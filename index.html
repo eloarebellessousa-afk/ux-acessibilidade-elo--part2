@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clube da Música • Plataforma Interativa</title>
 <link rel="stylesheet" href="style.css">
-<!-- Three.js CDN para o Fundo 3D -->
+<!-- Three.js CDN para o Fundo 3D Interativo -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-<!-- Canvas 3D no Fundo -->
+<!-- Canvas do Fundo 3D -->
 <canvas id="bg-canvas-3d"></canvas>
 
 <!-- Link de Acessibilidade -->
@@ -45,9 +45,8 @@
 </div>
 </header>
 
-<!-- SISTEMA DE NAVEGAÇÃO POR ABAS (CSS PURO) -->
+<!-- SISTEMA DE NAVEGAÇÃO POR ABAS -->
 <div class="sistema-abas">
-<!-- Inputs para controlar qual aba está aberta -->
 <input type="radio" name="abas" id="aba-catalogo" class="controle-oculto" checked>
 <input type="radio" name="abas" id="aba-quiz" class="controle-oculto">
 <input type="radio" name="abas" id="aba-pratica" class="controle-oculto">
@@ -80,7 +79,6 @@
 <span class="etiqueta">Voz & Canto</span>
 </div>
 
-<!-- Avaliação Visual -->
 <div class="medidores">
 <div class="medidor-item">
 <span>Conforto nos Dedos:</span>
@@ -275,7 +273,7 @@ Seu navegador não suporta este áudio.
 <div class="resposta-card resultado-violao">
 <span class="resposta-icone">🎸</span>
 <div>
-<h3>Seu instrumento ideal é o **Violão**!</h3>
+<h3>Seu instrumento ideal é o <strong>Violão</strong>!</h3>
 <p>Ele é versátil, ótimo para rodas de conversa e perfeito para acompanhar quem gosta de cantar junto.</p>
 </div>
 </div>
@@ -283,7 +281,7 @@ Seu navegador não suporta este áudio.
 <div class="resposta-card resultado-teclado">
 <span class="resposta-icone">🎹</span>
 <div>
-<h3>Seu instrumento ideal é o **Teclado**!</h3>
+<h3>Seu instrumento ideal é o <strong>Teclado</strong>!</h3>
 <p>Extremamente confortável, permite tocar lindas músicas sem causar esforço nas articulações dos dedos.</p>
 </div>
 </div>
@@ -291,7 +289,7 @@ Seu navegador não suporta este áudio.
 <div class="resposta-card resultado-ukulele">
 <span class="resposta-icone">🪕</span>
 <div>
-<h3>Seu instrumento ideal é o **Ukulele**!</h3>
+<h3>Seu instrumento ideal é o <strong>Ukulele</strong>!</h3>
 <p>Alegre e levinho, você aprenderá suas primeiras músicas em poucos dias de treino simples.</p>
 </div>
 </div>
@@ -305,7 +303,7 @@ Seu navegador não suporta este áudio.
 <h2>🎹 Treino Visual: Conhecendo as Notas do Teclado</h2>
 <p>Passe o mouse ou toque nas teclas abaixo para visualizar o nome e a posição das notas principais no teclado:</p>
 
-<!-- Mini Teclado Visual CSS -->
+<!-- Mini Teclado Visual -->
 <div class="teclado-visual" aria-label="Teclado demonstrativo">
 <div class="tecla branca" tabindex="0"><span>DÓ</span></div>
 <div class="tecla preta"></div>
@@ -335,11 +333,11 @@ Seu navegador não suporta este áudio.
 
 </div>
 
-<!-- Script do Fundo 3D Interativo -->
+<!-- SCRIPT DE EXECUÇÃO DO AMBIENTE 3D (THREE.JS) -->
 <script>
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('bg-canvas-3d');
-  if (!canvas || !window.Three) return;
+  if (!canvas || typeof THREE === 'undefined') return;
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -349,47 +347,43 @@ window.addEventListener('DOMContentLoaded', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  // Iluminação 3D
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+  // Luzes
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
   scene.add(ambientLight);
 
-  const dirLight1 = new THREE.DirectionalLight(0x2563eb, 1.2);
-  dirLight1.position.set(20, 20, 20);
-  scene.add(dirLight1);
+  const light1 = new THREE.DirectionalLight(0x3b82f6, 1.5);
+  light1.position.set(20, 20, 20);
+  scene.add(light1);
 
-  const dirLight2 = new THREE.DirectionalLight(0x7c3aed, 1.2);
-  dirLight2.position.set(-20, -20, -10);
-  scene.add(dirLight2);
+  const light2 = new THREE.DirectionalLight(0x8b5cf6, 1.5);
+  light2.position.set(-20, -20, -10);
+  scene.add(light2);
 
-  // Objetos Geométricos Flutuantes 3D
+  // Geometrias dos Objetos 3D
   const geometries = [
     new THREE.IcosahedronGeometry(1.2, 0),
-    new THREE.TorusGeometry(1, 0.4, 16, 32),
+    new THREE.TorusGeometry(1, 0.35, 16, 32),
     new THREE.OctahedronGeometry(1.2, 0),
     new THREE.TetrahedronGeometry(1.3, 0),
-    new THREE.TorusKnotGeometry(0.8, 0.25, 64, 8)
+    new THREE.TorusKnotGeometry(0.7, 0.2, 64, 8)
   ];
 
-  const material = new THREE.MeshPhongMaterial({
-    color: 0x3b82f6,
-    shininess: 80,
-    transparent: true,
-    opacity: 0.65,
-    wireframe: false
-  });
+  const group = new THREE.Group();
+  const objectsData = [];
+  const quantidade = window.innerWidth < 768 ? 20 : 45;
 
-  const objectsGroup = new THREE.Group();
-  const objectData = [];
-  const count = window.innerWidth < 768 ? 25 : 50;
+  const cores = [0x3b82f6, 0x8b5cf6, 0xec4899, 0x06b6d4, 0x6366f1];
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < quantidade; i++) {
     const geom = geometries[Math.floor(Math.random() * geometries.length)];
-    const mesh = new THREE.Mesh(geom, material.clone());
-    
-    // Cores aleatórias suaves para os objetos
-    const colors = [0x2563eb, 0x7c3aed, 0xdb2777, 0x0284c7, 0x4f46e5];
-    mesh.material.color.setHex(colors[Math.floor(Math.random() * colors.length)]);
+    const mat = new THREE.MeshPhongMaterial({
+      color: cores[Math.floor(Math.random() * cores.length)],
+      shininess: 90,
+      transparent: true,
+      opacity: 0.75
+    });
 
+    const mesh = new THREE.Mesh(geom, mat);
     mesh.position.x = (Math.random() - 0.5) * 60;
     mesh.position.y = (Math.random() - 0.5) * 60;
     mesh.position.z = (Math.random() - 0.5) * 40;
@@ -397,46 +391,40 @@ window.addEventListener('DOMContentLoaded', () => {
     const scale = Math.random() * 0.8 + 0.4;
     mesh.scale.set(scale, scale, scale);
 
-    objectsGroup.add(mesh);
+    group.add(mesh);
 
-    objectData.push({
+    objectsData.push({
       mesh: mesh,
-      rotX: (Math.random() - 0.5) * 0.02,
-      rotY: (Math.random() - 0.5) * 0.02,
-      posY: mesh.position.y,
+      rotX: (Math.random() - 0.5) * 0.015,
+      rotY: (Math.random() - 0.5) * 0.015,
+      baseY: mesh.position.y,
       speed: Math.random() * 0.015 + 0.005,
-      factor: Math.random() * Math.PI * 2
+      offset: Math.random() * Math.PI * 2
     });
   }
 
-  scene.add(objectsGroup);
+  scene.add(group);
 
-  // Interatividade com o Mouse/Toque
+  // Movimento com o ponteiro do mouse
   let mouseX = 0, mouseY = 0;
-  let targetX = 0, targetY = 0;
-
   document.addEventListener('mousemove', (e) => {
-    mouseX = (e.clientX - window.innerWidth / 2) * 0.0008;
-    mouseY = (e.clientY - window.innerHeight / 2) * 0.0008;
+    mouseX = (e.clientX - window.innerWidth / 2) * 0.0006;
+    mouseY = (e.clientY - window.innerHeight / 2) * 0.0006;
   });
 
-  // Animação Contínua
-  let clock = new THREE.Clock();
+  const clock = new THREE.Clock();
+
   function animate() {
     requestAnimationFrame(animate);
-
     const elapsedTime = clock.getElapsedTime();
 
-    targetX += (mouseX - targetX) * 0.05;
-    targetY += (mouseY - targetY) * 0.05;
+    group.rotation.y += (mouseX - group.rotation.y) * 0.05;
+    group.rotation.x += (mouseY - group.rotation.x) * 0.05;
 
-    objectsGroup.rotation.y = targetX;
-    objectsGroup.rotation.x = targetY;
-
-    objectData.forEach((obj) => {
-      obj.mesh.rotation.x += obj.rotX;
-      obj.mesh.rotation.y += obj.rotY;
-      obj.mesh.position.y = obj.posY + Math.sin(elapsedTime * 1.5 + obj.factor) * 1.5;
+    objectsData.forEach((item) => {
+      item.mesh.rotation.x += item.rotX;
+      item.mesh.rotation.y += item.rotY;
+      item.mesh.position.y = item.baseY + Math.sin(elapsedTime * 1.5 + item.offset) * 1.8;
     });
 
     renderer.render(scene, camera);
@@ -444,7 +432,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
   animate();
 
-  // RedimensionamentoResponsivo
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
