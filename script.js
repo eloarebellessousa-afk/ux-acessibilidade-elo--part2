@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // 2. SÍNTESE DE ÁUDIO REALISTA (WEB AUDIO)
+  // 2. SÍNTESE & SAMPLES DE ÁUDIO REALISTA
   // ==========================================
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   let audioCtx = null;
@@ -108,20 +108,74 @@ document.addEventListener('DOMContentLoaded', () => {
     return audioCtx;
   }
 
-  function criarBufferRuido(ctx, duracao) {
-    const bufferSize = ctx.sampleRate * duracao;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const output = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      output[i] = Math.random() * 2 - 1;
+  // Links CDN de áudio de bateria real em HQ
+  const urlsBateria = {
+    bumbo: 'https://cdn.jsdelivr.net/gh/muralidesign/drum-samples@main/kick.wav',
+    caixa: 'https://cdn.jsdelivr.net/gh/muralidesign/drum-samples@main/snare.wav',
+    prato: 'https://cdn.jsdelivr.net/gh/muralidesign/drum-samples@main/hihat.wav',
+    tom: 'https://cdn.jsdelivr.net/gh/muralidesign/drum-samples@main/tom.wav',
+    palma: 'https://cdn.jsdelivr.net/gh/muralidesign/drum-samples@main/clap.wav'
+  };
+
+  const buffersBateria = {};
+
+  // Carrega os sons reais na memória
+  async function carregarSamplesBateria() {
+    const ctx = obterAudioContext();
+    for (const [key, url] of Object.entries(urlsBateria)) {
+      try {
+        const resp = await fetch(url);
+        const arrayBuffer = await resp.arrayBuffer();
+        buffersBateria[key] = await ctx.decodeAudioData(arrayBuffer);
+      } catch (e) {
+        console.warn(`Erro ao carregar sample de ${key}, usando síntese fallback.`, e);
+      }
     }
-    return buffer;
+  }
+
+  // Toca o som real da bateria (ou o sintetizado se estiver offline)
+  function tocarBateria(som) {
+    const ctx = obterAudioContext();
+
+    if (buffersBateria[som]) {
+      const source = ctx.createBufferSource();
+      source.buffer = buffersBateria[som];
+      source.connect(ctx.destination);
+      source.start(0);
+      dispararDMX();
+      return;
+    }
+
+    // FALLBACK SINTETIZADO (Sintetizador de contingência)
+    const now = ctx.currentTime;
+    if (som === 'bumbo') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.setValueAtTime(120, now);
+      osc.frequency.exponentialRampToValueAtTime(30, now + 0.1);
+      gain.gain.setValueAtTime(1.0, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.setValueAtTime(200, now);
+      gain.gain.setValueAtTime(0.5, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.15);
+    }
+    dispararDMX();
   }
 
   function tocarCordaViolao(freq, duracao = 1.5) {
     const ctx = obterAudioContext();
     const now = ctx.currentTime;
-
     const bufferSize = Math.round(ctx.sampleRate / freq);
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -183,129 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
     dispararDMX();
   }
 
-  // BATERIA MANUAL REALISTA
-  function tocarBateria(som) {
-    const ctx = obterAudioContext();
-    const now = ctx.currentTime;
-
-    if (som === 'bumbo') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.frequency.setValueAtTime(140, now);
-      osc.frequency.exponentialRampToValueAtTime(30, now + 0.08);
-
-      gain.gain.setValueAtTime(1.0, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.35);
-
-    } else if (som === 'caixa') {
-      const osc = ctx.createOscillator();
-      const oscGain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(180, now);
-      osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
-      
-      oscGain.gain.setValueAtTime(0.7, now);
-      oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-      
-      osc.connect(oscGain);
-      oscGain.connect(ctx.destination);
-
-      const noise = ctx.createBufferSource();
-      noise.buffer = criarBufferRuido(ctx, 0.2);
-      
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.setValueAtTime(1000, now);
-
-      const noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.8, now);
-      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-
-      noise.connect(filter);
-      filter.connect(noiseGain);
-      noiseGain.connect(ctx.destination);
-
-      osc.start(now);
-      noise.start(now);
-      osc.stop(now + 0.18);
-      noise.stop(now + 0.18);
-
-    } else if (som === 'prato') {
-      const freqs = [2, 3, 4.16, 5.43, 6.79, 8.21];
-      const fundamental = 40;
-      
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.4, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.setValueAtTime(7000, now);
-
-      freqs.forEach(f => {
-        const osc = ctx.createOscillator();
-        osc.type = 'square';
-        osc.frequency.value = fundamental * f * 10;
-        osc.connect(filter);
-        osc.start(now);
-        osc.stop(now + 0.08);
-      });
-
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-
-    } else if (som === 'tom') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(120, now);
-      osc.frequency.exponentialRampToValueAtTime(45, now + 0.25);
-
-      gain.gain.setValueAtTime(0.9, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.3);
-
-    } else if (som === 'palma') {
-      const tempos = [0, 0.01, 0.02, 0.03];
-      
-      tempos.forEach((delay) => {
-        const noise = ctx.createBufferSource();
-        noise.buffer = criarBufferRuido(ctx, 0.15);
-
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(1100, now + delay);
-        filter.Q.setValueAtTime(1.2, now + delay);
-
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.5, now + delay);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.12);
-
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(ctx.destination);
-
-        noise.start(now + delay);
-        noise.stop(now + delay + 0.12);
-      });
-    }
-
-    dispararDMX();
-  }
-
   function tocarBeatBateria() {
     const bpm = 110;
     const tempoNota = (60 / bpm) / 2;
@@ -352,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Eventos de Teclas
+  // Teclado
   document.querySelectorAll('.tecla').forEach(tecla => {
     tecla.addEventListener('click', () => {
       const freq = parseFloat(tecla.dataset.nota);
@@ -379,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Eventos de Demonstração
+  // Demonstrações
   document.querySelectorAll('.btn-tocar-demo').forEach(btn => {
     btn.addEventListener('click', () => {
       const tipo = btn.dataset.tipo;
@@ -434,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Filtro
+  // Filtros e Quiz
   const filtroCat = document.getElementById('filtro-categoria');
   const inputBusca = document.getElementById('input-busca');
 
@@ -455,7 +386,6 @@ document.addEventListener('DOMContentLoaded', () => {
   filtroCat?.addEventListener('change', filtrarCards);
   inputBusca?.addEventListener('keyup', filtrarCards);
 
-  // Quiz
   document.getElementById('btn-calcular-quiz')?.addEventListener('click', () => {
     const respostas = ['qp1', 'qp2', 'qp3', 'qp4', 'qp5'];
     let pontos = { violao: 0, teclado: 0, bateria: 0 };
@@ -507,14 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   });
 
-  // Controles de Fonte
-  let tamanhoFonte = 100;
-  document.getElementById('btn-fonte-aumentar')?.addEventListener('click', () => {
-    if (tamanhoFonte < 130) { tamanhoFonte += 5; document.body.style.fontSize = tamanhoFonte + '%'; }
-  });
-  document.getElementById('btn-fonte-diminuir')?.addEventListener('click', () => {
-    if (tamanhoFonte > 85) { tamanhoFonte -= 5; document.body.style.fontSize = tamanhoFonte + '%'; }
-  });
-
+  // Inicialização
   init3D();
+  carregarSamplesBateria();
 });
