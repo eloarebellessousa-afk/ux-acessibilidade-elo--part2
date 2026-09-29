@@ -195,6 +195,11 @@ body {
   color: var(--text-bright);
 }
 
+.pill-btn.small {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+
 .icon-btn {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-color);
@@ -501,7 +506,7 @@ section {
   border-color: var(--border-highlight);
 }
 
-.control-btn.active {
+.control-btn.active, .control-btn[aria-pressed="true"] {
   background: var(--primary-accent);
   color: #fff;
   border-color: var(--primary-accent);
@@ -955,7 +960,7 @@ section {
   cursor: pointer;
 }
 
-.filter-btn.active {
+.filter-btn.active, .filter-btn[aria-pressed="true"] {
   background: var(--primary-gradient);
   color: #fff;
   border-color: transparent;
@@ -1237,7 +1242,7 @@ section {
   margin: 0 auto;
 }
 
-/* Modo Simples Reorganizado */
+/* Modo Simples Reorganizado sem esconder a essência */
 body[data-simple-mode="true"] {
   --bg-dark: #000000;
   --bg-card: #111111;
@@ -1246,9 +1251,7 @@ body[data-simple-mode="true"] {
 }
 
 body[data-simple-mode="true"] #canvas-container,
-body[data-simple-mode="true"] .hero-interactive-stage,
-body[data-simple-mode="true"] .stories-grid,
-body[data-simple-mode="true"] .manifesto-section {
+body[data-simple-mode="true"] .hero-interactive-stage {
   display: none !important;
 }
 
@@ -1259,8 +1262,8 @@ body[data-simple-mode="true"] section {
 body[data-simple-mode="true"] button,
 body[data-simple-mode="true"] .pill-btn,
 body[data-simple-mode="true"] .control-btn {
-  padding: 1.25rem 2rem !important;
-  font-size: 1.2rem !important;
+  padding: 1rem 1.5rem !important;
+  font-size: 1.1rem !important;
   border: 2px solid #fff !important;
 }
 
@@ -1290,19 +1293,26 @@ body[data-soft-contrast="true"] {
   --primary-accent: #818cf8;
 }
 
-/* Controles Maiores */
+/* Controles Maiores Ajustados */
 body[data-large-controls="true"] button,
 body[data-large-controls="true"] .pill-btn {
-  transform: scale(1.15);
-  margin: 0.25rem;
+  font-size: 1.1rem;
+  padding: 0.8rem 1.4rem;
 }
 
-/* Redução de Movimento */
-body[data-motion-reduce="true"] *,
+/* CORREÇÃO ESTRUTURAL DE REDUÇÃO DE MOVIMENTO */
+body[data-motion-reduce="true"] * {
+  animation: none !important;
+  transition: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
     transition: none !important;
+  }
+  html {
+    scroll-behavior: auto !important;
   }
 }
 
