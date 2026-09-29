@@ -1009,6 +1009,12 @@ section {
   margin-bottom: 1.5rem;
 }
 
+.instrument-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
 /* Modal Dialog */
 .modal-dialog {
   margin: auto;
@@ -1025,6 +1031,38 @@ section {
 .modal-dialog::backdrop {
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-header h3 {
+  font-size: 1.8rem;
+  color: var(--text-bright);
+}
+
+.close-modal-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: var(--text-bright);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.modal-body p {
+  margin-bottom: 1.25rem;
+  color: var(--text-muted);
+}
+
+.modal-body strong {
+  color: var(--text-bright);
 }
 
 /* --------------------------------------------------------------------------
@@ -1242,7 +1280,7 @@ section {
   margin: 0 auto;
 }
 
-/* Modo Simples Reorganizado sem esconder a essência */
+/* Modo Simples Reorganizado */
 body[data-simple-mode="true"] {
   --bg-dark: #000000;
   --bg-card: #111111;
@@ -1267,7 +1305,7 @@ body[data-simple-mode="true"] .control-btn {
   border: 2px solid #fff !important;
 }
 
-/* Alto Contraste Semântico */
+/* Alto Contraste */
 body[data-high-contrast="true"] {
   --bg-dark: #000000;
   --bg-card: #000000;
@@ -1293,14 +1331,14 @@ body[data-soft-contrast="true"] {
   --primary-accent: #818cf8;
 }
 
-/* Controles Maiores Ajustados */
+/* Controles Maiores */
 body[data-large-controls="true"] button,
 body[data-large-controls="true"] .pill-btn {
   font-size: 1.1rem;
   padding: 0.8rem 1.4rem;
 }
 
-/* CORREÇÃO ESTRUTURAL DE REDUÇÃO DE MOVIMENTO */
+/* REDUÇÃO DE MOVIMENTO */
 body[data-motion-reduce="true"] * {
   animation: none !important;
   transition: none !important;
