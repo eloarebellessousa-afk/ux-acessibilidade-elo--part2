@@ -1,6 +1,21 @@
 /**
  * SONORA — EXPERIÊNCIA DIGITAL MUSICAL COMPLETA & ACESSÍVEL
- * Script final totalmente corrigido, integrado e testado.
+ * Script final refatorado e totalmente funcional.
+ *
+ * Recursos:
+ * - Web Audio API com timbres individuais (Violão, Teclado, Violino e Bateria)
+ * - Canvas 3D (Three.js) reativo ao cursor e aos sons
+ * - AnalyserNode com Canvas Visualizador de Áudio em Tempo Real
+ * - Teclado Musical interativo (Modo Livre, Aprender e Desafio)
+ * - Bateria com 5 pads independentes e demonstração rítmica
+ * - Gravador e Reprodução polifônica/multi-instrumento
+ * - Metrônomo com ajuste dinâmico de BPM
+ * - Catálogo de Instrumentos com Filtros e Modal Acessível
+ * - Mapeamento Sensorial (Perfil Musical)
+ * - Quiz de Afinidade Sonora (8 Perguntas)
+ * - Gamificação / Conquistas
+ * - Percurso Guiado (Onboarding Tour)
+ * - Acessibilidade completa com gravação em localStorage e Síntese de Voz
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -267,11 +282,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const particlesCount = 350;
     const posArray = new Float32Array(particlesCount * 3);
+    const scaleArray = new Float32Array(particlesCount);
 
     for (let i = 0; i < particlesCount * 3; i += 3) {
       posArray[i] = (Math.random() - 0.5) * 80;
       posArray[i + 1] = (Math.random() - 0.5) * 80;
       posArray[i + 2] = (Math.random() - 0.5) * 80;
+      scaleArray[i / 3] = Math.random();
     }
 
     const geometry = new THREE.BufferGeometry();
@@ -399,67 +416,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function setHighContrast(enable, announce = true) {
+  function setHighContrast(enable) {
     const enabled = Boolean(enable);
     body.setAttribute('data-high-contrast', String(enabled));
-    if (enabled) {
-      body.setAttribute('data-soft-contrast', 'false');
-      btnSoftContrast?.setAttribute('aria-pressed', 'false');
-      safeStorageSet('sonora_soft_contrast', 'false');
-    }
+    if (enabled) body.setAttribute('data-soft-contrast', 'false');
 
     btnHighContrast?.setAttribute('aria-pressed', String(enabled));
-    safeStorageSet('sonora_high_contrast', String(enabled));
+    btnSoftContrast?.setAttribute('aria-pressed', 'false');
 
-    if (announce) {
-      speakText(enabled ? 'Alto contraste ativado.' : 'Alto contraste desativado.');
-    }
-    if (enabled) unlockAchievement('ach-acc');
+    safeStorageSet('sonora_high_contrast', String(enabled));
+    if (enabled) safeStorageSet('sonora_soft_contrast', 'false');
+
+    speakText(enabled ? 'Alto contraste ativado.' : 'Alto contraste desativado.');
+    unlockAchievement('ach-acc');
   }
 
-  function setSoftContrast(enable, announce = true) {
+  function setSoftContrast(enable) {
     const enabled = Boolean(enable);
     body.setAttribute('data-soft-contrast', String(enabled));
-    if (enabled) {
-      body.setAttribute('data-high-contrast', 'false');
-      btnHighContrast?.setAttribute('aria-pressed', 'false');
-      safeStorageSet('sonora_high_contrast', 'false');
-    }
+    if (enabled) body.setAttribute('data-high-contrast', 'false');
 
     btnSoftContrast?.setAttribute('aria-pressed', String(enabled));
-    safeStorageSet('sonora_soft_contrast', String(enabled));
+    btnHighContrast?.setAttribute('aria-pressed', 'false');
 
-    if (announce) {
-      speakText(enabled ? 'Contraste suave ativado.' : 'Contraste suave desativado.');
-    }
-    if (enabled) unlockAchievement('ach-acc');
+    safeStorageSet('sonora_soft_contrast', String(enabled));
+    if (enabled) safeStorageSet('sonora_high_contrast', 'false');
+
+    speakText(enabled ? 'Contraste suave ativado.' : 'Contraste suave desativado.');
+    unlockAchievement('ach-acc');
   }
 
-  function setReducedMotion(enable, announce = true) {
+  function setReducedMotion(enable) {
     const enabled = Boolean(enable);
     body.setAttribute('data-motion-reduce', String(enabled));
     btnReduceMotion?.setAttribute('aria-pressed', String(enabled));
 
     safeStorageSet('sonora_motion_reduce', String(enabled));
     checkThreeState();
-    checkVisualizerState();
 
-    if (announce) {
-      speakText(enabled ? 'Animações reduzidas.' : 'Animações restauradas.');
-    }
-    if (enabled) unlockAchievement('ach-acc');
+    speakText(enabled ? 'Animações reduzidas.' : 'Animações restauradas.');
+    unlockAchievement('ach-acc');
   }
 
-  function setLargeControls(enable, announce = true) {
+  function setLargeControls(enable) {
     const enabled = Boolean(enable);
     body.setAttribute('data-large-controls', String(enabled));
     btnLargeControls?.setAttribute('aria-pressed', String(enabled));
 
     safeStorageSet('sonora_large_controls', String(enabled));
-    if (announce) {
-      speakText(enabled ? 'Controles maiores ativados.' : 'Controles normais.');
-    }
-    if (enabled) unlockAchievement('ach-acc');
+    speakText(enabled ? 'Controles maiores ativados.' : 'Controles normais.');
+    unlockAchievement('ach-acc');
   }
 
   btnSimpleMode?.addEventListener('click', () => setSimpleMode(body.getAttribute('data-simple-mode') !== 'true'));
@@ -487,23 +493,11 @@ document.addEventListener('DOMContentLoaded', () => {
   btnReduceMotion?.addEventListener('click', () => setReducedMotion(body.getAttribute('data-motion-reduce') !== 'true'));
   btnLargeControls?.addEventListener('click', () => setLargeControls(body.getAttribute('data-large-controls') !== 'true'));
 
-  // Inicialização Sem Sobrescrever Mutuamente
   setSimpleMode(safeStorageGet('sonora_simple_mode') === 'true', false);
-
-  const savedHigh = safeStorageGet('sonora_high_contrast') === 'true';
-  const savedSoft = safeStorageGet('sonora_soft_contrast') === 'true';
-
-  if (savedHigh) {
-    setHighContrast(true, false);
-  } else if (savedSoft) {
-    setSoftContrast(true, false);
-  } else {
-    setHighContrast(false, false);
-    setSoftContrast(false, false);
-  }
-
-  setReducedMotion(safeStorageGet('sonora_motion_reduce') === 'true', false);
-  setLargeControls(safeStorageGet('sonora_large_controls') === 'true', false);
+  setHighContrast(safeStorageGet('sonora_high_contrast') === 'true');
+  setSoftContrast(safeStorageGet('sonora_soft_contrast') === 'true');
+  setReducedMotion(safeStorageGet('sonora_motion_reduce') === 'true');
+  setLargeControls(safeStorageGet('sonora_large_controls') === 'true');
 
   /* ==========================================================================
      6. WEB AUDIO API & TIMBRES SINTÉTICOS
@@ -630,662 +624,348 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const output = audioCtx.createGain();
     output.gain.setValueAtTime(0.0001, now);
-    output.gain.linearRampToValueAtTime(0.28, now + 0.08);
-    output.gain.exponentialRampToValueAtTime(0.18, now + duration * 0.7);
+    output.gain.linearRampToValueAtTime(0.23, now + 0.10);
+    output.gain.setValueAtTime(0.20, now + Math.max(0.12, duration - 0.3));
     output.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
     filter.connect(output);
     output.connect(masterGain);
 
-    const osc = audioCtx.createOscillator();
-    osc.type = 'sawtooth';
+    const partials = [[1, 0.75], [2, 0.25], [3, 0.12]];
+    const oscs = [];
+    partials.forEach(([ratio, level]) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.value = freq * ratio;
+      g.gain.value = level;
+      osc.connect(g);
+      g.connect(filter);
+      osc.start(now);
+      osc.stop(now + duration + 0.1);
+      oscs.push(osc);
+    });
 
-    // LFO para Vibrato
-    const lfo = audioCtx.createOscillator();
-    lfo.frequency.value = 5.5;
-    const lfoGain = audioCtx.createGain();
-    lfoGain.gain.value = freq * 0.015;
-
-    lfo.connect(lfoGain);
-    lfoGain.connect(osc.frequency);
-    osc.frequency.setValueAtTime(freq, now);
-
-    osc.connect(filter);
-
-    lfo.start(now);
-    osc.start(now);
-
-    lfo.stop(now + duration + 0.05);
-    osc.stop(now + duration + 0.05);
+    const vibrato = audioCtx.createOscillator();
+    const vibratoGain = audioCtx.createGain();
+    vibrato.frequency.value = 5.2;
+    vibratoGain.gain.value = 3.5;
+    vibrato.connect(vibratoGain);
+    oscs.forEach(osc => vibratoGain.connect(osc.detune));
+    vibrato.start(now + 0.2);
+    vibrato.stop(now + duration);
 
     pulse3DEnvironment();
     triggerVisualizerFeedback();
   }
 
-  function playDrumSound(type) {
+  function createNoiseBuffer(seconds = 0.3) {
+    const length = Math.floor(audioCtx.sampleRate * seconds);
+    const buffer = audioCtx.createBuffer(1, length, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    return buffer;
+  }
+
+  function playKick() {
+    if (!initAudio()) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(48, now + 0.12);
+
+    gain.gain.setValueAtTime(0.85, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.45);
+
+    pulse3DEnvironment();
+    triggerVisualizerFeedback();
+  }
+
+  function playSnare() {
     if (!initAudio()) return;
     const now = audioCtx.currentTime;
 
-    if (type === 'kick') {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.frequency.setValueAtTime(140, now);
-      osc.frequency.exponentialRampToValueAtTime(38, now + 0.12);
+    const bodyOsc = audioCtx.createOscillator();
+    const bodyGain = audioCtx.createGain();
+    bodyOsc.type = 'triangle';
+    bodyOsc.frequency.value = 190;
+    bodyGain.gain.setValueAtTime(0.35, now);
+    bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+    bodyOsc.connect(bodyGain);
+    bodyGain.connect(masterGain);
+    bodyOsc.start(now);
+    bodyOsc.stop(now + 0.18);
 
-      gain.gain.setValueAtTime(0.8, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    const noise = audioCtx.createBufferSource();
+    const filter = audioCtx.createBiquadFilter();
+    const gain = audioCtx.createGain();
+    noise.buffer = createNoiseBuffer(0.22);
+    filter.type = 'highpass';
+    filter.frequency.value = 1400;
+    gain.gain.setValueAtTime(0.48, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.20);
 
-      osc.connect(gain);
-      gain.connect(masterGain);
-      osc.start(now);
-      osc.stop(now + 0.36);
-
-    } else if (type === 'snare') {
-      const noise = audioCtx.createBufferSource();
-      const bufferSize = audioCtx.sampleRate * 0.2;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const output = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-      noise.buffer = buffer;
-
-      const noiseFilter = audioCtx.createBiquadFilter();
-      noiseFilter.type = 'highpass';
-      noiseFilter.frequency.value = 1000;
-
-      const noiseGain = audioCtx.createGain();
-      noiseGain.gain.setValueAtTime(0.5, now);
-      noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-
-      noise.connect(noiseFilter);
-      noiseFilter.connect(noiseGain);
-      noiseGain.connect(masterGain);
-
-      const osc = audioCtx.createOscillator();
-      const oscGain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(180, now);
-      osc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
-
-      oscGain.gain.setValueAtTime(0.4, now);
-      oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-
-      osc.connect(oscGain);
-      oscGain.connect(masterGain);
-
-      noise.start(now);
-      osc.start(now);
-      noise.stop(now + 0.22);
-      osc.stop(now + 0.13);
-
-    } else if (type === 'hihat') {
-      const bufferSize = audioCtx.sampleRate * 0.08;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const output = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = buffer;
-
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.value = 7000;
-
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.07);
-
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(masterGain);
-
-      noise.start(now);
-      noise.stop(now + 0.08);
-
-    } else if (type === 'tom') {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(180, now);
-      osc.frequency.exponentialRampToValueAtTime(70, now + 0.25);
-
-      gain.gain.setValueAtTime(0.6, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
-
-      osc.connect(gain);
-      gain.connect(masterGain);
-      osc.start(now);
-      osc.stop(now + 0.3);
-
-    } else if (type === 'crash') {
-      const bufferSize = audioCtx.sampleRate * 1.2;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const output = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = buffer;
-
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.value = 5500;
-      filter.Q.value = 1.2;
-
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.45, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
-
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(masterGain);
-
-      noise.start(now);
-      noise.stop(now + 1.15);
-    }
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+    noise.start(now);
 
     pulse3DEnvironment();
     triggerVisualizerFeedback();
   }
 
-  // Roteador de Reprodução Musical Centralizado
-  function playInstrumentSound(type, freqOrSubtype = 261.63) {
+  function playHiHat() {
+    if (!initAudio()) return;
+    const now = audioCtx.currentTime;
+    const noise = audioCtx.createBufferSource();
+    const filter = audioCtx.createBiquadFilter();
+    const gain = audioCtx.createGain();
+
+    noise.buffer = createNoiseBuffer(0.10);
+    filter.type = 'highpass';
+    filter.frequency.value = 6500;
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.075);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+    noise.start(now);
+
+    pulse3DEnvironment();
+    triggerVisualizerFeedback();
+  }
+
+  function playTom() {
+    if (!initAudio()) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(90, now + 0.14);
+    gain.gain.setValueAtTime(0.55, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.5);
+
+    pulse3DEnvironment();
+    triggerVisualizerFeedback();
+  }
+
+  function playCrash() {
+    if (!initAudio()) return;
+    const now = audioCtx.currentTime;
+    const noise = audioCtx.createBufferSource();
+    const filter = audioCtx.createBiquadFilter();
+    const gain = audioCtx.createGain();
+
+    noise.buffer = createNoiseBuffer(1.2);
+    filter.type = 'highpass';
+    filter.frequency.value = 3500;
+    gain.gain.setValueAtTime(0.32, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+    noise.start(now);
+
+    pulse3DEnvironment();
+    triggerVisualizerFeedback();
+  }
+
+  function playInstrumentSound(soundType, freq = 261.63) {
     unlockAchievement('ach-first-sound');
+    recordAudioEvent(soundType, freq);
 
-    if (type === 'piano') {
-      playPianoNote(Number(freqOrSubtype));
-    } else if (type === 'guitar') {
-      playGuitarNote(Number(freqOrSubtype));
-    } else if (type === 'violin') {
-      playViolinNote(Number(freqOrSubtype));
-    } else if (['kick', 'snare', 'hihat', 'tom', 'crash'].includes(type)) {
-      playDrumSound(type);
-      unlockAchievement('ach-rhythm');
-    } else if (type === 'drums') {
-      // Se chamado como 'drums' genérico no catálogo, toca a demo rápida de bateria
-      playDrumDemo(false);
+    switch (soundType) {
+      case 'guitar': playGuitarNote(freq); break;
+      case 'piano': playPianoNote(freq); break;
+      case 'violin': playViolinNote(freq); break;
+      case 'kick': playKick(); break;
+      case 'snare': playSnare(); break;
+      case 'hihat': playHiHat(); break;
+      case 'tom': playTom(); break;
+      case 'crash': playCrash(); break;
+      case 'drums': playDrumDemo(); break;
+      default: playPianoNote(freq); break;
     }
   }
 
-  /* ==========================================================================
-     7. VISUALIZADOR DE ÁUDIO EM TEMPO REAL (CANVAS)
-     ========================================================================== */
-
-  const visualizerCanvas = $('#audio-visualizer-canvas');
-  const visualizerFeedback = $('#visualizer-text-feedback');
-  let visualizerCtx = visualizerCanvas ? visualizerCanvas.getContext('2d') : null;
-  let visualizerFrameId = null;
-
-  function resizeVisualizer() {
-    if (!visualizerCanvas) return;
-    visualizerCanvas.width = visualizerCanvas.offsetWidth;
-    visualizerCanvas.height = visualizerCanvas.offsetHeight;
-  }
-  window.addEventListener('resize', resizeVisualizer);
-  resizeVisualizer();
-
-  function renderVisualizer() {
-    if (!visualizerCtx || !analyser) return;
-
-    const width = visualizerCanvas.width;
-    const height = visualizerCanvas.height;
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
-    analyser.getByteFrequencyData(dataArray);
-
-    visualizerCtx.clearRect(0, 0, width, height);
-
-    const barWidth = (width / bufferLength) * 2.2;
-    let x = 0;
-
-    for (let i = 0; i < bufferLength; i++) {
-      const barHeight = (dataArray[i] / 255) * height;
-      visualizerCtx.fillStyle = `hsl(${260 + (i / bufferLength) * 80}, 90%, 60%)`;
-      visualizerCtx.fillRect(x, height - barHeight, barWidth, barHeight);
-      x += barWidth + 1;
-    }
-
-    visualizerFrameId = requestAnimationFrame(renderVisualizer);
-  }
-
-  function startVisualizer() {
-    if (!visualizerFrameId) {
-      checkVisualizerState();
-    }
-  }
-
-  function stopVisualizer() {
-    if (visualizerFrameId) {
-      cancelAnimationFrame(visualizerFrameId);
-      visualizerFrameId = null;
-    }
-  }
-
-  function drawStaticVisualizer() {
-    if (!visualizerCtx || !visualizerCanvas) return;
-    const width = visualizerCanvas.width;
-    const height = visualizerCanvas.height;
-    visualizerCtx.clearRect(0, 0, width, height);
-    visualizerCtx.fillStyle = 'rgba(121, 82, 245, 0.4)';
-
-    const barCount = 32;
-    const barWidth = width / barCount;
-    for (let i = 0; i < barCount; i++) {
-      const h = Math.sin(i * 0.3) * (height * 0.3) + (height * 0.3);
-      visualizerCtx.fillRect(i * barWidth, height - h, barWidth - 2, h);
-    }
-  }
-
-  function checkVisualizerState() {
-    const isReduced = body.getAttribute('data-motion-reduce') === 'true';
-    if (isReduced) {
-      stopVisualizer();
-      drawStaticVisualizer();
-    } else {
-      if (!visualizerFrameId) renderVisualizer();
-    }
-  }
-
-  function triggerVisualizerFeedback() {
-    if (!visualizerFeedback) return;
-    visualizerFeedback.textContent = '🔊 Resposta Áudio-Visual: Frequência Emitida!';
-    setTimeout(() => {
-      visualizerFeedback.textContent = 'Visualizador Áudio-Visual em Espera...';
-    }, 1200);
-  }
-
-  /* ==========================================================================
-     8. TECLADO MUSICAL ACESSÍVEL
-     ========================================================================== */
-
-  const pianoKeysData = [
-    { note: 'Dó', pitch: 'C4', key: 'Z', freq: 261.63, isBlack: false },
-    { note: 'Dó#', pitch: 'C#4', key: 'S', freq: 277.18, isBlack: true },
-    { note: 'Ré', pitch: 'D4', key: 'X', freq: 293.66, isBlack: false },
-    { note: 'Ré#', pitch: 'D#4', key: 'D', freq: 311.13, isBlack: true },
-    { note: 'Mí', pitch: 'E4', key: 'C', freq: 329.63, isBlack: false },
-    { note: 'Fá', pitch: 'F4', key: 'V', freq: 349.23, isBlack: false },
-    { note: 'Fá#', pitch: 'F#4', key: 'G', freq: 369.99, isBlack: true },
-    { note: 'Sol', pitch: 'G4', key: 'B', freq: 392.00, isBlack: false },
-    { note: 'Sol#', pitch: 'G#4', key: 'H', freq: 415.30, isBlack: true },
-    { note: 'Lá', pitch: 'A4', key: 'N', freq: 440.00, isBlack: false },
-    { note: 'Lá#', pitch: 'A#4', key: 'J', freq: 466.16, isBlack: true },
-    { note: 'Si', pitch: 'B4', key: 'M', freq: 493.88, isBlack: false },
-    { note: 'Dó', pitch: 'C5', key: 'K', freq: 523.25, isBlack: false }
-  ];
-
-  let keyboardMode = 'free'; // 'free', 'learn', 'challenge'
-  let learnIndex = 0;
-  const learnSequence = ['C4', 'E4', 'G4', 'C5'];
-  let challengeScore = 0;
-  let challengeTarget = null;
-
-  function renderPianoKeys() {
-    const wrapper = $('#piano-keys-wrapper');
-    if (!wrapper) return;
-    wrapper.innerHTML = '';
-
-    pianoKeysData.forEach(item => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = `piano-key ${item.isBlack ? 'black' : 'white'}`;
-      btn.dataset.pitch = item.pitch;
-      btn.dataset.freq = item.freq;
-      btn.setAttribute('aria-label', `Nota ${item.note} (${item.pitch}), atalho tecla ${item.key}`);
-
-      btn.innerHTML = `
-        <span class="note-name">${item.note}</span>
-        <span class="key-bind">${item.key}</span>
-      `;
-
-      btn.addEventListener('click', () => triggerPianoKey(item));
-      wrapper.appendChild(btn);
-    });
-  }
-
-  function triggerPianoKey(item) {
-    playPianoNote(item.freq);
-    recordAudioEvent('piano', item.freq);
-
-    const notesDisplay = $('#keyboard-notes-display');
-    if (notesDisplay) {
-      notesDisplay.innerHTML = `Nota: <strong>${item.note} (${item.pitch})</strong> — ${item.freq.toFixed(1)} Hz`;
-    }
-
-    // Animação Visual da Tecla
-    const keyEl = $(`[data-pitch="${item.pitch}"]`);
-    if (keyEl) {
-      keyEl.classList.add('active');
-      setTimeout(() => keyEl.classList.remove('active'), 180);
-    }
-
-    // Validação nos Modos
-    if (keyboardMode === 'learn') {
-      if (item.pitch === learnSequence[learnIndex]) {
-        learnIndex++;
-        if (learnIndex >= learnSequence.length) {
-          updateKeyboardGuide('🎉 Parabéns! Sequência concluída com sucesso!');
-          unlockAchievement('ach-melody');
-          learnIndex = 0;
-          setTimeout(updateLearnGuide, 2000);
-        } else {
-          updateLearnGuide();
-        }
-      }
-    } else if (keyboardMode === 'challenge') {
-      if (challengeTarget && item.pitch === challengeTarget.pitch) {
-        challengeScore++;
-        updateKeyboardGuide(`✨ Correto! Pontuação: ${challengeScore}. Próxima nota...`);
-        nextChallengeStep();
-      } else if (challengeTarget) {
-        updateKeyboardGuide(`❌ Ops! Era a nota ${challengeTarget.note}. Tente acertar a próxima!`);
-        nextChallengeStep();
-      }
-    }
-  }
-
-  function setKeyboardMode(mode) {
-    keyboardMode = mode;
-    $$('.mode-tab').forEach(tab => {
-      const isActive = tab.id === `btn-keymode-${mode}`;
-      tab.classList.toggle('active', isActive);
-      tab.setAttribute('aria-selected', String(isActive));
-    });
-
-    const banner = $('#keyboard-guide-banner');
-    if (!banner) return;
-
-    if (mode === 'free') {
-      banner.hidden = true;
-      speakText('Modo Livre ativado. Toque à vontade.');
-    } else if (mode === 'learn') {
-      banner.hidden = false;
-      learnIndex = 0;
-      updateLearnGuide();
-      speakText('Modo Aprender ativado. Siga as notas na tela.');
-    } else if (mode === 'challenge') {
-      banner.hidden = false;
-      challengeScore = 0;
-      nextChallengeStep();
-      speakText('Modo Desafio ativado. Encontre a nota sorteada.');
-    }
-  }
-
-  function updateKeyboardGuide(text) {
-    const guideText = $('#keyboard-guide-text');
-    if (guideText) guideText.textContent = text;
-  }
-
-  function updateLearnGuide() {
-    const targetPitch = learnSequence[learnIndex];
-    const targetData = pianoKeysData.find(d => d.pitch === targetPitch);
-    if (targetData) {
-      updateKeyboardGuide(`🎯 Modo Aprender: Toque a nota ${targetData.note} (${targetData.pitch}) - Tecla [${targetData.key}]`);
-    }
-  }
-
-  function nextChallengeStep() {
-    const randomIndex = Math.floor(Math.random() * pianoKeysData.length);
-    challengeTarget = pianoKeysData[randomIndex];
-    setTimeout(() => {
-      updateKeyboardGuide(`⚡ Desafio: Encontre a nota ${challengeTarget.note}! (Pontuação: ${challengeScore})`);
-    }, 1200);
-  }
-
-  $('#btn-keymode-free')?.addEventListener('click', () => setKeyboardMode('free'));
-  $('#btn-keymode-learn')?.addEventListener('click', () => setKeyboardMode('learn'));
-  $('#btn-keymode-challenge')?.addEventListener('click', () => setKeyboardMode('challenge'));
-
-  renderPianoKeys();
-
-  /* ==========================================================================
-     9. BATERIA & PADS DE PERCUSSÃO
-     ========================================================================== */
-
-  let drumDemoInterval = null;
-
-  function initDrums() {
-    const pads = $$('.drum-pad');
-    pads.forEach(pad => {
-      pad.addEventListener('click', () => {
-        const sound = pad.dataset.sound;
-        triggerDrumPad(sound, pad);
-      });
-    });
-  }
-
-  function triggerDrumPad(soundType, element = null) {
-    playDrumSound(soundType);
-    recordAudioEvent(soundType, 0);
-
-    const pad = element || $(`.drum-pad[data-sound="${soundType}"]`);
-    if (pad) {
-      pad.classList.add('active');
-      setTimeout(() => pad.classList.remove('active'), 150);
-    }
-  }
-
-  function playDrumDemo(shouldLoop = true) {
-    stopDrumDemo();
-    const demoBtn = $('#btn-play-demo-rhythm');
-    const stopBtn = $('#btn-stop-demo-rhythm');
-
-    if (demoBtn) demoBtn.hidden = true;
-    if (stopBtn) stopBtn.hidden = false;
-
-    const pattern = [
-      { type: 'kick', time: 0 },
-      { type: 'hihat', time: 0 },
-      { type: 'hihat', time: 250 },
-      { type: 'snare', time: 500 },
-      { type: 'hihat', time: 500 },
-      { type: 'hihat', time: 750 },
-      { type: 'kick', time: 1000 },
-      { type: 'tom', time: 1250 },
-      { type: 'snare', time: 1500 },
-      { type: 'crash', time: 1750 }
-    ];
-
-    function runPattern() {
-      pattern.forEach(step => {
-        setTimeout(() => {
-          if (demoBtn && demoBtn.hidden) {
-            playDrumSound(step.type);
-            const pad = $(`.drum-pad[data-sound="${step.type}"]`);
-            if (pad) {
-              pad.classList.add('active');
-              setTimeout(() => pad.classList.remove('active'), 120);
-            }
-          }
-        }, step.time);
-      });
-    }
-
-    runPattern();
-
-    if (shouldLoop) {
-      drumDemoInterval = setInterval(runPattern, 2000);
-    } else {
-      setTimeout(stopDrumDemo, 2000);
-    }
-
-    speakText('Demonstração de ritmo iniciada.');
-  }
-
-  function stopDrumDemo() {
-    if (drumDemoInterval) {
-      clearInterval(drumDemoInterval);
-      drumDemoInterval = null;
-    }
-
-    const demoBtn = $('#btn-play-demo-rhythm');
-    const stopBtn = $('#btn-stop-demo-rhythm');
-
-    if (demoBtn) demoBtn.hidden = false;
-    if (stopBtn) stopBtn.hidden = true;
-  }
-
-  $('#btn-play-demo-rhythm')?.addEventListener('click', () => playDrumDemo(true));
-  $('#btn-stop-demo-rhythm')?.addEventListener('click', stopDrumDemo);
-
-  initDrums();
-
-  /* ==========================================================================
-     10. MAPEAMENTO GLOBAL DE TECLADO FÍSICO (SEM CONFLITOS)
-     ========================================================================== */
-
-  window.addEventListener('keydown', (e) => {
-    // Evita atalhos se o usuário estiver digitando em inputs
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
-    if (e.repeat) return;
-
-    const key = e.key.toUpperCase();
-
-    // 1. Mapeamento da Bateria (A, S, D, F, G)
-    const drumPadsMap = {
-      'A': 'kick',
-      'S': 'snare',
-      'D': 'hihat',
-      'F': 'tom',
-      'G': 'crash'
-    };
-
-    if (drumPadsMap[key]) {
-      e.preventDefault();
-      triggerDrumPad(drumPadsMap[key]);
-      return;
-    }
-
-    // 2. Mapeamento do Piano (Z, X, C, V, B, N, M, K e sustenidos)
-    const pianoMatch = pianoKeysData.find(item => item.key === key);
-    if (pianoMatch) {
-      e.preventDefault();
-      triggerPianoKey(pianoMatch);
-    }
+  $('#hero-orb')?.addEventListener('click', () => {
+    playPianoNote(440, 1.8);
+    const caption = $('#hero-sound-caption');
+    if (caption) caption.textContent = '🔊 Ressonância emitida! O espaço visual respondeu ao tom.';
   });
 
   /* ==========================================================================
-     11. GRAVADOR & REPRODUÇÃO DO ESTÚDIO
+     7. VISUALIZADOR DE ÁUDIO REAL (CANVAS & ANALYSERNODE)
+     ========================================================================== */
+
+  const visualizerCanvas = $('#audio-visualizer-canvas');
+  let visualizerCtx = visualizerCanvas ? visualizerCanvas.getContext('2d') : null;
+  let visualizerAnimId = null;
+
+  function resizeVisualizerCanvas() {
+    if (!visualizerCanvas) return;
+    visualizerCanvas.width = visualizerCanvas.clientWidth || 600;
+    visualizerCanvas.height = visualizerCanvas.clientHeight || 180;
+  }
+  window.addEventListener('resize', resizeVisualizerCanvas);
+  resizeVisualizerCanvas();
+
+  function startVisualizer() {
+    if (!visualizerCtx || !analyser || visualizerAnimId) return;
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    function draw() {
+      visualizerAnimId = requestAnimationFrame(draw);
+      const isMotionReduced = body.getAttribute('data-motion-reduce') === 'true';
+
+      visualizerCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+
+      if (isMotionReduced) {
+        visualizerCtx.fillStyle = 'rgba(121, 82, 245, 0.2)';
+        visualizerCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+        return;
+      }
+
+      analyser.getByteFrequencyData(dataArray);
+
+      const width = visualizerCanvas.width;
+      const height = visualizerCanvas.height;
+      const barWidth = (width / bufferLength) * 2.5;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = (dataArray[i] / 255) * height;
+
+        const gradient = visualizerCtx.createLinearGradient(0, height, 0, 0);
+        gradient.addColorStop(0, '#7952f5');
+        gradient.addColorStop(1, '#00f2fe');
+
+        visualizerCtx.fillStyle = gradient;
+        visualizerCtx.fillRect(x, height - barHeight, barWidth, barHeight);
+
+        x += barWidth + 2;
+      }
+    }
+
+    draw();
+  }
+
+  function triggerVisualizerFeedback() {
+    const feedback = $('#visualizer-text-feedback');
+    if (feedback) {
+      feedback.textContent = '⚡ Frequências áudio-visuais em atividade';
+      clearTimeout(triggerVisualizerFeedback.timer);
+      triggerVisualizerFeedback.timer = setTimeout(() => {
+        feedback.textContent = 'Visualizador Áudio-Visual em Espera...';
+      }, 1500);
+    }
+  }
+
+  /* ==========================================================================
+     8. GRAVADOR & REPRODUÇÃO MULTI-TIMBRE
      ========================================================================== */
 
   let isRecording = false;
   let recordingStartTime = 0;
   let recordedEvents = [];
-  let playbackTimers = [];
-  let isPlayingBack = false;
 
   const btnRecord = $('#btn-record');
   const btnPlayRecording = $('#btn-play-recording');
   const btnClearRecording = $('#btn-clear-recording');
-  const recordingStatus = $('#recording-status-text');
+  const recordingStatusText = $('#recording-status-text');
 
-  function recordAudioEvent(type, detail) {
+  function recordAudioEvent(type, value) {
     if (!isRecording) return;
     const time = Date.now() - recordingStartTime;
-    recordedEvents.push({ type, detail, time });
+    recordedEvents.push({ time, type, value });
+    updateRecordingStatusUI();
   }
 
-  function toggleRecording() {
-    isRecording = !isRecording;
+  function updateRecordingStatusUI() {
+    if (!recordingStatusText) return;
+
     if (isRecording) {
+      recordingStatusText.textContent = `🔴 Gravando... (${recordedEvents.length} eventos registrados)`;
+    } else if (recordedEvents.length > 0) {
+      recordingStatusText.textContent = `✅ Gravação pronta: ${recordedEvents.length} notas/sons armazenados.`;
+    } else {
+      recordingStatusText.textContent = 'Nenhuma gravação armazenada.';
+    }
+
+    if (btnPlayRecording) btnPlayRecording.disabled = isRecording || recordedEvents.length === 0;
+    if (btnClearRecording) btnClearRecording.disabled = isRecording || recordedEvents.length === 0;
+  }
+
+  btnRecord?.addEventListener('click', () => {
+    if (!isRecording) {
+      isRecording = true;
       recordedEvents = [];
       recordingStartTime = Date.now();
       btnRecord.classList.add('recording');
       btnRecord.setAttribute('aria-pressed', 'true');
       btnRecord.innerHTML = '<span class="dot" aria-hidden="true"></span> Parar Gravação';
-      if (recordingStatus) recordingStatus.textContent = '🔴 Gravando sequência em tempo real...';
-      speakText('Gravação iniciada.');
+      speakText('Gravação iniciada. Toque o teclado ou a bateria.');
     } else {
+      isRecording = false;
       btnRecord.classList.remove('recording');
       btnRecord.setAttribute('aria-pressed', 'false');
       btnRecord.innerHTML = '<span class="dot" aria-hidden="true"></span> Gravar Sequência';
-
-      if (recordedEvents.length > 0) {
-        if (recordingStatus) recordingStatus.textContent = `🟢 Sequência armazenada: ${recordedEvents.length} eventos.`;
-        if (btnPlayRecording) btnPlayRecording.disabled = false;
-        if (btnClearRecording) btnClearRecording.disabled = false;
-        unlockAchievement('ach-creator');
-        speakText('Gravação concluída.');
-      } else {
-        if (recordingStatus) recordingStatus.textContent = 'Nenhuma nota registrada.';
-      }
+      speakText(`Gravação finalizada com ${recordedEvents.length} eventos.`);
+      if (recordedEvents.length > 0) unlockAchievement('ach-creator');
     }
-  }
-
-  function stopPlayback() {
-    playbackTimers.forEach(timer => clearTimeout(timer));
-    playbackTimers = [];
-    isPlayingBack = false;
-    if (btnPlayRecording) {
-      btnPlayRecording.disabled = recordedEvents.length === 0;
-      btnPlayRecording.textContent = '▶️ Reproduzir Gravação';
-    }
-  }
-
-  function playRecording() {
-    if (recordedEvents.length === 0) return;
-
-    stopPlayback();
-    isPlayingBack = true;
-
-    if (btnPlayRecording) {
-      btnPlayRecording.textContent = '⏹️ Parar Reprodução';
-    }
-    if (recordingStatus) recordingStatus.textContent = '▶️ Reproduzindo gravação...';
-
-    const maxTime = recordedEvents[recordedEvents.length - 1].time + 500;
-
-    recordedEvents.forEach(evt => {
-      const timer = setTimeout(() => {
-        if (!isPlayingBack) return;
-        if (['kick', 'snare', 'hihat', 'tom', 'crash'].includes(evt.type)) {
-          triggerDrumPad(evt.type);
-        } else {
-          playInstrumentSound(evt.type, evt.detail);
-        }
-      }, evt.time);
-      playbackTimers.push(timer);
-    });
-
-    const endTimer = setTimeout(() => {
-      stopPlayback();
-      if (recordingStatus) recordingStatus.textContent = 'Reprodução concluída.';
-    }, maxTime);
-
-    playbackTimers.push(endTimer);
-  }
-
-  function clearRecording() {
-    stopPlayback();
-    recordedEvents = [];
-    if (btnPlayRecording) btnPlayRecording.disabled = true;
-    if (btnClearRecording) btnClearRecording.disabled = true;
-    if (recordingStatus) recordingStatus.textContent = 'Nenhuma gravação armazenada.';
-    speakText('Gravação limpa.');
-  }
-
-  btnRecord?.addEventListener('click', toggleRecording);
-  btnPlayRecording?.addEventListener('click', () => {
-    if (isPlayingBack) {
-      stopPlayback();
-      if (recordingStatus) recordingStatus.textContent = 'Reprodução interrompida.';
-    } else {
-      playRecording();
-    }
+    updateRecordingStatusUI();
   });
-  btnClearRecording?.addEventListener('click', clearRecording);
+
+  btnPlayRecording?.addEventListener('click', () => {
+    if (recordedEvents.length === 0) return;
+    speakText('Reproduzindo gravação...');
+
+    recordedEvents.forEach(event => {
+      setTimeout(() => {
+        if (['kick', 'snare', 'hihat', 'tom', 'crash'].includes(event.type)) {
+          playInstrumentSound(event.type);
+          highlightDrumPad(event.type);
+        } else {
+          playPianoNote(event.value);
+          highlightPianoKey(event.value);
+        }
+      }, event.time);
+    });
+  });
+
+  btnClearRecording?.addEventListener('click', () => {
+    recordedEvents = [];
+    updateRecordingStatusUI();
+    speakText('Gravação limpa.');
+  });
 
   /* ==========================================================================
-     12. METRÔNOMO
+     9. METRÔNOMO
      ========================================================================== */
 
-  let metronomeInterval = null;
-  let isMetronomeActive = false;
+  let metronomeActive = false;
+  let metronomeTimer = null;
   let bpm = 120;
 
   const btnMetronome = $('#btn-toggle-metronome');
@@ -1293,75 +973,333 @@ document.addEventListener('DOMContentLoaded', () => {
   const bpmInput = $('#metronome-bpm');
   const bpmDisplay = $('#bpm-display');
 
-  function playMetronomeClick() {
-    if (!initAudio()) return;
-    const now = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
+  function tickMetronome() {
+    if (!metronomeActive) return;
+    if (initAudio()) {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
 
-    osc.frequency.setValueAtTime(1000, now);
-    gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1000, now);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
 
-    osc.connect(gain);
-    gain.connect(masterGain);
-    osc.start(now);
-    osc.stop(now + 0.06);
-  }
-
-  function toggleMetronome() {
-    isMetronomeActive = !isMetronomeActive;
-    btnMetronome?.setAttribute('aria-pressed', String(isMetronomeActive));
-
-    if (isMetronomeActive) {
-      if (metronomeStatus) metronomeStatus.textContent = 'Ligado';
-      startMetronome();
-      speakText('Metrônomo ligado.');
-    } else {
-      if (metronomeStatus) metronomeStatus.textContent = 'Desligado';
-      stopMetronome();
-      speakText('Metrônomo desligado.');
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.06);
     }
   }
 
   function startMetronome() {
     stopMetronome();
-    const intervalMs = (60 / bpm) * 1000;
-    playMetronomeClick();
-    metronomeInterval = setInterval(playMetronomeClick, intervalMs);
+    metronomeActive = true;
+    if (metronomeStatus) metronomeStatus.textContent = 'Ligado';
+    if (btnMetronome) btnMetronome.setAttribute('aria-pressed', 'true');
+
+    const interval = (60 / bpm) * 1000;
+    tickMetronome();
+    metronomeTimer = setInterval(tickMetronome, interval);
   }
 
   function stopMetronome() {
-    if (metronomeInterval) {
-      clearInterval(metronomeInterval);
-      metronomeInterval = null;
+    metronomeActive = false;
+    if (metronomeTimer) {
+      clearInterval(metronomeTimer);
+      metronomeTimer = null;
+    }
+    if (metronomeStatus) metronomeStatus.textContent = 'Desligado';
+    if (btnMetronome) btnMetronome.setAttribute('aria-pressed', 'false');
+  }
+
+  btnMetronome?.addEventListener('click', () => {
+    if (metronomeActive) {
+      stopMetronome();
+      speakText('Metrônomo desligado.');
+    } else {
+      startMetronome();
+      speakText(`Metrônomo ligado em ${bpm} BPM.`);
+    }
+  });
+
+  bpmInput?.addEventListener('input', (e) => {
+    bpm = Number(e.target.value);
+    if (bpmDisplay) bpmDisplay.textContent = `${bpm} BPM`;
+    if (metronomeActive) startMetronome();
+  });
+
+  /* ==========================================================================
+     10. TECLADO MUSICAL ACESSÍVEL
+     ========================================================================== */
+
+  const pianoKeysData = [
+    { note: 'C4', label: 'Dó', freq: 261.63, key: 'C', isBlack: false },
+    { note: 'C#4', label: 'Dó#', freq: 277.18, key: 'V', isBlack: true },
+    { note: 'D4', label: 'Ré', freq: 293.66, key: 'D', isBlack: false },
+    { note: 'D#4', label: 'Ré#', freq: 311.13, key: 'G', isBlack: true },
+    { note: 'E4', label: 'Mi', freq: 329.63, key: 'E', isBlack: false },
+    { note: 'F4', label: 'Fá', freq: 349.23, key: 'F', isBlack: false },
+    { note: 'F#4', label: 'Fá#', freq: 369.99, key: 'T', isBlack: true },
+    { note: 'G4', label: 'Sol', freq: 392.00, key: 'G', isBlack: false },
+    { note: 'G#4', label: 'Sol#', freq: 415.30, key: 'Y', isBlack: true },
+    { note: 'A4', label: 'Lá', freq: 440.00, key: 'A', isBlack: false },
+    { note: 'A#4', label: 'Lá#', freq: 466.16, key: 'U', isBlack: true },
+    { note: 'B4', label: 'Si', freq: 493.88, key: 'B', isBlack: false },
+    { note: 'C5', label: 'Dó Agudo', freq: 523.25, key: 'K', isBlack: false }
+  ];
+
+  let currentKeyboardMode = 'free'; // free, learn, challenge
+  let learnIndex = 0;
+  const learnSequence = ['C4', 'E4', 'G4', 'C5'];
+
+  const keysWrapper = $('#piano-keys-wrapper');
+  const notesDisplay = $('#keyboard-notes-display');
+  const guideBanner = $('#keyboard-guide-banner');
+  const guideText = $('#keyboard-guide-text');
+
+  function renderPianoKeys() {
+    if (!keysWrapper) return;
+    keysWrapper.innerHTML = '';
+
+    pianoKeysData.forEach(item => {
+      const keyBtn = document.createElement('button');
+      keyBtn.className = `piano-key ${item.isBlack ? 'black' : 'white'}`;
+      keyBtn.dataset.freq = item.freq;
+      keyBtn.dataset.note = item.note;
+      keyBtn.setAttribute('aria-label', `Nota ${item.label} (${item.note}), tecla ${item.key}`);
+
+      keyBtn.innerHTML = `
+        <span class="key-note-label">${item.label}</span>
+        <span class="key-shortcut">${item.key}</span>
+      `;
+
+      keyBtn.addEventListener('click', () => triggerPianoKey(item));
+      keysWrapper.appendChild(keyBtn);
+    });
+  }
+
+  function triggerPianoKey(item) {
+    playPianoNote(item.freq);
+    recordAudioEvent('piano', item.freq);
+
+    if (notesDisplay) {
+      notesDisplay.textContent = `Nota tocada: ${item.label} (${item.note})`;
+    }
+
+    highlightPianoKey(item.freq);
+
+    // Lógica do Modo Aprender
+    if (currentKeyboardMode === 'learn') {
+      const targetNote = learnSequence[learnIndex];
+      if (item.note === targetNote) {
+        learnIndex++;
+        if (learnIndex >= learnSequence.length) {
+          learnIndex = 0;
+          if (guideText) guideText.textContent = '🎉 Excelente! Você completou a sequência melódica!';
+          speakText('Excelente! Você completou a sequência melódica!');
+          unlockAchievement('ach-melody');
+        } else {
+          const nextNote = pianoKeysData.find(k => k.note === learnSequence[learnIndex]);
+          if (guideText) guideText.textContent = `Muito bem! Próxima nota: ${nextNote.label} (${nextNote.note})`;
+        }
+      }
     }
   }
 
-  btnMetronome?.addEventListener('click', toggleMetronome);
+  function highlightPianoKey(freq) {
+    const btn = $(`button[data-freq="${freq}"]`, keysWrapper);
+    if (!btn) return;
+    btn.classList.add('active');
+    setTimeout(() => btn.classList.remove('active'), 200);
+  }
 
-  bpmInput?.addEventListener('input', (e) => {
-    bpm = clamp(Number(e.target.value), 40, 200);
-    if (bpmDisplay) bpmDisplay.textContent = `${bpm} BPM`;
-    if (isMetronomeActive) {
-      startMetronome();
+  // Modos do Teclado
+  $('#btn-keymode-free')?.addEventListener('click', (e) => setKeyboardMode('free', e.target));
+  $('#btn-keymode-learn')?.addEventListener('click', (e) => setKeyboardMode('learn', e.target));
+  $('#btn-keymode-challenge')?.addEventListener('click', (e) => setKeyboardMode('challenge', e.target));    function setKeyboardMode(mode, targetBtn) {     currentKeyboardMode = mode;     $$('.mode-tab').forEach(tab => {
+      tab.classList.remove('active');
+      tab.setAttribute('aria-selected', 'false');
+    });
+
+    targetBtn.classList.add('active');
+    targetBtn.setAttribute('aria-selected', 'true');
+
+    if (guideBanner) {
+      if (mode === 'learn') {
+        guideBanner.hidden = false;
+        learnIndex = 0;
+        const note = pianoKeysData.find(k => k.note === learnSequence[0]);
+        if (guideText) guideText.textContent = `Modo Aprender: Toque a nota ${note.label} (${note.note})`;
+        speakText('Modo Aprender ativado.');
+      } else if (mode === 'challenge') {
+        guideBanner.hidden = false;
+        if (guideText) guideText.textContent = 'Modo Desafio: Crie sua própria melodia usando a memória e intuição!';
+        speakText('Modo Desafio ativado.');
+      } else {
+        guideBanner.hidden = true;
+        speakText('Modo Livre ativado.');
+      }
+    }
+  }
+
+  renderPianoKeys();
+
+  /* ==========================================================================
+     11. BATERIA & PADS DE PERCUSSÃO
+     ========================================================================== */
+
+  const drumPads = $$('.drum-pad');
+  let drumDemoInterval = null;
+
+  function triggerDrumSound(soundType) {
+    unlockAchievement('ach-rhythm');
+    playInstrumentSound(soundType);
+    highlightDrumPad(soundType);
+  }
+
+  function highlightDrumPad(soundType) {
+    const pad = $(`.drum-pad[data-sound="${soundType}"]`);
+    if (!pad) return;
+    pad.classList.add('active');
+    setTimeout(() => pad.classList.remove('active'), 150);
+  }
+
+  drumPads.forEach(pad => {
+    pad.addEventListener('click', () => {
+      const sound = pad.dataset.sound;
+      triggerDrumSound(sound);
+    });
+  });
+
+  // Demonstração Rítmica
+  const btnPlayDemo = $('#btn-play-demo-rhythm');
+  const btnStopDemo = $('#btn-stop-demo-rhythm');
+
+  function playDrumDemo() {
+    stopDrumDemo();
+    let step = 0;
+    if (btnPlayDemo) btnPlayDemo.hidden = true;
+    if (btnStopDemo) btnStopDemo.hidden = false;
+
+    drumDemoInterval = setInterval(() => {
+      if (step % 2 === 0) triggerDrumSound('kick');
+      if (step % 4 === 2) triggerDrumSound('snare');
+      triggerDrumSound('hihat');
+      step = (step + 1) % 8;
+    }, 250);
+  }
+
+  function stopDrumDemo() {
+    if (drumDemoInterval) {
+      clearInterval(drumDemoInterval);
+      drumDemoInterval = null;
+    }
+    if (btnPlayDemo) btnPlayDemo.hidden = false;
+    if (btnStopDemo) btnStopDemo.hidden = true;
+  }
+
+  btnPlayDemo?.addEventListener('click', playDrumDemo);
+  btnStopDemo?.addEventListener('click', stopDrumDemo);
+
+  /* Mapeamento de Teclado Global (Sem Conflitos) */
+  window.addEventListener('keydown', (e) => {
+    if (e.repeat || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    const key = e.key.toUpperCase();
+
+    // Bateria (A, S, D, F, G)
+    const drumPad = $(`.drum-pad[data-key="${key}"]`);
+    if (drumPad) {
+      triggerDrumSound(drumPad.dataset.sound);
+      return;
+    }
+
+    // Teclado Piano
+    const pianoItem = pianoKeysData.find(k => k.key === key);
+    if (pianoItem) {
+      triggerPianoKey(pianoItem);
     }
   });
 
   /* ==========================================================================
-     13. CATÁLOGO & MODAL ACESSÍVEL
+     12. PERFIL MUSICAL & MAPEAMENTO SENSORIAL
      ========================================================================== */
 
-  let activeModalTrigger = null;
+  const moodBtns = $$('.mood-btn');
+  const discoveryQuizStep = $('#discovery-quiz-step');
+  const discoveryResultStep = $('#discovery-result-step');
+  const discoveryProfileTitle = $('#discovery-profile-title');
+  const discoveryProfileDesc = $('#discovery-profile-desc');
+  const discoveryRecList = $('#discovery-recommendations-list');
+  const btnRestartDiscovery = $('#btn-restart-discovery');
+
+  const moodProfiles = {
+    calm: {
+      title: 'Perfil Orgânico & Tranquilo',
+      desc: 'Sua sensibilidade busca paz, fluidez e sons quentes e acolhedores.',
+      recs: ['🎸 Violão', '🎻 Violino']
+    },
+    energetic: {
+      title: 'Perfil Pulsante & Rítmico',
+      desc: 'Você se move através da energia, da presença marcante e da percussão vibrante.',
+      recs: ['🥁 Bateria', '🎹 Teclado']
+    },
+    creative: {
+      title: 'Perfil Melódico & Dinâmico',
+      desc: 'Sua mente explora harmonias ricas, estruturas versáteis e combinações sonoras.',
+      recs: ['🎹 Teclado', '🎸 Violão']
+    },
+    curious: {
+      title: 'Perfil Expressivo & Nuanceado',
+      desc: 'Você aprecia a profundidade clássica, a dinâmica do arco e a expressividade.',
+      recs: ['🎻 Violino', '🎹 Teclado']
+    }
+  };
+
+  moodBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mood = btn.dataset.mood;
+      const profile = moodProfiles[mood] || moodProfiles.calm;
+
+      if (discoveryProfileTitle) discoveryProfileTitle.textContent = profile.title;
+      if (discoveryProfileDesc) discoveryProfileDesc.textContent = profile.desc;
+
+      if (discoveryRecList) {
+        discoveryRecList.innerHTML = profile.recs
+          .map(rec => `<div class="rec-item">${escapeHTML(rec)}</div>`)
+          .join('');
+      }
+
+      if (discoveryQuizStep) discoveryQuizStep.hidden = true;
+      if (discoveryResultStep) discoveryResultStep.hidden = false;
+
+      unlockAchievement('ach-explorer');
+      speakText(`Seu perfil: ${profile.title}. ${profile.desc}`);
+    });
+  });
+
+  btnRestartDiscovery?.addEventListener('click', () => {
+    if (discoveryQuizStep) discoveryQuizStep.hidden = false;
+    if (discoveryResultStep) discoveryResultStep.hidden = true;
+  });
+
+  /* ==========================================================================
+     13. CATÁLOGO DE INSTRUMENTOS & MODAL ACESSÍVEL
+     ========================================================================== */
+
+  const catalogGrid = $('#catalog-grid');   const filterBtns = $$('.filter-btn');
+  const instrumentModal = $('#instrument-modal');
+  const modalContentBody = $('#modal-content-body');
+  let lastActiveElement = null;
 
   function renderCatalog(filter = 'all') {
-    const grid = $('#catalog-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
+    if (!catalogGrid) return;
+    catalogGrid.innerHTML = '';
 
     const filtered = filter === 'all'
       ? instrumentsData
-      : instrumentsData.filter(item => item.category === filter);
+      : instrumentsData.filter(i => i.category === filter);
 
     filtered.forEach(inst => {
       const card = document.createElement('article');
@@ -1373,361 +1311,257 @@ document.addEventListener('DOMContentLoaded', () => {
           <p>${escapeHTML(inst.desc)}</p>
         </div>
         <div class="instrument-card-actions">
-          <button class="pill-btn highlight btn-listen" type="button" data-id="${inst.id}">🔊 Ouvir Som</button>
-          <button class="pill-btn outline btn-details" type="button" data-id="${inst.id}">📖 Detalhes</button>
+          <button class="pill-btn highlight btn-listen-inst" data-id="${inst.id}">🔊 Ouvir Som</button>
+          <button class="pill-btn outline btn-details-inst" data-id="${inst.id}">ℹ️ Detalhes</button>
         </div>
       `;
+      catalogGrid.appendChild(card);
+    });
 
-      card.querySelector('.btn-listen').addEventListener('click', () => {
-        playInstrumentSound(inst.soundType, inst.freq);
+    $$('.btn-listen-inst', catalogGrid).forEach(btn => {       btn.addEventListener('click', () => {         const inst = instrumentsData.find(i => i.id === btn.dataset.id);         if (inst) playInstrumentSound(inst.soundType, inst.freq);       });     });      $$
+('.btn-details-inst', catalogGrid).forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        lastActiveElement = e.target;
+        const inst = instrumentsData.find(i => i.id === btn.dataset.id);
+        if (inst) openInstrumentModal(inst);
       });
-
-      card.querySelector('.btn-details').addEventListener('click', (e) => {
-        activeModalTrigger = e.currentTarget;
-        openInstrumentModal(inst);
-      });
-
-      grid.appendChild(card);
     });
   }
 
-  function openInstrumentModal(inst) {
-    const dialog = $('#instrument-modal');
-    const body = $('#modal-content-body');
-    if (!dialog || !body) return;
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+      renderCatalog(btn.dataset.filter);
+    });
+  });
 
-    body.innerHTML = `
+  function openInstrumentModal(inst) {
+    if (!instrumentModal || !modalContentBody) return;
+
+    modalContentBody.innerHTML = `
       <div class="modal-header">
+        <span class="badge">${escapeHTML(inst.categoryLabel)}</span>
         <h3 id="modal-title">${escapeHTML(inst.name)}</h3>
-        <button class="close-modal-btn" type="button" id="btn-close-modal" aria-label="Fechar modal">&times;</button>
+        <button class="close-modal-btn" id="btn-close-modal" aria-label="Fechar janela de detalhes">✕</button>
       </div>
       <div class="modal-body">
-        <p><strong>Categoria:</strong> ${escapeHTML(inst.categoryLabel)}</p>
         <p><strong>Descrição:</strong> ${escapeHTML(inst.desc)}</p>
-        <p><strong>História e Contexto:</strong> ${escapeHTML(inst.history)}</p>
-        <div style="margin-top: 1.5rem;">
-          <button class="btn-primary" type="button" id="btn-modal-listen">🔊 Ouvir Demonstrativo</button>
-        </div>
+        <p><strong>História & Origem:</strong> ${escapeHTML(inst.history)}</p>
+      </div>
+      <div class="modal-actions" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+        <button class="pill-btn highlight" id="btn-modal-listen">🔊 Ouvir Demonstração</button>
+        <button class="pill-btn outline" id="btn-modal-close-action">Fechar</button>
       </div>
     `;
 
-    if (typeof dialog.showModal === 'function') {
-      dialog.showModal();
-    } else {
-      dialog.hidden = false;
-    }
+    instrumentModal.showModal();
 
-    const closeBtn = $('#btn-close-modal', body);
-    closeBtn?.focus();
+    const btnClose = $('#btn-close-modal', modalContentBody);
+    const btnCloseAction = $('#btn-modal-close-action', modalContentBody);
+    const btnListen = $('#btn-modal-listen', modalContentBody);
 
-    closeBtn?.addEventListener('click', closeInstrumentModal);
-    $('#btn-modal-listen', body)?.addEventListener('click', () => {
-      playInstrumentSound(inst.soundType, inst.freq);
-    });
+    const closeModal = () => {
+      instrumentModal.close();
+      if (lastActiveElement) lastActiveElement.focus();
+    };
+
+    btnClose?.addEventListener('click', closeModal);
+    btnCloseAction?.addEventListener('click', closeModal);
+    btnListen?.addEventListener('click', () => playInstrumentSound(inst.soundType, inst.freq));
+
+    instrumentModal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    }, { once: true });
   }
 
-  function closeInstrumentModal() {
-    const dialog = $('#instrument-modal');
-    if (!dialog) return;
-
-    if (typeof dialog.close === 'function') {
-      dialog.close();
-    } else {
-      dialog.hidden = true;
-    }
-
-    if (activeModalTrigger) {
-      activeModalTrigger.focus();
-      activeModalTrigger = null;
-    }
-  }
-
-  $('#instrument-modal')?.addEventListener('keydown', (e) => {     if (e.key === 'Escape') {       closeInstrumentModal();     }   });    $$('.catalog-filters .filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      $$('.catalog-filters .filter-btn').forEach(b => {         b.classList.remove('active');         b.setAttribute('aria-pressed', 'false');       });       btn.classList.add('active');       btn.setAttribute('aria-pressed', 'true');       renderCatalog(btn.dataset.filter);     });   });    renderCatalog();    /* ==========================================================================      14. MAPEAMENTO SENSORIAL (PERFIL MUSICAL)      ========================================================================== */    $$
-('.mood-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const mood = btn.dataset.mood;
-      showDiscoveryResult(mood);
-      unlockAchievement('ach-explorer');
-    });
-  });
-
-  function showDiscoveryResult(mood) {
-    const quizStep = $('#discovery-quiz-step');
-    const resultStep = $('#discovery-result-step');
-    const title = $('#discovery-profile-title');
-    const desc = $('#discovery-profile-desc');
-    const list = $('#discovery-recommendations-list');
-
-    if (!quizStep || !resultStep || !title || !desc || !list) return;
-
-    quizStep.hidden = true;
-    resultStep.hidden = false;
-    list.innerHTML = '';
-
-    let profileName = 'Harmonioso e Inclusivo';
-    let profileDescText = 'Você aprecia a música como um refúgio de expressão e equilíbrio.';
-    let recs = ['Violão', 'Teclado'];
-
-    if (mood === 'calm') {
-      profileName = 'Sereno e Introspectivo';
-      profileDescText = 'Sua sintonia busca a paz, timbres aveludados e atmosferas calmas.';
-      recs = ['Violão', 'Violino'];
-    } else if (mood === 'energetic') {
-      profileName = 'Pulsante e Dinâmico';
-      profileDescText = 'Você se move através da energia, ritmo marcante e batidas forte.';
-      recs = ['Bateria', 'Teclado'];
-    } else if (mood === 'creative') {
-      profileName = 'Criativo e Harmônico';
-      profileDescText = 'Sua mente busca arranjos ricos, novas estruturas e descobertas.';
-      recs = ['Teclado', 'Violão'];
-    } else if (mood === 'curious') {
-      profileName = 'Expressivo e Clássico';
-      profileDescText = 'Você se conecta com emoções profundas, nuances e timbres eruditos.';
-      recs = ['Violino', 'Teclado'];
-    }
-
-    title.textContent = `Perfil ${profileName}`;
-    desc.textContent = profileDescText;
-
-    recs.forEach(r => {
-      const div = document.createElement('div');
-      div.className = 'rec-item';
-      div.textContent = `✨ ${r}`;
-      list.appendChild(div);
-    });
-
-    speakText(`Seu perfil musical é ${profileName}.`);
-  }
-
-  $('#btn-restart-discovery')?.addEventListener('click', () => {
-    const quizStep = $('#discovery-quiz-step');
-    const resultStep = $('#discovery-result-step');
-    if (quizStep) quizStep.hidden = false;
-    if (resultStep) resultStep.hidden = true;
-  });
+  renderCatalog();
 
   /* ==========================================================================
-     15. QUIZ MUSICAL (8 PERGUNTAS)
+     14. QUIZ MUSICAL DE APRENDIZADO (8 PERGUNTAS)
      ========================================================================== */
 
   const quizQuestions = [
     {
-      q: "1. Como você prefere que a música comece em uma canção?",
-      options: [
-        { text: "Com uma melodia suave de cordas", inst: "violao" },
-        { text: "Com um ritmo marcante e envolvente", inst: "bateria" },
-        { text: "Com harmonias ricas e acordes encorpados", inst: "teclado" },
-        { text: "Com um solo expressivo e emocionante", inst: "violino" }
+      q: 'Qual família de instrumentos produz som através da vibração de cordas?',
+      opts: [
+        { text: '🎸 Cordas (Violão, Violino)', points: 'cordas' },
+        { text: '🥁 Percussão (Bateria)', points: 'percussao' },
+        { text: '🎹 Teclas (Teclado)', points: 'teclas' }
       ]
     },
     {
-      q: "2. Qual sensação você busca ao ouvir ou criar som?",
-      options: [
-        { text: "Achei aconchego e tranquilidade", inst: "violao" },
-        { text: "Vontade de dançar e me mexer", inst: "bateria" },
-        { text: "Sensação de exploração e amplitude", inst: "teclado" },
-        { text: "Conexão emocional profunda", inst: "violino" }
+      q: 'Se você quer marcar o ritmo e a batida principal de uma música, qual escolhe?',
+      opts: [
+        { text: '🥁 Bateria', points: 'percussao' },
+        { text: '🎻 Violino', points: 'cordas' },
+        { text: '🎹 Teclado', points: 'teclas' }
       ]
     },
     {
-      q: "3. Qual dessas atividades descreve melhor sua criatividade?",
-      options: [
-        { text: "Dedilhar ideias sem pressa ao ar livre", inst: "violao" },
-        { text: "Marcar o tempo e organizar o fluxo do grupo", inst: "bateria" },
-        { text: "Construir arranjos e combinar timbres", inst: "teclado" },
-        { text: "Interpretar melodia com delicadeza e precisão", inst: "violino" }
+      q: 'Qual destes instrumentos utiliza um arco com crina de cavalo para friccionar suas cordas?',
+      opts: [
+        { text: '🎻 Violino', points: 'cordas' },
+        { text: '🎸 Violão', points: 'cordas' },
+        { text: '🎹 Teclado', points: 'teclas' }
       ]
     },
     {
-      q: "4. Se você estivesse em um grupo musical, qual seria seu papel?",
-      options: [
-        { text: "A harmonia de apoio acolhedora", inst: "violao" },
-        { text: "O motor e a base do ritmo", inst: "bateria" },
-        { text: "O arquiteto dos sons do grupo", inst: "teclado" },
-        { text: "A voz solista de destaque", inst: "violino" }
+      q: 'O teclado musical permite tocar notas graves e agudas simultaneamente com facilidade?',
+      opts: [
+        { text: 'Sim, é ideal para harmonia e melodia', points: 'teclas' },
+        { text: 'Não, só toca uma nota de cada vez', points: 'percussao' }
       ]
     },
     {
-      q: "5. Que tipo de textura sonora te fascina?",
-      options: [
-        { text: "Madeira e cordas naturais", inst: "violao" },
-        { text: "Impacto, graves e pratos reluzentes", inst: "bateria" },
-        { text: "Versatilidade digital e sintética", inst: "teclado" },
-        { text: "O atrito do arco gerando notas sustentadas", inst: "violino" }
+      q: 'Qual instrumento é símbolo tradicional da Bossa Nova e do MPB nas praias brasileiras?',
+      opts: [
+        { text: '🎸 Violão', points: 'cordas' },
+        { text: '🥁 Bateria', points: 'percussao' },
+        { text: '🎻 Violino', points: 'cordas' }
       ]
     },
     {
-      q: "6. Como você lida com o aprendizado de um novo instrumento?",
-      options: [
-        { text: "Gosto de praticar de forma relaxada", inst: "violao" },
-        { text: "Gosto de coordenação e energia física", inst: "bateria" },
-        { text: "Prefiro entender a teoria e visual das notas", inst: "teclado" },
-        { text: "Tenho paciência para dominar a técnica precisa", inst: "violino" }
+      q: 'Para criar um som de impacto explosivo no final de uma virada musical, usamos:',
+      opts: [
+        { text: '🥁 Prato de Ataque (Crash) da Bateria', points: 'percussao' },
+        { text: '🎸 Uma corda solta do Violão', points: 'cordas' },
+        { text: '🎹 Tecla central do teclado', points: 'teclas' }
       ]
     },
     {
-      q: "7. Qual ambiente te inspira mais a fazer som?",
-      options: [
-        { text: "Uma roda de amigos ao entardecer", inst: "violao" },
-        { text: "Um palco vibrante e cheio de energia", inst: "bateria" },
-        { text: "Um estúdio moderno cheio de recursos", inst: "teclado" },
-        { text: "Um teatro com acústica impecável", inst: "violino" }
+      q: 'Qual instrumento é fundamental em uma orquestra sinfônica para conduzir temas dramáticos?',
+      opts: [
+        { text: '🎻 Violino', points: 'cordas' },
+        { text: '🎸 Violão elétrico', points: 'cordas' },
+        { text: '🥁 Caixas de marcha', points: 'percussao' }
       ]
     },
     {
-      q: "8. Para você, a música é principalmente...",
-      options: [
-        { text: "Companhia e expressão pessoal", inst: "violao" },
-        { text: "Movimento e energia contagiante", inst: "bateria" },
-        { text: "Universo Infinito de combinações", inst: "teclado" },
-        { text: "A arte de tocar a alma do ouvinte", inst: "violino" }
+      q: 'O que a Bateria, o Teclado, o Violão e o Violino têm em comum no Sonora?',
+      opts: [
+        { text: 'Todos são inclusivos, acessíveis e expressivos!', points: 'todos' },
+        { text: 'São exatamente os mesmos sons', points: 'nenhum' }
       ]
     }
   ];
 
   let quizCurrentIndex = 0;
-  const quizScores = { violao: 0, teclado: 0, bateria: 0, violino: 0 };
+  let quizScores = { cordas: 0, teclas: 0, percussao: 0 };
+
+  const quizCard = $('#quiz-question-card');
+  const quizResultCard = $('#quiz-result-card');
+  const quizText = $('#quiz-question-text');
+  const quizOptionsContainer = $('#quiz-options-container');
+  const quizCounter = $('#quiz-counter');
+  const quizProgressFill = $('#quiz-progress-fill');
+  const btnRestartQuiz = $('#btn-restart-quiz');
 
   function renderQuizQuestion() {
-    const questionText = $('#quiz-question-text');
-    const optionsContainer = $('#quiz-options-container');
-    const counter = $('#quiz-counter');
-    const progressFill = $('#quiz-progress-fill');
-    const progressBar = $('.quiz-progress-bar');
-
-    if (!questionText || !optionsContainer) return;
-
-    const current = quizQuestions[quizCurrentIndex];
-    questionText.textContent = current.q;
-    if (counter) counter.textContent = `Pergunta ${quizCurrentIndex + 1} de ${quizQuestions.length}`;
-
-    const percent = Math.round(((quizCurrentIndex) / quizQuestions.length) * 100);
-    if (progressFill) progressFill.style.width = `${percent}%`;
-    if (progressBar) progressBar.setAttribute('aria-valuenow', percent);
-
-    optionsContainer.innerHTML = '';
-    current.options.forEach(opt => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'quiz-opt-btn';
-      btn.textContent = opt.text;
-      btn.addEventListener('click', () => {
-        quizScores[opt.inst]++;
-        quizCurrentIndex++;
-        if (quizCurrentIndex < quizQuestions.length) {
-          renderQuizQuestion();
-        } else {
-          showQuizResult();
-        }
-      });
-      optionsContainer.appendChild(btn);
-    });
-  }
-
-  function showQuizResult() {
-    const questionCard = $('#quiz-question-card');
-    const resultCard = $('#quiz-result-card');
-    const resultText = $('#quiz-result-text');
-    const previewContainer = $('#quiz-result-instrument-preview');
-    const progressFill = $('#quiz-progress-fill');
-
-    if (!questionCard || !resultCard) return;
-
-    if (progressFill) progressFill.style.width = '100%';
-
-    questionCard.hidden = true;
-    resultCard.hidden = false;
-
-    // Determina o vencedor garantindo tratamento de empates estável
-    let topInstId = 'teclado';
-    let maxScore = -1;
-
-    Object.keys(quizScores).forEach(instId => {
-      if (quizScores[instId] > maxScore) {
-        maxScore = quizScores[instId];
-        topInstId = instId;
-      }
-    });
-
-    const winner = instrumentsData.find(i => i.id === topInstId) || instrumentsData[1];
-
-    if (resultText) {
-      resultText.textContent = `Sua maior afinidade sonora é com o(a) ${winner.name}! ${winner.desc}`;
+    if (quizCurrentIndex >= quizQuestions.length) {
+      showQuizResults();
+      return;
     }
 
-    if (previewContainer) {
-      previewContainer.innerHTML = `
-        <div class="rec-item" style="text-align:center; padding:1.5rem;">
-          <h4>${escapeHTML(winner.name)}</h4>
-          <p style="margin: 0.5rem 0;">${escapeHTML(winner.categoryLabel)}</p>
-          <button class="pill-btn highlight" type="button" id="btn-quiz-play-win">🔊 Testar Som do ${escapeHTML(winner.name)}</button>
+    const qData = quizQuestions[quizCurrentIndex];
+    if (quizText) quizText.textContent = qData.q;
+    if (quizCounter) quizCounter.textContent = `Pergunta ${quizCurrentIndex + 1} de ${quizQuestions.length}`;
+
+    const progressPct = Math.round(((quizCurrentIndex) / quizQuestions.length) * 100);
+    if (quizProgressFill) quizProgressFill.style.width = `${progressPct}%`;
+
+    if (quizOptionsContainer) {
+      quizOptionsContainer.innerHTML = '';
+      qData.opts.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-opt-btn';
+        btn.textContent = opt.text;
+        btn.addEventListener('click', () => {
+          if (opt.points && quizScores[opt.points] !== undefined) {
+            quizScores[opt.points]++;
+          }
+          quizCurrentIndex++;
+          renderQuizQuestion();
+        });
+        quizOptionsContainer.appendChild(btn);
+      });
+    }
+  }
+
+  function showQuizResults() {
+    if (quizCard) quizCard.hidden = true;
+    if (quizResultCard) quizResultCard.hidden = false;
+    if (quizProgressFill) quizProgressFill.style.width = '100%';
+
+    let topCategory = 'cordas';
+    if (quizScores.teclas > quizScores[topCategory]) topCategory = 'teclas';
+    if (quizScores.percussao > quizScores[topCategory]) topCategory = 'percussao';
+
+    const matchInst = instrumentsData.find(i => i.category === topCategory) || instrumentsData[0];
+
+    const resultTitle = $('#quiz-result-title');
+    const resultText = $('#quiz-result-text');
+    const resultPreview = $('#quiz-result-instrument-preview');
+
+    if (resultTitle) resultTitle.textContent = `Sua maior afinidade: ${matchInst.name}!`;
+    if (resultText) resultText.textContent = `Com base nas suas respostas, você demonstra forte sintonia com a família de ${matchInst.categoryLabel}.`;
+
+    if (resultPreview) {
+      resultPreview.innerHTML = `
+        <div class="rec-item" style="margin-top: 1rem;">
+          <h4>${escapeHTML(matchInst.name)}</h4>
+          <p>${escapeHTML(matchInst.desc)}</p>
+          <button class="pill-btn highlight" id="btn-quiz-play-match" style="margin-top: 0.5rem;">🔊 Ouvir ${escapeHTML(matchInst.name)}</button>
         </div>
       `;
 
-      $('#btn-quiz-play-win')?.addEventListener('click', () => {
-        playInstrumentSound(winner.soundType, winner.freq);
+      $('#btn-quiz-play-match')?.addEventListener('click', () => {
+        playInstrumentSound(matchInst.soundType, matchInst.freq);
       });
     }
 
-    speakText(`Resultado do quiz: Seu instrumento ideal é ${winner.name}.`);
+    speakText(`Resultado do quiz: Sua maior afinidade é o ${matchInst.name}.`);
   }
 
-  $('#btn-restart-quiz')?.addEventListener('click', () => {
+  btnRestartQuiz?.addEventListener('click', () => {
     quizCurrentIndex = 0;
-    Object.keys(quizScores).forEach(k => quizScores[k] = 0);
-    const questionCard = $('#quiz-question-card');
-    const resultCard = $('#quiz-result-card');
-    if (questionCard) questionCard.hidden = false;
-    if (resultCard) resultCard.hidden = true;
+    quizScores = { cordas: 0, teclas: 0, percussao: 0 };
+    if (quizCard) quizCard.hidden = false;
+    if (quizResultCard) quizResultCard.hidden = true;
     renderQuizQuestion();
   });
 
   renderQuizQuestion();
 
   /* ==========================================================================
-     16. PERCURSO GUIADO (ONBOARDING TOUR)
+     15. PERCURSO GUIADO (ONBOARDING TOUR)
      ========================================================================== */
 
   const tourModal = $('#guided-tour-modal');
-  const hasSeenTour = safeStorageGet('sonora_tour_seen');
+  const btnStartTour = $('#btn-start-tour');
+  const btnSkipTour = $('#btn-skip-tour');
 
-  if (!hasSeenTour && tourModal) {
+  const tourVisited = safeStorageGet('sonora_tour_visited');
+  if (!tourVisited && tourModal) {
     setTimeout(() => {
-      if (typeof tourModal.showModal === 'function') {
-        tourModal.showModal();
-      } else {
-        tourModal.hidden = false;
-      }
+      tourModal.showModal();
     }, 1000);
   }
 
-  $('#btn-start-tour')?.addEventListener('click', () => {
-    safeStorageSet('sonora_tour_seen', 'true');
-    if (typeof tourModal.close === 'function') tourModal.close();
-    else tourModal.hidden = true;
-
-    // Leva para o centro de acessibilidade como primeiro passo do percurso
-    const accSection = $('#meu-jeito');
-    if (accSection) accSection.scrollIntoView({ behavior: 'smooth' });
-    speakText('Percurso iniciado. Aqui você pode personalizar a acessibilidade.');
+  btnStartTour?.addEventListener('click', () => {
+    safeStorageSet('sonora_tour_visited', 'true');
+    tourModal.close();
+    speakText('Iniciando o Sonora. Use a tecla TAB para navegar entre os controles de acessibilidade e os instrumentos.');
+    $('#meu-jeito')?.scrollIntoView({ behavior: 'smooth' });
   });
 
-  $('#btn-skip-tour')?.addEventListener('click', () => {
-    safeStorageSet('sonora_tour_seen', 'true');
-    if (typeof tourModal.close === 'function') tourModal.close();
-    else tourModal.hidden = true;
-  });
-
-  /* ==========================================================================
-     17. HERO ORB INTERATIVO
-     ========================================================================== */
-
-  $('#hero-orb')?.addEventListener('click', () => {
-    playPianoNote(440.00, 2.5);
-    pulse3DEnvironment();
-    speakText('Ressonância de áudio e pulso 3D ativados.');
+  btnSkipTour?.addEventListener('click', () => {
+    safeStorageSet('sonora_tour_visited', 'true');
+    tourModal.close();
   });
 
 });
