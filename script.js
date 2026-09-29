@@ -306,8 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
     scene.add(particlesMesh);
 
     window.addEventListener('mousemove', (e) => {
-      mouseX = (e.clientX - window.innerWidth / 2) * 0.0008;
-      mouseY = (e.clientY - window.innerHeight / 2) * 0.0008;
+      mouseX = (e.clientX - window.innerWidth / 2) * 0.00015;
+      mouseY = (e.clientY - window.innerHeight / 2) * 0.00015;
     });
 
     window.addEventListener('resize', () => {
