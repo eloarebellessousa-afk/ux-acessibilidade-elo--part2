@@ -1,33 +1,138 @@
 /**
  * SONORA — EXPERIÊNCIA DIGITAL MUSICAL COMPLETA & ACESSÍVEL
- * Arquitetura de Áudio Web Audio API + Engine 3D Three.js + Acessibilidade Integrada
+ * Script final refatorado e totalmente funcional.
+ *
+ * Recursos:
+ * - Web Audio API com timbres individuais (Violão, Teclado, Violino e Bateria)
+ * - Canvas 3D (Three.js) reativo ao cursor e aos sons
+ * - AnalyserNode com Canvas Visualizador de Áudio em Tempo Real
+ * - Teclado Musical interativo (Modo Livre, Aprender e Desafio)
+ * - Bateria com 5 pads independentes e demonstração rítmica
+ * - Gravador e Reprodução polifônica/multi-instrumento
+ * - Metrônomo com ajuste dinâmico de BPM
+ * - Catálogo de Instrumentos com Filtros e Modal Acessível
+ * - Mapeamento Sensorial (Perfil Musical)
+ * - Quiz de Afinidade Sonora (8 Perguntas)
+ * - Gamificação / Conquistas
+ * - Percurso Guiado (Onboarding Tour)
+ * - Acessibilidade completa com gravação em localStorage e Síntese de Voz
  */
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  'use strict';
+
   /* ==========================================================================
-     0. REGISTRADOR DE ANÚNCIOS PARA LEITORES DE TELA (SR) & VOZ
+     0. UTILITÁRIOS E AUXILIARES
      ========================================================================== */
-  const srAnnouncer = document.getElementById('sr-announcer');
+
+  const $ = (selector, parent = document) => parent.querySelector(selector);
+  const $$ = (selector, parent = document) => [...parent.querySelectorAll(selector)];
+
+  const body = document.body;
+  const root = document.documentElement;
+
+  const srAnnouncer = $('#sr-announcer');
 
   function announceToSR(message) {
-    if (srAnnouncer) {
+    if (!srAnnouncer) return;
+    srAnnouncer.textContent = '';
+    setTimeout(() => {
       srAnnouncer.textContent = message;
+    }, 20);
+  }
+
+  function safeStorageGet(key, fallback = null) {
+    try {
+      const value = localStorage.getItem(key);
+      return value !== null ? value : fallback;
+    } catch (error) {
+      return fallback;
     }
   }
 
-  function speakText(text) {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'pt-BR';
-      window.speechSynthesis.speak(utterance);
+  function safeStorageSet(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (error) {
+      console.warn(`Não foi possível salvar "${key}".`);
     }
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  function escapeHTML(value) {
+    return String(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
   }
 
   /* ==========================================================================
-     1. BASE DE DADOS DOS 4 INSTRUMENTOS
+     1. VOZ / SÍNTESE DE FALA
      ========================================================================== */
+
+  let speechEnabled = false;
+
+  function speakText(text) {
+    announceToSR(text);
+    if (!('speechSynthesis' in window) || !speechEnabled) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'pt-BR';
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function updateSpeechButtons() {
+    const buttons = [
+      $('#btn-toggle-speech'),
+      $('#btn-quick-speech')
+    ].filter(Boolean);
+
+    buttons.forEach(button => {
+      button.setAttribute('aria-pressed', String(speechEnabled));
+      if (button.id === 'btn-toggle-speech') {
+        button.textContent = speechEnabled
+          ? '🔊 Síntese de voz: ligada'
+          : '🔇 Síntese de voz: desligada';
+      }
+    });
+  }
+
+  const savedSpeech = safeStorageGet('sonora_speech');
+  speechEnabled = savedSpeech === 'true';
+
+  $('#btn-toggle-speech')?.addEventListener('click', () => {
+    speechEnabled = !speechEnabled;
+    safeStorageSet('sonora_speech', String(speechEnabled));
+    updateSpeechButtons();
+    speakText(speechEnabled ? 'Síntese de voz ativada.' : 'Síntese de voz desativada.');
+    unlockAchievement('ach-acc');
+  });
+
+  $('#btn-quick-speech')?.addEventListener('click', () => {
+    const text = 'Você está no Sonora, uma experiência digital musical focada em acessibilidade universal.';
+    if (!speechEnabled) {
+      speechEnabled = true;
+      safeStorageSet('sonora_speech', 'true');
+      updateSpeechButtons();
+    }
+    speakText(text);
+  });
+
+  updateSpeechButtons();
+
+  /* ==========================================================================
+     2. BASE DOS 4 INSTRUMENTOS
+     ========================================================================== */
+
   const instrumentsData = [
     {
       id: 'violao',
@@ -36,8 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
       categoryLabel: '🎸 Cordas',
       desc: 'Instrumento de cordas dedilhadas com sonoridade quente, orgânica e acolhedora.',
       history: 'O violão evoluiu de antigos instrumentos de cordas como o alaúde e a vihuela. É um dos instrumentos mais populares do mundo, essencial na Bossa Nova, MPB, Flamenco e Pop.',
-      freq: 196.00, // Sol3
-      soundType: 'sawtooth'
+      freq: 196.00,
+      soundType: 'guitar'
     },
     {
       id: 'teclado',
@@ -45,9 +150,9 @@ document.addEventListener('DOMContentLoaded', () => {
       category: 'teclas',
       categoryLabel: '🎹 Teclas',
       desc: 'Versátil e expressivo, oferece controle melódico e harmônico completo.',
-      history: 'Baseado no layout clássico do piano, o teclado moderno utiliza sintese eletrônica e digital para reproduzir timbres de piano acústico, órgãos e sintetizadores futuristas.',
-      freq: 261.63, // Dó4
-      soundType: 'sine'
+      history: 'Baseado no layout clássico do piano, o teclado moderno utiliza síntese eletrônica e digital para reproduzir timbres de piano acústico, órgãos e sintetizadores.',
+      freq: 261.63,
+      soundType: 'piano'
     },
     {
       id: 'bateria',
@@ -56,7 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
       categoryLabel: '🥁 Percussão',
       desc: 'Conjunto de tambores e pratos que dão o pulso e o ritmo à música.',
       history: 'Surgiu nos Estados Unidos no início do século XX com a junção de vários instrumentos de percussão para serem tocados por um único músico usando baquetas e pedais.',
-      freq: 100, // Som percussivo especial
+      freq: 100,
+      soundType: 'drums',
       isDrum: true
     },
     {
@@ -65,15 +171,16 @@ document.addEventListener('DOMContentLoaded', () => {
       category: 'cordas',
       categoryLabel: '🎻 Cordas',
       desc: 'O menor e mais agudo instrumento da família das cordas friccionadas por arco.',
-      history: 'Criado na Itália no século XVI por luthiers lendários como Stradivari e Amati. Possui expressividade única e som brilhante, sendo pilar fundamental da música orquestral e erudita.',
-      freq: 440.00, // Lá4
-      soundType: 'triangle'
+      history: 'Criado na Itália no século XVI, o violino tornou-se fundamental na música orquestral e em diversos gêneros musicais graças à sua grande expressividade.',
+      freq: 440.00,
+      soundType: 'violin'
     }
   ];
 
   /* ==========================================================================
-     2. GAMIFICAÇÃO & CONQUISTAS
+     3. GAMIFICAÇÃO & CONQUISTAS
      ========================================================================== */
+
   const achievements = [
     { id: 'ach-first-sound', title: 'Primeiro Som', desc: 'Tocou sua primeira nota no Sonora.', icon: '🎵' },
     { id: 'ach-melody', title: 'Melodista', desc: 'Completou uma sequência no Modo Aprender.', icon: '🎹' },
@@ -84,800 +191,1124 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   let unlockedIds = new Set();
+
   try {
-    const saved = localStorage.getItem('sonora_achievements');
-    if (saved) {
-      unlockedIds = new Set(JSON.parse(saved));
+    const savedAchievements = JSON.parse(safeStorageGet('sonora_achievements', '[]'));
+    if (Array.isArray(savedAchievements)) {
+      unlockedIds = new Set(savedAchievements);
     }
-  } catch (e) {
-    console.warn("Não foi possível carregar conquistas do localStorage.", e);
+  } catch (error) {
+    console.warn('Não foi possível carregar as conquistas.');
   }
 
   function renderAchievements() {
-    const grid = document.getElementById('achievements-grid');
+    const grid = $('#achievements-grid');
     if (!grid) return;
-    grid.innerHTML = '';
 
-    achievements.forEach(ach => {
-      const isUnlocked = unlockedIds.has(ach.id);
+    grid.innerHTML = '';
+    achievements.forEach(achievement => {
+      const unlocked = unlockedIds.has(achievement.id);
       const card = document.createElement('div');
-      card.className = `achievement-card ${isUnlocked ? 'unlocked' : ''}`;
+      card.className = `achievement-card ${unlocked ? 'unlocked' : ''}`;
       card.innerHTML = `
-        <div class="ach-icon" aria-hidden="true">${ach.icon}</div>
+        <div class="ach-icon" aria-hidden="true">${achievement.icon}</div>
         <div class="ach-info">
-          <span class="ach-title">${ach.title}</span>
-          <span class="ach-desc">${ach.desc}</span>
+          <span class="ach-title">${escapeHTML(achievement.title)}</span>
+          <span class="ach-desc">${escapeHTML(achievement.desc)}</span>
         </div>
       `;
       grid.appendChild(card);
     });
 
     const percentage = Math.round((unlockedIds.size / achievements.length) * 100);
-    const barFill = document.getElementById('journey-bar-fill');
-    const percentText = document.getElementById('journey-percentage-text');
+    const barFill = $('#journey-bar-fill');
+    const percentageText = $('#journey-percentage-text');
+    const progressBox = $('.journey-bar');
+
     if (barFill) barFill.style.width = `${percentage}%`;
-    if (percentText) percentText.textContent = `${percentage}%`;
+    if (percentageText) percentageText.textContent = `${percentage}%`;
+    if (progressBox) progressBox.setAttribute('aria-valuenow', percentage);
+  }
+
+  let toastTimer = null;
+  function showAchievementToast(achievement) {
+    const toast = $('#achievement-toast');
+    const toastName = $('#toast-achievement-name');
+    if (!toast || !toastName) return;
+
+    toastName.textContent = achievement.title;
+    toast.hidden = false;
+    speakText(`Conquista desbloqueada: ${achievement.title}`);
+
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.hidden = true;
+    }, 4000);
   }
 
   function unlockAchievement(id) {
-    if (!unlockedIds.has(id)) {
-      unlockedIds.add(id);
-      try {
-        localStorage.setItem('sonora_achievements', JSON.stringify(Array.from(unlockedIds)));
-      } catch (e) {
-        console.warn("Não foi possível salvar conquista.", e);
-      }
-      renderAchievements();
-
-      const ach = achievements.find(a => a.id === id);
-      if (ach) {
-        showAchievementToast(ach);
-      }
-    }
-  }
-
-  function showAchievementToast(ach) {
-    const toast = document.getElementById('achievement-toast');
-    const toastName = document.getElementById('toast-achievement-name');
-    if (toast && toastName) {
-      toastName.textContent = ach.title;
-      toast.hidden = false;
-      announceToSR(`Conquista unlocked: ${ach.title}`);
-      setTimeout(() => {
-        toast.hidden = true;
-      }, 4000);
-    }
+    if (unlockedIds.has(id)) return;
+    unlockedIds.add(id);
+    safeStorageSet('sonora_achievements', JSON.stringify([...unlockedIds]));
+    renderAchievements();
+    const achievement = achievements.find(item => item.id === id);
+    if (achievement) showAchievementToast(achievement);
   }
 
   renderAchievements();
 
   /* ==========================================================================
-     3. GERENCIADOR DE ACESSIBILIDADE & PREFERÊNCIAS
+     4. THREE.JS — BACKGROUND 3D
      ========================================================================== */
-  const btnSimpleMode = document.getElementById('btn-toggle-simple-mode');
-  const btnQuickSimple = document.getElementById('btn-quick-simple-mode');
-  const btnDisableSimple = document.getElementById('btn-disable-simple-mode');
-  const simpleBanner = document.getElementById('simple-mode-banner');
 
-  function setSimpleMode(enable) {
-    const isEnabled = enable === 'true' || enable === true;
-    document.body.setAttribute('data-simple-mode', isEnabled);
-    if (simpleBanner) simpleBanner.hidden = !isEnabled;
-    if (btnQuickSimple) btnQuickSimple.setAttribute('aria-pressed', isEnabled);
-    if (btnSimpleMode) btnSimpleMode.setAttribute('aria-pressed', isEnabled);
-
-    try {
-      localStorage.setItem('sonora_simple_mode', isEnabled);
-    } catch (e) {
-      console.warn("localStorage inacessível.", e);
-    }
-    
-    announceToSR(isEnabled ? "Modo Simples ativado. Layout limpo e direto." : "Modo Completo ativado.");
-    unlockAchievement('ach-acc');
-  }
-
-  try {
-    if (localStorage.getItem('sonora_simple_mode') === 'true') {
-      setSimpleMode(true);
-    }
-  } catch (e) {
-    console.warn("Não foi possível restaurar Modo Simples.", e);
-  }
-
-  [btnSimpleMode, btnQuickSimple].forEach(btn => {
-    if (btn) btn.addEventListener('click', () => {
-      const current = document.body.getAttribute('data-simple-mode') === 'true';
-      setSimpleMode(!current);
-    });
-  });
-
-  if (btnDisableSimple) {
-    btnDisableSimple.addEventListener('click', () => setSimpleMode(false));
-  }
-
-  // Ajustes de Fonte
-  let fontSizeOffset = 0;
-  document.getElementById('btn-font-increase')?.addEventListener('click', () => {
-    if (fontSizeOffset < 4) {
-      fontSizeOffset += 2;
-      document.documentElement.style.fontSize = `${16 + fontSizeOffset}px`;
-      announceToSR("Tamanho da fonte aumentado.");
-      unlockAchievement('ach-acc');
-    }
-  });
-
-  document.getElementById('btn-font-decrease')?.addEventListener('click', () => {
-    if (fontSizeOffset > -2) {
-      fontSizeOffset -= 2;
-      document.documentElement.style.fontSize = `${16 + fontSizeOffset}px`;
-      announceToSR("Tamanho da fonte diminuído.");
-    }
-  });
-
-  // Contraste
-  const btnHighContrast = document.getElementById('btn-high-contrast');
-  const btnSoftContrast = document.getElementById('btn-soft-contrast');
-
-  btnHighContrast?.addEventListener('click', () => {
-    const active = document.body.getAttribute('data-high-contrast') === 'true';
-    document.body.setAttribute('data-high-contrast', !active);
-    document.body.setAttribute('data-soft-contrast', 'false');
-    btnHighContrast.setAttribute('aria-pressed', !active);
-    if (btnSoftContrast) btnSoftContrast.setAttribute('aria-pressed', 'false');
-    announceToSR(!active ? "Alto contraste ativado." : "Alto contraste desativado.");
-    unlockAchievement('ach-acc');
-  });
-
-  btnSoftContrast?.addEventListener('click', () => {
-    const active = document.body.getAttribute('data-soft-contrast') === 'true';
-    document.body.setAttribute('data-soft-contrast', !active);
-    document.body.setAttribute('data-high-contrast', 'false');
-    btnSoftContrast.setAttribute('aria-pressed', !active);
-    if (btnHighContrast) btnHighContrast.setAttribute('aria-pressed', 'false');
-    announceToSR(!active ? "Contraste suave ativado." : "Contraste suave desativado.");
-  });
-
-  // Redução de Movimento
-  const btnReduceMotion = document.getElementById('btn-reduce-motion');
-  btnReduceMotion?.addEventListener('click', () => {
-    const active = document.body.getAttribute('data-motion-reduce') === 'true';
-    document.body.setAttribute('data-motion-reduce', !active);
-    btnReduceMotion.setAttribute('aria-pressed', !active);
-    if (!active) {
-      if (animFrameId) cancelAnimationFrame(animFrameId);
-    } else {
-      animate3D();
-    }
-    announceToSR(!active ? "Animações reduzidas." : "Animações restauradas.");
-  });
-
-  // Controles Maiores
-  const btnLargeControls = document.getElementById('btn-large-controls');
-  btnLargeControls?.addEventListener('click', () => {
-    const active = document.body.getAttribute('data-large-controls') === 'true';
-    document.body.setAttribute('data-large-controls', !active);
-    btnLargeControls.setAttribute('aria-pressed', !active);
-    announceToSR(!active ? "Controles maiores ativados." : "Controles normais.");
-  });
-
-  document.getElementById('btn-quick-speech')?.addEventListener('click', () => {
-    speakText("Você está no Sonora, uma experiência digital musical focada em acessibilidade universal.");
-  });
-
-  /* ==========================================================================
-     4. ARQUITETURA DE ÁUDIO WEB AUDIO API
-     ========================================================================== */
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  let audioCtx = null;
-  let masterGain = null;
-  let analyser = null;
-
-  function initAudio() {
-    if (!audioCtx) {
-      audioCtx = new AudioContext();
-      masterGain = audioCtx.createGain();
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64;
-      
-      const volInput = document.getElementById('master-volume');
-      masterGain.gain.value = volInput ? parseFloat(volInput.value) : 0.8;
-      
-      masterGain.connect(analyser);
-      analyser.connect(audioCtx.destination);
-    }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-  }
-
-  document.getElementById('master-volume')?.addEventListener('input', (e) => {
-    if (masterGain) {
-      masterGain.gain.value = parseFloat(e.target.value);
-    }
-  });
-
-  function playSynthNote(freq, duration = 0.8, type = 'sine') {
-    initAudio();
-    const osc = audioCtx.createOscillator();
-    const noteGain = audioCtx.createGain();
-
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-
-    noteGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    noteGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-
-    osc.connect(noteGain);
-    noteGain.connect(masterGain);
-
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
-
-    pulse3DEnvironment();
-    triggerVisualizerFeedback();
-  }
-
-  function playDrumSound(type) {
-    initAudio();
-    const now = audioCtx.currentTime;
-
-    if (type === 'kick') {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.frequency.setValueAtTime(130, now);
-      osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.4);
-      gain.gain.setValueAtTime(1, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-      osc.connect(gain);
-      gain.connect(masterGain);
-      osc.start(now);
-      osc.stop(now + 0.4);
-    } else if (type === 'snare') {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(240, now);
-      gain.gain.setValueAtTime(0.7, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-      osc.connect(gain);
-      gain.connect(masterGain);
-      osc.start(now);
-      osc.stop(now + 0.2);
-    } else if (type === 'hihat') {
-      const bufferSize = audioCtx.sampleRate * 0.08;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const output = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.value = 7500;
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(masterGain);
-      noise.start(now);
-    } else {
-      playSynthNote(type === 'crash' ? 880 : 220, 0.4, 'triangle');
-    }
-
-    pulse3DEnvironment();
-    triggerVisualizerFeedback();
-  }
-
-  /* ==========================================================================
-     5. VISUALIZADOR DE ÁUDIO & AMBIENTE 3D THREE.JS
-     ========================================================================== */
-  let scene, camera, renderer, particleSystem, lightMesh;
+  let scene, camera, renderer, particlesMesh;
   let mouseX = 0, mouseY = 0;
-  let animFrameId = null;
+  let targetX = 0, targetY = 0;
+  let animationFrameId = null;
+  let threePulseIntensity = 0;
 
-  function init3D() {
-    const container = document.getElementById('canvas-container');
+  function initThree() {
+    const container = $('#canvas-container');
     if (!container || typeof THREE === 'undefined') return;
 
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 400;
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 30;
 
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    const particleCount = 280;
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
+    const particlesCount = 350;
+    const posArray = new Float32Array(particlesCount * 3);
+    const scaleArray = new Float32Array(particlesCount);
 
-    for (let i = 0; i < particleCount * 3; i++) {
-      positions[i] = (Math.random() - 0.5) * 800;
+    for (let i = 0; i < particlesCount * 3; i += 3) {
+      posArray[i] = (Math.random() - 0.5) * 80;
+      posArray[i + 1] = (Math.random() - 0.5) * 80;
+      posArray[i + 2] = (Math.random() - 0.5) * 80;
+      scaleArray[i / 3] = Math.random();
     }
 
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
     const material = new THREE.PointsMaterial({
+      size: 0.8,
       color: 0x7952f5,
-      size: 4,
       transparent: true,
-      opacity: 0.6
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending
     });
 
-    particleSystem = new THREE.Points(geometry, material);
-    scene.add(particleSystem);
+    particlesMesh = new THREE.Points(geometry, material);
+    scene.add(particlesMesh);
 
-    const orbGeo = new THREE.IcosahedronGeometry(45, 2);
-    const orbMat = new THREE.MeshBasicMaterial({
-      color: 0x00f2fe,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.15
-    });
-    lightMesh = new THREE.Mesh(orbGeo, orbMat);
-    scene.add(lightMesh);
-
-    document.addEventListener('mousemove', (e) => {
-      mouseX = (e.clientX - window.innerWidth / 2) * 0.05;
-      mouseY = (e.clientY - window.innerHeight / 2) * 0.05;
+    window.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX - window.innerWidth / 2) * 0.0008;
+      mouseY = (e.clientY - window.innerHeight / 2) * 0.0008;
     });
 
     window.addEventListener('resize', () => {
+      if (!camera || !renderer) return;
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    animate3D();
+    checkThreeState();
   }
 
-  function animate3D() {
-    if (document.body.getAttribute('data-motion-reduce') === 'true' || document.body.getAttribute('data-simple-mode') === 'true') {
-      if (animFrameId) cancelAnimationFrame(animFrameId);
-      return;
+  function renderThree() {
+    if (!renderer || !scene || !camera) return;
+
+    targetX += (mouseX - targetX) * 0.05;
+    targetY += (mouseY - targetY) * 0.05;
+
+    if (particlesMesh) {
+      particlesMesh.rotation.y += 0.002;
+      particlesMesh.rotation.x += 0.001;
+      particlesMesh.rotation.y += targetX * 0.5;
+      particlesMesh.rotation.x += targetY * 0.5;
+
+      if (threePulseIntensity > 0) {
+        particlesMesh.scale.setScalar(1 + threePulseIntensity * 0.15);
+        threePulseIntensity *= 0.92;
+        if (threePulseIntensity < 0.01) threePulseIntensity = 0;
+      }
     }
-
-    animFrameId = requestAnimationFrame(animate3D);
-
-    if (particleSystem) {
-      particleSystem.rotation.y += 0.001;
-      particleSystem.rotation.x += 0.0005;
-    }
-
-    if (lightMesh) {
-      lightMesh.rotation.x += 0.004;
-      lightMesh.rotation.y += 0.004;
-    }
-
-    camera.position.x += (mouseX - camera.position.x) * 0.05;
-    camera.position.y += (-mouseY - camera.position.y) * 0.05;
-    camera.lookAt(scene.position);
 
     renderer.render(scene, camera);
+    animationFrameId = requestAnimationFrame(renderThree);
+  }
+
+  function startThreeAnimation() {
+    if (!animationFrameId && renderer) {
+      renderThree();
+    }
+  }
+
+  function stopThreeAnimation() {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+  }
+
+  function checkThreeState() {
+    const isSimple = body.getAttribute('data-simple-mode') === 'true';
+    const isReduced = body.getAttribute('data-motion-reduce') === 'true';
+
+    if (isSimple || isReduced) {
+      stopThreeAnimation();
+    } else {
+      startThreeAnimation();
+    }
   }
 
   function pulse3DEnvironment() {
-    if (lightMesh && document.body.getAttribute('data-motion-reduce') !== 'true') {
-      lightMesh.scale.set(1.25, 1.25, 1.25);
-      setTimeout(() => lightMesh.scale.set(1, 1, 1), 200);
+    threePulseIntensity = 1.0;
+  }
+
+  initThree();
+
+  /* ==========================================================================
+     5. ACESSIBILIDADE E CONTROLES DE INTERFACE
+     ========================================================================== */
+
+  const btnSimpleMode = $('#btn-toggle-simple-mode');
+  const btnQuickSimple = $('#btn-quick-simple-mode');
+  const btnDisableSimple = $('#btn-disable-simple-mode');
+  const simpleBanner = $('#simple-mode-banner');
+
+  const btnHighContrast = $('#btn-high-contrast');
+  const btnSoftContrast = $('#btn-soft-contrast');
+  const btnReduceMotion = $('#btn-reduce-motion');
+  const btnLargeControls = $('#btn-large-controls');
+
+  const btnFontIncrease = $('#btn-font-increase');
+  const btnFontDecrease = $('#btn-font-decrease');
+
+  let fontSizeOffset = Number(safeStorageGet('sonora_font_offset', '0'));
+  if (!Number.isFinite(fontSizeOffset)) fontSizeOffset = 0;
+  fontSizeOffset = clamp(fontSizeOffset, -2, 4);
+
+  function applyFontSize() {
+    root.style.fontSize = `${16 + fontSizeOffset}px`;
+  }
+  applyFontSize();
+
+  function setSimpleMode(enable, announce = true) {
+    const enabled = Boolean(enable);
+    body.setAttribute('data-simple-mode', String(enabled));
+
+    if (simpleBanner) simpleBanner.hidden = !enabled;
+    [btnSimpleMode, btnQuickSimple].filter(Boolean).forEach(btn => {
+      btn.setAttribute('aria-pressed', String(enabled));
+    });
+
+    safeStorageSet('sonora_simple_mode', String(enabled));
+    checkThreeState();
+
+    if (announce) {
+      speakText(enabled ? 'Modo Simples ativado. Layout limpo e direto.' : 'Modo Completo ativado.');
     }
+  }
+
+  function setHighContrast(enable) {
+    const enabled = Boolean(enable);
+    body.setAttribute('data-high-contrast', String(enabled));
+    if (enabled) body.setAttribute('data-soft-contrast', 'false');
+
+    btnHighContrast?.setAttribute('aria-pressed', String(enabled));
+    btnSoftContrast?.setAttribute('aria-pressed', 'false');
+
+    safeStorageSet('sonora_high_contrast', String(enabled));
+    if (enabled) safeStorageSet('sonora_soft_contrast', 'false');
+
+    speakText(enabled ? 'Alto contraste ativado.' : 'Alto contraste desativado.');
+    unlockAchievement('ach-acc');
+  }
+
+  function setSoftContrast(enable) {
+    const enabled = Boolean(enable);
+    body.setAttribute('data-soft-contrast', String(enabled));
+    if (enabled) body.setAttribute('data-high-contrast', 'false');
+
+    btnSoftContrast?.setAttribute('aria-pressed', String(enabled));
+    btnHighContrast?.setAttribute('aria-pressed', 'false');
+
+    safeStorageSet('sonora_soft_contrast', String(enabled));
+    if (enabled) safeStorageSet('sonora_high_contrast', 'false');
+
+    speakText(enabled ? 'Contraste suave ativado.' : 'Contraste suave desativado.');
+    unlockAchievement('ach-acc');
+  }
+
+  function setReducedMotion(enable) {
+    const enabled = Boolean(enable);
+    body.setAttribute('data-motion-reduce', String(enabled));
+    btnReduceMotion?.setAttribute('aria-pressed', String(enabled));
+
+    safeStorageSet('sonora_motion_reduce', String(enabled));
+    checkThreeState();
+
+    speakText(enabled ? 'Animações reduzidas.' : 'Animações restauradas.');
+    unlockAchievement('ach-acc');
+  }
+
+  function setLargeControls(enable) {
+    const enabled = Boolean(enable);
+    body.setAttribute('data-large-controls', String(enabled));
+    btnLargeControls?.setAttribute('aria-pressed', String(enabled));
+
+    safeStorageSet('sonora_large_controls', String(enabled));
+    speakText(enabled ? 'Controles maiores ativados.' : 'Controles normais.');
+    unlockAchievement('ach-acc');
+  }
+
+  btnSimpleMode?.addEventListener('click', () => setSimpleMode(body.getAttribute('data-simple-mode') !== 'true'));
+  btnQuickSimple?.addEventListener('click', () => setSimpleMode(body.getAttribute('data-simple-mode') !== 'true'));
+  btnDisableSimple?.addEventListener('click', () => setSimpleMode(false));
+
+  btnFontIncrease?.addEventListener('click', () => {
+    fontSizeOffset = clamp(fontSizeOffset + 2, -2, 4);
+    applyFontSize();
+    safeStorageSet('sonora_font_offset', String(fontSizeOffset));
+    speakText('Tamanho da fonte aumentado.');
+    unlockAchievement('ach-acc');
+  });
+
+  btnFontDecrease?.addEventListener('click', () => {
+    fontSizeOffset = clamp(fontSizeOffset - 2, -2, 4);
+    applyFontSize();
+    safeStorageSet('sonora_font_offset', String(fontSizeOffset));
+    speakText('Tamanho da fonte diminuído.');
+    unlockAchievement('ach-acc');
+  });
+
+  btnHighContrast?.addEventListener('click', () => setHighContrast(body.getAttribute('data-high-contrast') !== 'true'));
+  btnSoftContrast?.addEventListener('click', () => setSoftContrast(body.getAttribute('data-soft-contrast') !== 'true'));
+  btnReduceMotion?.addEventListener('click', () => setReducedMotion(body.getAttribute('data-motion-reduce') !== 'true'));
+  btnLargeControls?.addEventListener('click', () => setLargeControls(body.getAttribute('data-large-controls') !== 'true'));
+
+  setSimpleMode(safeStorageGet('sonora_simple_mode') === 'true', false);
+  setHighContrast(safeStorageGet('sonora_high_contrast') === 'true');
+  setSoftContrast(safeStorageGet('sonora_soft_contrast') === 'true');
+  setReducedMotion(safeStorageGet('sonora_motion_reduce') === 'true');
+  setLargeControls(safeStorageGet('sonora_large_controls') === 'true');
+
+  /* ==========================================================================
+     6. WEB AUDIO API & TIMBRES SINTÉTICOS
+     ========================================================================== */
+
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  let audioCtx = null;
+  let masterGain = null;
+  let analyser = null;
+
+  function initAudio() {
+    if (!AudioContextClass) {
+      announceToSR('Seu navegador não oferece suporte ao áudio interativo.');
+      return false;
+    }
+
+    if (!audioCtx) {
+      audioCtx = new AudioContextClass();
+      masterGain = audioCtx.createGain();
+      analyser = audioCtx.createAnalyser();
+
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.78;
+
+      const volumeInput = $('#master-volume');
+      masterGain.gain.value = volumeInput ? Number(volumeInput.value) : 0.8;
+
+      masterGain.connect(analyser);
+      analyser.connect(audioCtx.destination);
+
+      startVisualizer();
+    }
+
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    return true;
+  }
+
+  $('#master-volume')?.addEventListener('input', (e) => {
+    const val = Number(e.target.value);
+    if (masterGain && Number.isFinite(val)) {
+      masterGain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.015);
+    }
+  });
+
+  // Timbres Específicos
+  function playGuitarNote(freq, duration = 1.4) {
+    if (!initAudio()) return;
+    const now = audioCtx.currentTime;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(2800, now);
+
+    const output = audioCtx.createGain();
+    output.gain.setValueAtTime(0.0001, now);
+    output.gain.exponentialRampToValueAtTime(0.32, now + 0.008);
+    output.gain.exponentialRampToValueAtTime(0.08, now + Math.min(duration, 0.65));
+    output.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    filter.connect(output);
+    output.connect(masterGain);
+
+    const partials = [{ ratio: 1, gain: 0.75 }, { ratio: 2, gain: 0.20 }, { ratio: 3, gain: 0.09 }];
+    partials.forEach((p, idx) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = idx === 0 ? 'triangle' : 'sine';
+      osc.frequency.setValueAtTime(freq * p.ratio, now);
+      g.gain.value = p.gain;
+      osc.connect(g);
+      g.connect(filter);
+      osc.start(now);
+      osc.stop(now + duration + 0.05);
+    });
+
+    pulse3DEnvironment();
+    triggerVisualizerFeedback();
+  }
+
+  function playPianoNote(freq, duration = 2.0) {
+    if (!initAudio()) return;
+    const now = audioCtx.currentTime;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 4200;
+
+    const output = audioCtx.createGain();
+    output.gain.setValueAtTime(0.0001, now);
+    output.gain.linearRampToValueAtTime(0.34, now + 0.008);
+    output.gain.exponentialRampToValueAtTime(0.11, now + 0.45);
+    output.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    filter.connect(output);
+    output.connect(masterGain);
+
+    const harmonics = [[1, 0.72], [2, 0.24], [3, 0.12], [4, 0.055]];
+    harmonics.forEach(([ratio, level], idx) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = idx === 0 ? 'triangle' : 'sine';
+      osc.frequency.value = freq * ratio;
+      g.gain.value = level;
+      osc.connect(g);
+      g.connect(filter);
+      osc.start(now);
+      osc.stop(now + duration + 0.05);
+    });
+
+    pulse3DEnvironment();
+    triggerVisualizerFeedback();
+  }
+
+  function playViolinNote(freq, duration = 1.8) {
+    if (!initAudio()) return;
+    const now = audioCtx.currentTime;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 3200;
+
+    const output = audioCtx.createGain();
+    output.gain.setValueAtTime(0.0001, now);
+    output.gain.linearRampToValueAtTime(0.23, now + 0.10);
+    output.gain.setValueAtTime(0.20, now + Math.max(0.12, duration - 0.3));
+    output.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    filter.connect(output);
+    output.connect(masterGain);
+
+    const partials = [[1, 0.75], [2, 0.25], [3, 0.12]];
+    const oscs = [];
+    partials.forEach(([ratio, level]) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.value = freq * ratio;
+      g.gain.value = level;
+      osc.connect(g);
+      g.connect(filter);
+      osc.start(now);
+      osc.stop(now + duration + 0.1);
+      oscs.push(osc);
+    });
+
+    const vibrato = audioCtx.createOscillator();
+    const vibratoGain = audioCtx.createGain();
+    vibrato.frequency.value = 5.2;
+    vibratoGain.gain.value = 3.5;
+    vibrato.connect(vibratoGain);
+    oscs.forEach(osc => vibratoGain.connect(osc.detune));
+    vibrato.start(now + 0.2);
+    vibrato.stop(now + duration);
+
+    pulse3DEnvironment();
+    triggerVisualizerFeedback();
+  }
+
+  function createNoiseBuffer(seconds = 0.3) {
+    const length = Math.floor(audioCtx.sampleRate * seconds);
+    const buffer = audioCtx.createBuffer(1, length, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    return buffer;
+  }
+
+  function playKick() {
+    if (!initAudio()) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(48, now + 0.12);
+
+    gain.gain.setValueAtTime(0.85, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.45);
+
+    pulse3DEnvironment();
+    triggerVisualizerFeedback();
+  }
+
+  function playSnare() {
+    if (!initAudio()) return;
+    const now = audioCtx.currentTime;
+
+    const bodyOsc = audioCtx.createOscillator();
+    const bodyGain = audioCtx.createGain();
+    bodyOsc.type = 'triangle';
+    bodyOsc.frequency.value = 190;
+    bodyGain.gain.setValueAtTime(0.35, now);
+    bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+    bodyOsc.connect(bodyGain);
+    bodyGain.connect(masterGain);
+    bodyOsc.start(now);
+    bodyOsc.stop(now + 0.18);
+
+    const noise = audioCtx.createBufferSource();
+    const filter = audioCtx.createBiquadFilter();
+    const gain = audioCtx.createGain();
+    noise.buffer = createNoiseBuffer(0.22);
+    filter.type = 'highpass';
+    filter.frequency.value = 1400;
+    gain.gain.setValueAtTime(0.48, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.20);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+    noise.start(now);
+
+    pulse3DEnvironment();
+    triggerVisualizerFeedback();
+  }
+
+  function playHiHat() {
+    if (!initAudio()) return;
+    const now = audioCtx.currentTime;
+    const noise = audioCtx.createBufferSource();
+    const filter = audioCtx.createBiquadFilter();
+    const gain = audioCtx.createGain();
+
+    noise.buffer = createNoiseBuffer(0.10);
+    filter.type = 'highpass';
+    filter.frequency.value = 6500;
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.075);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+    noise.start(now);
+
+    pulse3DEnvironment();
+    triggerVisualizerFeedback();
+  }
+
+  function playTom() {
+    if (!initAudio()) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(90, now + 0.14);
+    gain.gain.setValueAtTime(0.55, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.5);
+
+    pulse3DEnvironment();
+    triggerVisualizerFeedback();
+  }
+
+  function playCrash() {
+    if (!initAudio()) return;
+    const now = audioCtx.currentTime;
+    const noise = audioCtx.createBufferSource();
+    const filter = audioCtx.createBiquadFilter();
+    const gain = audioCtx.createGain();
+
+    noise.buffer = createNoiseBuffer(1.2);
+    filter.type = 'highpass';
+    filter.frequency.value = 3500;
+    gain.gain.setValueAtTime(0.32, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+    noise.start(now);
+
+    pulse3DEnvironment();
+    triggerVisualizerFeedback();
+  }
+
+  function playInstrumentSound(soundType, freq = 261.63) {
+    unlockAchievement('ach-first-sound');
+    recordAudioEvent(soundType, freq);
+
+    switch (soundType) {
+      case 'guitar': playGuitarNote(freq); break;
+      case 'piano': playPianoNote(freq); break;
+      case 'violin': playViolinNote(freq); break;
+      case 'kick': playKick(); break;
+      case 'snare': playSnare(); break;
+      case 'hihat': playHiHat(); break;
+      case 'tom': playTom(); break;
+      case 'crash': playCrash(); break;
+      case 'drums': playDrumDemo(); break;
+      default: playPianoNote(freq); break;
+    }
+  }
+
+  $('#hero-orb')?.addEventListener('click', () => {
+    playPianoNote(440, 1.8);
+    const caption = $('#hero-sound-caption');
+    if (caption) caption.textContent = '🔊 Ressonância emitida! O espaço visual respondeu ao tom.';
+  });
+
+  /* ==========================================================================
+     7. VISUALIZADOR DE ÁUDIO REAL (CANVAS & ANALYSERNODE)
+     ========================================================================== */
+
+  const visualizerCanvas = $('#audio-visualizer-canvas');
+  let visualizerCtx = visualizerCanvas ? visualizerCanvas.getContext('2d') : null;
+  let visualizerAnimId = null;
+
+  function resizeVisualizerCanvas() {
+    if (!visualizerCanvas) return;
+    visualizerCanvas.width = visualizerCanvas.clientWidth || 600;
+    visualizerCanvas.height = visualizerCanvas.clientHeight || 180;
+  }
+  window.addEventListener('resize', resizeVisualizerCanvas);
+  resizeVisualizerCanvas();
+
+  function startVisualizer() {
+    if (!visualizerCtx || !analyser || visualizerAnimId) return;
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    function draw() {
+      visualizerAnimId = requestAnimationFrame(draw);
+      const isMotionReduced = body.getAttribute('data-motion-reduce') === 'true';
+
+      visualizerCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+
+      if (isMotionReduced) {
+        visualizerCtx.fillStyle = 'rgba(121, 82, 245, 0.2)';
+        visualizerCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+        return;
+      }
+
+      analyser.getByteFrequencyData(dataArray);
+
+      const width = visualizerCanvas.width;
+      const height = visualizerCanvas.height;
+      const barWidth = (width / bufferLength) * 2.5;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = (dataArray[i] / 255) * height;
+
+        const gradient = visualizerCtx.createLinearGradient(0, height, 0, 0);
+        gradient.addColorStop(0, '#7952f5');
+        gradient.addColorStop(1, '#00f2fe');
+
+        visualizerCtx.fillStyle = gradient;
+        visualizerCtx.fillRect(x, height - barHeight, barWidth, barHeight);
+
+        x += barWidth + 2;
+      }
+    }
+
+    draw();
   }
 
   function triggerVisualizerFeedback() {
-    const feedbackText = document.getElementById('visualizer-text-feedback');
-    if (feedbackText) {
-      feedbackText.textContent = "🔊 Sinal sonoro emitido — Frequência ativa no visualizador";
+    const feedback = $('#visualizer-text-feedback');
+    if (feedback) {
+      feedback.textContent = '⚡ Frequências áudio-visuais em atividade';
+      clearTimeout(triggerVisualizerFeedback.timer);
+      triggerVisualizerFeedback.timer = setTimeout(() => {
+        feedback.textContent = 'Visualizador Áudio-Visual em Espera...';
+      }, 1500);
     }
-  }
-
-  init3D();
-
-  /* ==========================================================================
-     6. HERO & HERO ORB
-     ========================================================================== */
-  const heroOrb = document.getElementById('hero-orb');
-  const heroSoundCaption = document.getElementById('hero-sound-caption');
-
-  if (heroOrb) {
-    heroOrb.addEventListener('click', () => {
-      playSynthNote(440, 1.2, 'sine');
-      if (heroSoundCaption) {
-        heroSoundCaption.textContent = "Nota Lá (440Hz) executada com resposta no ambiente 3D.";
-      }
-      announceToSR("Nota Lá tocada no orbe.");
-      unlockAchievement('ach-first-sound');
-    });
   }
 
   /* ==========================================================================
-     7. ESTÚDIO, GRAVADOR E METRÔNOMO
+     8. GRAVADOR & REPRODUÇÃO MULTI-TIMBRE
      ========================================================================== */
-  let metronomeInterval = null;
-  let isMetronomeActive = false;
-  const btnMetronome = document.getElementById('btn-toggle-metronome');
-  const metronomeStatus = document.getElementById('metronome-status');
-  const bpmInput = document.getElementById('metronome-bpm');
-  const bpmDisplay = document.getElementById('bpm-display');
 
-  function updateMetronomeSpeed() {
-    if (isMetronomeActive) {
-      stopMetronome();
-      startMetronome();
-    }
-  }
-
-  function startMetronome() {
-    const bpm = bpmInput ? parseInt(bpmInput.value, 10) : 120;
-    const intervalMs = (60 / bpm) * 1000;
-    isMetronomeActive = true;
-    if (metronomeStatus) metronomeStatus.textContent = "Ligado";
-    if (btnMetronome) btnMetronome.setAttribute('aria-pressed', 'true');
-
-    metronomeInterval = setInterval(() => {
-      playSynthNote(880, 0.05, 'sine');
-    }, intervalMs);
-  }
-
-  function stopMetronome() {
-    if (metronomeInterval) clearInterval(metronomeInterval);
-    isMetronomeActive = false;
-    if (metronomeStatus) metronomeStatus.textContent = "Desligado";
-    if (btnMetronome) btnMetronome.setAttribute('aria-pressed', 'false');
-  }
-
-  btnMetronome?.addEventListener('click', () => {
-    if (isMetronomeActive) {
-      stopMetronome();
-      announceToSR("Metrônomo desligado.");
-    } else {
-      startMetronome();
-      announceToSR(`Metrônomo ligado a ${bpmInput ? bpmInput.value : 120} BPM.`);
-    }
-  });
-
-  bpmInput?.addEventListener('input', (e) => {
-    if (bpmDisplay) bpmDisplay.textContent = `${e.target.value} BPM`;
-    updateMetronomeSpeed();
-  });
-
-  // Sistema de Gravação
   let isRecording = false;
-  let recordStartTime = 0;
-  let recordedNotes = [];
-  const btnRecord = document.getElementById('btn-record');
-  const btnPlayRecord = document.getElementById('btn-play-recording');
-  const btnClearRecord = document.getElementById('btn-clear-recording');
-  const recordStatusText = document.getElementById('recording-status-text');
+  let recordingStartTime = 0;
+  let recordedEvents = [];
+
+  const btnRecord = $('#btn-record');
+  const btnPlayRecording = $('#btn-play-recording');
+  const btnClearRecording = $('#btn-clear-recording');
+  const recordingStatusText = $('#recording-status-text');
+
+  function recordAudioEvent(type, value) {
+    if (!isRecording) return;
+    const time = Date.now() - recordingStartTime;
+    recordedEvents.push({ time, type, value });
+    updateRecordingStatusUI();
+  }
+
+  function updateRecordingStatusUI() {
+    if (!recordingStatusText) return;
+
+    if (isRecording) {
+      recordingStatusText.textContent = `🔴 Gravando... (${recordedEvents.length} eventos registrados)`;
+    } else if (recordedEvents.length > 0) {
+      recordingStatusText.textContent = `✅ Gravação pronta: ${recordedEvents.length} notas/sons armazenados.`;
+    } else {
+      recordingStatusText.textContent = 'Nenhuma gravação armazenada.';
+    }
+
+    if (btnPlayRecording) btnPlayRecording.disabled = isRecording || recordedEvents.length === 0;
+    if (btnClearRecording) btnClearRecording.disabled = isRecording || recordedEvents.length === 0;
+  }
 
   btnRecord?.addEventListener('click', () => {
     if (!isRecording) {
       isRecording = true;
-      recordStartTime = Date.now();
-      recordedNotes = [];
+      recordedEvents = [];
+      recordingStartTime = Date.now();
       btnRecord.classList.add('recording');
       btnRecord.setAttribute('aria-pressed', 'true');
-      if (recordStatusText) recordStatusText.textContent = "🔴 Gravando... Toque notas no teclado ou bateria!";
-      announceToSR("Gravação iniciada.");
+      btnRecord.innerHTML = '<span class="dot" aria-hidden="true"></span> Parar Gravação';
+      speakText('Gravação iniciada. Toque o teclado ou a bateria.');
     } else {
       isRecording = false;
       btnRecord.classList.remove('recording');
       btnRecord.setAttribute('aria-pressed', 'false');
-      const count = recordedNotes.length;
-      if (recordStatusText) recordStatusText.textContent = `Gravação concluída (${count} notas gravadas).`;
-      if (btnPlayRecord) btnPlayRecord.disabled = count === 0;
-      if (btnClearRecord) btnClearRecord.disabled = count === 0;
-      announceToSR(`Gravação encerrada com ${count} notas.`);
-      if (count > 0) unlockAchievement('ach-creator');
+      btnRecord.innerHTML = '<span class="dot" aria-hidden="true"></span> Gravar Sequência';
+      speakText(`Gravação finalizada com ${recordedEvents.length} eventos.`);
+      if (recordedEvents.length > 0) unlockAchievement('ach-creator');
     }
+    updateRecordingStatusUI();
   });
 
-  btnPlayRecord?.addEventListener('click', () => {
-    if (recordedNotes.length === 0) return;
-    if (recordStatusText) recordStatusText.textContent = "▶️ Reproduzindo gravação...";
-    announceToSR("Reproduzindo gravação.");
+  btnPlayRecording?.addEventListener('click', () => {
+    if (recordedEvents.length === 0) return;
+    speakText('Reproduzindo gravação...');
 
-    recordedNotes.forEach(item => {
+    recordedEvents.forEach(event => {
       setTimeout(() => {
-        if (item.isDrum) {
-          playDrumSound(item.sound);
+        if (['kick', 'snare', 'hihat', 'tom', 'crash'].includes(event.type)) {
+          playInstrumentSound(event.type);
+          highlightDrumPad(event.type);
         } else {
-          playSynthNote(item.freq, 0.5);
+          playPianoNote(event.value);
+          highlightPianoKey(event.value);
         }
-      }, item.time);
+      }, event.time);
     });
-
-    const maxTime = Math.max(...recordedNotes.map(n => n.time)) + 800;
-    setTimeout(() => {
-      if (recordStatusText) recordStatusText.textContent = "Reprodução finalizada.";
-    }, maxTime);
   });
 
-  btnClearRecord?.addEventListener('click', () => {
-    recordedNotes = [];
-    if (btnPlayRecord) btnPlayRecord.disabled = true;
-    if (btnClearRecord) btnClearRecord.disabled = true;
-    if (recordStatusText) recordStatusText.textContent = "Nenhuma gravação armazenada.";
-    announceToSR("Gravação apagada.");
+  btnClearRecording?.addEventListener('click', () => {
+    recordedEvents = [];
+    updateRecordingStatusUI();
+    speakText('Gravação limpa.');
   });
 
   /* ==========================================================================
-     8. TECLADO MUSICAL
+     9. METRÔNOMO
      ========================================================================== */
-  const notesData = [
-    { note: 'C4', key: 'C', freq: 261.63, type: 'white' },
-    { note: 'C#4', key: 'D', freq: 277.18, type: 'black' },
-    { note: 'D4', key: 'E', freq: 293.66, type: 'white' },
-    { note: 'D#4', key: 'R', freq: 311.13, type: 'black' },
-    { note: 'E4', key: 'F', freq: 329.63, type: 'white' },
-    { note: 'F4', key: 'G', freq: 349.23, type: 'white' },
-    { note: 'F#4', key: 'Y', freq: 369.99, type: 'black' },
-    { note: 'G4', key: 'H', freq: 392.00, type: 'white' },
-    { note: 'G#4', key: 'U', freq: 415.30, type: 'black' },
-    { note: 'A4', key: 'J', freq: 440.00, type: 'white' },
-    { note: 'A#4', key: 'I', freq: 466.16, type: 'black' },
-    { note: 'B4', key: 'K', freq: 493.88, type: 'white' }
+
+  let metronomeActive = false;
+  let metronomeTimer = null;
+  let bpm = 120;
+
+  const btnMetronome = $('#btn-toggle-metronome');
+  const metronomeStatus = $('#metronome-status');
+  const bpmInput = $('#metronome-bpm');
+  const bpmDisplay = $('#bpm-display');
+
+  function tickMetronome() {
+    if (!metronomeActive) return;
+    if (initAudio()) {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1000, now);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.06);
+    }
+  }
+
+  function startMetronome() {
+    stopMetronome();
+    metronomeActive = true;
+    if (metronomeStatus) metronomeStatus.textContent = 'Ligado';
+    if (btnMetronome) btnMetronome.setAttribute('aria-pressed', 'true');
+
+    const interval = (60 / bpm) * 1000;
+    tickMetronome();
+    metronomeTimer = setInterval(tickMetronome, interval);
+  }
+
+  function stopMetronome() {
+    metronomeActive = false;
+    if (metronomeTimer) {
+      clearInterval(metronomeTimer);
+      metronomeTimer = null;
+    }
+    if (metronomeStatus) metronomeStatus.textContent = 'Desligado';
+    if (btnMetronome) btnMetronome.setAttribute('aria-pressed', 'false');
+  }
+
+  btnMetronome?.addEventListener('click', () => {
+    if (metronomeActive) {
+      stopMetronome();
+      speakText('Metrônomo desligado.');
+    } else {
+      startMetronome();
+      speakText(`Metrônomo ligado em ${bpm} BPM.`);
+    }
+  });
+
+  bpmInput?.addEventListener('input', (e) => {
+    bpm = Number(e.target.value);
+    if (bpmDisplay) bpmDisplay.textContent = `${bpm} BPM`;
+    if (metronomeActive) startMetronome();
+  });
+
+  /* ==========================================================================
+     10. TECLADO MUSICAL ACESSÍVEL
+     ========================================================================== */
+
+  const pianoKeysData = [
+    { note: 'C4', label: 'Dó', freq: 261.63, key: 'C', isBlack: false },
+    { note: 'C#4', label: 'Dó#', freq: 277.18, key: 'V', isBlack: true },
+    { note: 'D4', label: 'Ré', freq: 293.66, key: 'D', isBlack: false },
+    { note: 'D#4', label: 'Ré#', freq: 311.13, key: 'G', isBlack: true },
+    { note: 'E4', label: 'Mi', freq: 329.63, key: 'E', isBlack: false },
+    { note: 'F4', label: 'Fá', freq: 349.23, key: 'F', isBlack: false },
+    { note: 'F#4', label: 'Fá#', freq: 369.99, key: 'T', isBlack: true },
+    { note: 'G4', label: 'Sol', freq: 392.00, key: 'G', isBlack: false },
+    { note: 'G#4', label: 'Sol#', freq: 415.30, key: 'Y', isBlack: true },
+    { note: 'A4', label: 'Lá', freq: 440.00, key: 'A', isBlack: false },
+    { note: 'A#4', label: 'Lá#', freq: 466.16, key: 'U', isBlack: true },
+    { note: 'B4', label: 'Si', freq: 493.88, key: 'B', isBlack: false },
+    { note: 'C5', label: 'Dó Agudo', freq: 523.25, key: 'K', isBlack: false }
   ];
 
-  let currentKeyMode = 'free';
-  let learnSequence = ['C4', 'E4', 'G4', 'C4'];
-  let learnStep = 0;
+  let currentKeyboardMode = 'free'; // free, learn, challenge
+  let learnIndex = 0;
+  const learnSequence = ['C4', 'E4', 'G4', 'C5'];
 
-  const keysWrapper = document.getElementById('piano-keys-wrapper');
-  const notesDisplay = document.getElementById('keyboard-notes-display');
-  const guideBanner = document.getElementById('keyboard-guide-banner');
-  const guideText = document.getElementById('keyboard-guide-text');
+  const keysWrapper = $('#piano-keys-wrapper');
+  const notesDisplay = $('#keyboard-notes-display');
+  const guideBanner = $('#keyboard-guide-banner');
+  const guideText = $('#keyboard-guide-text');
 
-  function buildKeyboard() {
+  function renderPianoKeys() {
     if (!keysWrapper) return;
     keysWrapper.innerHTML = '';
 
-    notesData.forEach(item => {
+    pianoKeysData.forEach(item => {
       const keyBtn = document.createElement('button');
-      keyBtn.className = `piano-key ${item.type}`;
-      keyBtn.dataset.note = item.note;
+      keyBtn.className = `piano-key ${item.isBlack ? 'black' : 'white'}`;
       keyBtn.dataset.freq = item.freq;
-      keyBtn.setAttribute('aria-label', `Nota ${item.note}, atalho tecla ${item.key}`);
-      keyBtn.innerHTML = `<span>${item.note}</span><small style="opacity:0.6">${item.key}</small>`;
+      keyBtn.dataset.note = item.note;
+      keyBtn.setAttribute('aria-label', `Nota ${item.label} (${item.note}), tecla ${item.key}`);
 
-      keyBtn.addEventListener('click', () => triggerNote(item, keyBtn));
+      keyBtn.innerHTML = `
+        <span class="key-note-label">${item.label}</span>
+        <span class="key-shortcut">${item.key}</span>
+      `;
+
+      keyBtn.addEventListener('click', () => triggerPianoKey(item));
       keysWrapper.appendChild(keyBtn);
     });
   }
 
-  function triggerNote(item, el) {
-    playSynthNote(item.freq, 0.8);
+  function triggerPianoKey(item) {
+    playPianoNote(item.freq);
+    recordAudioEvent('piano', item.freq);
+
     if (notesDisplay) {
-      notesDisplay.innerHTML = `Nota Ativa: <strong>${item.note}</strong> (${Math.round(item.freq)} Hz)`;
-    }
-    announceToSR(`Nota ${item.note}`);
-    
-    if (el) {
-      el.classList.add('active');
-      setTimeout(() => el.classList.remove('active'), 200);
+      notesDisplay.textContent = `Nota tocada: ${item.label} (${item.note})`;
     }
 
-    if (isRecording) {
-      recordedNotes.push({ note: item.note, freq: item.freq, time: Date.now() - recordStartTime });
-    }
+    highlightPianoKey(item.freq);
 
-    if (currentKeyMode === 'learn' || currentKeyMode === 'challenge') {
-      if (item.note === learnSequence[learnStep]) {
-        learnStep++;
-        if (learnStep >= learnSequence.length) {
-          if (guideText) guideText.textContent = "✨ Sequência perfeita! Parabéns!";
-          announceToSR("Sequência concluída com sucesso!");
-          learnStep = 0;
+    // Lógica do Modo Aprender
+    if (currentKeyboardMode === 'learn') {
+      const targetNote = learnSequence[learnIndex];
+      if (item.note === targetNote) {
+        learnIndex++;
+        if (learnIndex >= learnSequence.length) {
+          learnIndex = 0;
+          if (guideText) guideText.textContent = '🎉 Excelente! Você completou a sequência melódica!';
+          speakText('Excelente! Você completou a sequência melódica!');
           unlockAchievement('ach-melody');
         } else {
-          if (guideText) guideText.textContent = `Próxima nota: ${learnSequence[learnStep]}`;
+          const nextNote = pianoKeysData.find(k => k.note === learnSequence[learnIndex]);
+          if (guideText) guideText.textContent = `Muito bem! Próxima nota: ${nextNote.label} (${nextNote.note})`;
         }
-      } else {
-        if (guideText) guideText.textContent = `Nota incorreta. Tente tocar: ${learnSequence[learnStep]}`;
       }
     }
-
-    unlockAchievement('ach-first-sound');
   }
 
-  document.getElementById('btn-keymode-free')?.addEventListener('click', (e) => {
-    currentKeyMode = 'free';
-    updateKeyModeUI(e.target);
-    if (guideBanner) guideBanner.hidden = true;
-  });
+  function highlightPianoKey(freq) {
+    const btn = $(`button[data-freq="${freq}"]`, keysWrapper);
+    if (!btn) return;
+    btn.classList.add('active');
+    setTimeout(() => btn.classList.remove('active'), 200);
+  }
 
-  document.getElementById('btn-keymode-learn')?.addEventListener('click', (e) => {
-    currentKeyMode = 'learn';
-    learnStep = 0;
-    updateKeyModeUI(e.target);
-    if (guideBanner) {
-      guideBanner.hidden = false;
-      if (guideText) guideText.textContent = `Modo Aprender: Toque a nota ${learnSequence[0]}`;
-    }
-  });
-
-  document.getElementById('btn-keymode-challenge')?.addEventListener('click', (e) => {
-    currentKeyMode = 'challenge';
-    learnStep = 0;
-    updateKeyModeUI(e.target);
-    if (guideBanner) {
-      guideBanner.hidden = false;
-      if (guideText) guideText.textContent = `Desafio de Memória: Repita a nota ${learnSequence[0]}`;
-    }
-  });
-
-  function updateKeyModeUI(activeBtn) {
-    document.querySelectorAll('.mode-tab').forEach(b => {
-      b.classList.remove('active');
-      b.setAttribute('aria-selected', 'false');
+  // Modos do Teclado
+  $('#btn-keymode-free')?.addEventListener('click', (e) => setKeyboardMode('free', e.target));
+  $('#btn-keymode-learn')?.addEventListener('click', (e) => setKeyboardMode('learn', e.target));
+  $('#btn-keymode-challenge')?.addEventListener('click', (e) => setKeyboardMode('challenge', e.target));    function setKeyboardMode(mode, targetBtn) {     currentKeyboardMode = mode;     $$('.mode-tab').forEach(tab => {
+      tab.classList.remove('active');
+      tab.setAttribute('aria-selected', 'false');
     });
-    activeBtn.classList.add('active');
-    activeBtn.setAttribute('aria-selected', 'true');
+
+    targetBtn.classList.add('active');
+    targetBtn.setAttribute('aria-selected', 'true');
+
+    if (guideBanner) {
+      if (mode === 'learn') {
+        guideBanner.hidden = false;
+        learnIndex = 0;
+        const note = pianoKeysData.find(k => k.note === learnSequence[0]);
+        if (guideText) guideText.textContent = `Modo Aprender: Toque a nota ${note.label} (${note.note})`;
+        speakText('Modo Aprender ativado.');
+      } else if (mode === 'challenge') {
+        guideBanner.hidden = false;
+        if (guideText) guideText.textContent = 'Modo Desafio: Crie sua própria melodia usando a memória e intuição!';
+        speakText('Modo Desafio ativado.');
+      } else {
+        guideBanner.hidden = true;
+        speakText('Modo Livre ativado.');
+      }
+    }
   }
 
-  buildKeyboard();
+  renderPianoKeys();
 
   /* ==========================================================================
-     9. BATERIA & PADS
+     11. BATERIA & PADS DE PERCUSSÃO
      ========================================================================== */
-  const drumPads = document.querySelectorAll('.drum-pad');
-  let demoRhythmInterval = null;
+
+  const drumPads = $$('.drum-pad');
+  let drumDemoInterval = null;
+
+  function triggerDrumSound(soundType) {
+    unlockAchievement('ach-rhythm');
+    playInstrumentSound(soundType);
+    highlightDrumPad(soundType);
+  }
+
+  function highlightDrumPad(soundType) {
+    const pad = $(`.drum-pad[data-sound="${soundType}"]`);
+    if (!pad) return;
+    pad.classList.add('active');
+    setTimeout(() => pad.classList.remove('active'), 150);
+  }
 
   drumPads.forEach(pad => {
     pad.addEventListener('click', () => {
-      const soundType = pad.dataset.sound;
-      playDrumSound(soundType);
-      pad.classList.add('active');
-      setTimeout(() => pad.classList.remove('active'), 150);
-
-      if (isRecording) {
-        recordedNotes.push({ isDrum: true, sound: soundType, time: Date.now() - recordStartTime });
-      }
-
-      unlockAchievement('ach-rhythm');
+      const sound = pad.dataset.sound;
+      triggerDrumSound(sound);
     });
   });
 
-  // Atalhos Globais de Teclado (Bateria + Teclado)
+  // Demonstração Rítmica
+  const btnPlayDemo = $('#btn-play-demo-rhythm');
+  const btnStopDemo = $('#btn-stop-demo-rhythm');
+
+  function playDrumDemo() {
+    stopDrumDemo();
+    let step = 0;
+    if (btnPlayDemo) btnPlayDemo.hidden = true;
+    if (btnStopDemo) btnStopDemo.hidden = false;
+
+    drumDemoInterval = setInterval(() => {
+      if (step % 2 === 0) triggerDrumSound('kick');
+      if (step % 4 === 2) triggerDrumSound('snare');
+      triggerDrumSound('hihat');
+      step = (step + 1) % 8;
+    }, 250);
+  }
+
+  function stopDrumDemo() {
+    if (drumDemoInterval) {
+      clearInterval(drumDemoInterval);
+      drumDemoInterval = null;
+    }
+    if (btnPlayDemo) btnPlayDemo.hidden = false;
+    if (btnStopDemo) btnStopDemo.hidden = true;
+  }
+
+  btnPlayDemo?.addEventListener('click', playDrumDemo);
+  btnStopDemo?.addEventListener('click', stopDrumDemo);
+
+  /* Mapeamento de Teclado Global (Sem Conflitos) */
   window.addEventListener('keydown', (e) => {
     if (e.repeat || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
     const key = e.key.toUpperCase();
 
-    // Teclas da bateria: A, S, D, F, G
-    const drumPad = document.querySelector(`.drum-pad[data-key="${key}"]`);
+    // Bateria (A, S, D, F, G)
+    const drumPad = $(`.drum-pad[data-key="${key}"]`);
     if (drumPad) {
-      drumPad.click();
+      triggerDrumSound(drumPad.dataset.sound);
       return;
     }
 
-    // Teclas do teclado musical
-    const foundNote = notesData.find(n => n.key === key);
-    if (foundNote) {
-      const btnEl = keysWrapper?.querySelector(`button[data-note="${foundNote.note}"]`);
-      triggerNote(foundNote, btnEl);
+    // Teclado Piano
+    const pianoItem = pianoKeysData.find(k => k.key === key);
+    if (pianoItem) {
+      triggerPianoKey(pianoItem);
     }
-  });
-
-  // Demonstração de Ritmo
-  const btnPlayDemoRhythm = document.getElementById('btn-play-demo-rhythm');
-  const btnStopDemoRhythm = document.getElementById('btn-stop-demo-rhythm');
-
-  btnPlayDemoRhythm?.addEventListener('click', () => {
-    if (demoRhythmInterval) clearInterval(demoRhythmInterval);
-    
-    if (btnPlayDemoRhythm) btnPlayDemoRhythm.hidden = true;
-    if (btnStopDemoRhythm) btnStopDemoRhythm.hidden = false;
-
-    let step = 0;
-    const pattern = ['kick', 'hihat', 'snare', 'hihat'];
-
-    demoRhythmInterval = setInterval(() => {
-      const sound = pattern[step % pattern.length];
-      playDrumSound(sound);
-      
-      const targetPad = document.querySelector(`.drum-pad[data-sound="${sound}"]`);
-      if (targetPad) {
-        targetPad.classList.add('active');
-        setTimeout(() => targetPad.classList.remove('active'), 100);
-      }
-      step++;
-    }, 300);
-
-    announceToSR("Demonstração de ritmo iniciada.");
-  });
-
-  btnStopDemoRhythm?.addEventListener('click', () => {
-    if (demoRhythmInterval) clearInterval(demoRhythmInterval);
-    if (btnPlayDemoRhythm) btnPlayDemoRhythm.hidden = false;
-    if (btnStopDemoRhythm) btnStopDemoRhythm.hidden = true;
-    announceToSR("Demonstração de ritmo parada.");
   });
 
   /* ==========================================================================
-     10. PERFIL MUSICAL / DESCUBRA
+     12. PERFIL MUSICAL & MAPEAMENTO SENSORIAL
      ========================================================================== */
-  const moodButtons = document.querySelectorAll('.mood-btn');
-  const quizStep = document.getElementById('discovery-quiz-step');
-  const resultStep = document.getElementById('discovery-result-step');
-  const profileTitle = document.getElementById('discovery-profile-title');
-  const profileDesc = document.getElementById('discovery-profile-desc');
-  const recList = document.getElementById('discovery-recommendations-list');
-  const btnRestartDiscovery = document.getElementById('btn-restart-discovery');
+
+  const moodBtns = $$('.mood-btn');
+  const discoveryQuizStep = $('#discovery-quiz-step');
+  const discoveryResultStep = $('#discovery-result-step');
+  const discoveryProfileTitle = $('#discovery-profile-title');
+  const discoveryProfileDesc = $('#discovery-profile-desc');
+  const discoveryRecList = $('#discovery-recommendations-list');
+  const btnRestartDiscovery = $('#btn-restart-discovery');
 
   const moodProfiles = {
     calm: {
-      title: 'Perfil Sereno & Contemplativo',
-      desc: 'Sua sensibilidade é voltada para melodias suaves, timbres acústicos e momentos de relaxamento.',
-      recommendations: ['Violão', 'Violino']
+      title: 'Perfil Orgânico & Tranquilo',
+      desc: 'Sua sensibilidade busca paz, fluidez e sons quentes e acolhedores.',
+      recs: ['🎸 Violão', '🎻 Violino']
     },
     energetic: {
-      title: 'Perfil Vigoroso & Pulsante',
-      desc: 'Você se move através do ritmo, da energia percussiva e do impacto da batida.',
-      recommendations: ['Bateria', 'Teclado']
+      title: 'Perfil Pulsante & Rítmico',
+      desc: 'Você se move através da energia, da presença marcante e da percussão vibrante.',
+      recs: ['🥁 Bateria', '🎹 Teclado']
     },
     creative: {
-      title: 'Perfil Expressivo & Melódico',
-      desc: 'Sua marca é a criação de harmonias ricas, arranjos envolventes e arranjos expressivos.',
-      recommendations: ['Teclado', 'Violão', 'Violino']
+      title: 'Perfil Melódico & Dinâmico',
+      desc: 'Sua mente explora harmonias ricas, estruturas versáteis e combinações sonoras.',
+      recs: ['🎹 Teclado', '🎸 Violão']
     },
     curious: {
-      title: 'Perfil Clássico & Detalhista',
-      desc: 'Você aprecia nuances sonoras, dinâmicas de arco e timbres de grande riqueza harmônica.',
-      recommendations: ['Violino', 'Teclado', 'Violão']
+      title: 'Perfil Expressivo & Nuanceado',
+      desc: 'Você aprecia a profundidade clássica, a dinâmica do arco e a expressividade.',
+      recs: ['🎻 Violino', '🎹 Teclado']
     }
   };
 
-  moodButtons.forEach(btn => {
+  moodBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const mood = btn.dataset.mood;
       const profile = moodProfiles[mood] || moodProfiles.calm;
 
-      if (quizStep) quizStep.hidden = true;
-      if (resultStep) resultStep.hidden = false;
+      if (discoveryProfileTitle) discoveryProfileTitle.textContent = profile.title;
+      if (discoveryProfileDesc) discoveryProfileDesc.textContent = profile.desc;
 
-      if (profileTitle) profileTitle.textContent = profile.title;
-      if (profileDesc) profileDesc.textContent = profile.desc;
-
-      if (recList) {
-        recList.innerHTML = profile.recommendations.map(inst => `
-          <div class="rec-item">🎵 ${inst}</div>
-        `).join('');
+      if (discoveryRecList) {
+        discoveryRecList.innerHTML = profile.recs
+          .map(rec => `<div class="rec-item">${escapeHTML(rec)}</div>`)
+          .join('');
       }
 
-      announceToSR(`Perfil identificado: ${profile.title}`);
+      if (discoveryQuizStep) discoveryQuizStep.hidden = true;
+      if (discoveryResultStep) discoveryResultStep.hidden = false;
+
       unlockAchievement('ach-explorer');
+      speakText(`Seu perfil: ${profile.title}. ${profile.desc}`);
     });
   });
 
   btnRestartDiscovery?.addEventListener('click', () => {
-    if (quizStep) quizStep.hidden = false;
-    if (resultStep) resultStep.hidden = true;
+    if (discoveryQuizStep) discoveryQuizStep.hidden = false;
+    if (discoveryResultStep) discoveryResultStep.hidden = true;
   });
 
   /* ==========================================================================
-     11. CATÁLOGO INTERATIVO & MODAL
+     13. CATÁLOGO DE INSTRUMENTOS & MODAL ACESSÍVEL
      ========================================================================== */
-  const catalogGrid = document.getElementById('catalog-grid');
-  const filterBtns = document.querySelectorAll('.catalog-filters .filter-btn');
-  const modal = document.getElementById('instrument-modal');
-  const modalContent = document.getElementById('modal-content-body');
+
+  const catalogGrid = $('#catalog-grid');   const filterBtns = $$('.filter-btn');
+  const instrumentModal = $('#instrument-modal');
+  const modalContentBody = $('#modal-content-body');
+  let lastActiveElement = null;
 
   function renderCatalog(filter = 'all') {
     if (!catalogGrid) return;
     catalogGrid.innerHTML = '';
 
-    const filtered = instrumentsData.filter(inst => filter === 'all' || inst.category === filter);
+    const filtered = filter === 'all'
+      ? instrumentsData
+      : instrumentsData.filter(i => i.category === filter);
 
     filtered.forEach(inst => {
       const card = document.createElement('article');
       card.className = 'instrument-card';
       card.innerHTML = `
         <div>
-          <span class="badge">${inst.categoryLabel}</span>
-          <h3>${inst.name}</h3>
-          <p>${inst.desc}</p>
+          <span class="badge">${escapeHTML(inst.categoryLabel)}</span>
+          <h3>${escapeHTML(inst.name)}</h3>
+          <p>${escapeHTML(inst.desc)}</p>
         </div>
         <div class="instrument-card-actions">
           <button class="pill-btn highlight btn-listen-inst" data-id="${inst.id}">🔊 Ouvir Som</button>
@@ -887,25 +1318,12 @@ document.addEventListener('DOMContentLoaded', () => {
       catalogGrid.appendChild(card);
     });
 
-    // Anexar ouvintes aos botões do catálogo de forma limpa
-    catalogGrid.querySelectorAll('.btn-listen-inst').forEach(b => {
-      b.addEventListener('click', () => {
-        const inst = instrumentsData.find(i => i.id === b.dataset.id);
-        if (inst) {
-          if (inst.isDrum) {
-            playDrumSound('snare');
-          } else {
-            playSynthNote(inst.freq, 1.0, inst.soundType);
-          }
-          announceToSR(`Tocando demonstração de ${inst.name}`);
-        }
-      });
-    });
-
-    catalogGrid.querySelectorAll('.btn-details-inst').forEach(b => {
-      b.addEventListener('click', (e) => {
-        const inst = instrumentsData.find(i => i.id === b.dataset.id);
-        if (inst) openModal(inst, e.currentTarget);
+    $$('.btn-listen-inst', catalogGrid).forEach(btn => {       btn.addEventListener('click', () => {         const inst = instrumentsData.find(i => i.id === btn.dataset.id);         if (inst) playInstrumentSound(inst.soundType, inst.freq);       });     });      $$
+('.btn-details-inst', catalogGrid).forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        lastActiveElement = e.target;
+        const inst = instrumentsData.find(i => i.id === btn.dataset.id);
+        if (inst) openInstrumentModal(inst);
       });
     });
   }
@@ -922,240 +1340,228 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  let lastFocusedElement = null;
+  function openInstrumentModal(inst) {
+    if (!instrumentModal || !modalContentBody) return;
 
-  function openModal(inst, triggerEl) {
-    if (!modal || !modalContent) return;
-    lastFocusedElement = triggerEl;
-
-    modalContent.innerHTML = `
+    modalContentBody.innerHTML = `
       <div class="modal-header">
-        <h3 id="modal-title">${inst.name}</h3>
-        <button id="btn-close-modal" class="close-modal-btn" aria-label="Fechar modal">✕</button>
+        <span class="badge">${escapeHTML(inst.categoryLabel)}</span>
+        <h3 id="modal-title">${escapeHTML(inst.name)}</h3>
+        <button class="close-modal-btn" id="btn-close-modal" aria-label="Fechar janela de detalhes">✕</button>
       </div>
       <div class="modal-body">
-        <p><strong>Categoria:</strong> ${inst.categoryLabel}</p>
-        <p>${inst.desc}</p>
-        <p><strong>História e Contexto:</strong> ${inst.history}</p>
-        <button id="btn-modal-listen" class="btn-primary" style="margin-top: 1rem;">🔊 Ouvir Timbre</button>
+        <p><strong>Descrição:</strong> ${escapeHTML(inst.desc)}</p>
+        <p><strong>História & Origem:</strong> ${escapeHTML(inst.history)}</p>
+      </div>
+      <div class="modal-actions" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+        <button class="pill-btn highlight" id="btn-modal-listen">🔊 Ouvir Demonstração</button>
+        <button class="pill-btn outline" id="btn-modal-close-action">Fechar</button>
       </div>
     `;
 
-    modal.showModal();
+    instrumentModal.showModal();
 
-    const btnClose = document.getElementById('btn-close-modal');
+    const btnClose = $('#btn-close-modal', modalContentBody);
+    const btnCloseAction = $('#btn-modal-close-action', modalContentBody);
+    const btnListen = $('#btn-modal-listen', modalContentBody);
+
+    const closeModal = () => {
+      instrumentModal.close();
+      if (lastActiveElement) lastActiveElement.focus();
+    };
+
     btnClose?.addEventListener('click', closeModal);
+    btnCloseAction?.addEventListener('click', closeModal);
+    btnListen?.addEventListener('click', () => playInstrumentSound(inst.soundType, inst.freq));
 
-    document.getElementById('btn-modal-listen')?.addEventListener('click', () => {
-      if (inst.isDrum) {
-        playDrumSound('kick');
-      } else {
-        playSynthNote(inst.freq, 1.2, inst.soundType);
-      }
-    });
-
-    announceToSR(`Modal aberto: ${inst.name}`);
+    instrumentModal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    }, { once: true });
   }
-
-  function closeModal() {
-    if (modal && modal.open) {
-      modal.close();
-      if (lastFocusedElement) lastFocusedElement.focus();
-    }
-  }
-
-  modal?.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeModal();
-  });
 
   renderCatalog();
 
   /* ==========================================================================
-     12. QUIZ MUSICAL DE APRENDIZADO (8 PERGUNTAS)
+     14. QUIZ MUSICAL DE APRENDIZADO (8 PERGUNTAS)
      ========================================================================== */
+
   const quizQuestions = [
     {
-      q: "1. Qual destes instrumentos produz som através de cordas dedilhadas?",
-      options: [
-        { text: "Violão", isCorrect: true, inst: "violao" },
-        { text: "Bateria", isCorrect: false },
-        { text: "Teclado", isCorrect: false }
+      q: 'Qual família de instrumentos produz som através da vibração de cordas?',
+      opts: [
+        { text: '🎸 Cordas (Violão, Violino)', points: 'cordas' },
+        { text: '🥁 Percussão (Bateria)', points: 'percussao' },
+        { text: '🎹 Teclas (Teclado)', points: 'teclas' }
       ]
     },
     {
-      q: "2. Qual instrumento é responsável por marcar o ritmo e a base percussiva da música?",
-      options: [
-        { text: "Violino", isCorrect: false },
-        { text: "Bateria", isCorrect: true, inst: "bateria" },
-        { text: "Teclado", isCorrect: false }
+      q: 'Se você quer marcar o ritmo e a batida principal de uma música, qual escolhe?',
+      opts: [
+        { text: '🥁 Bateria', points: 'percussao' },
+        { text: '🎻 Violino', points: 'cordas' },
+        { text: '🎹 Teclado', points: 'teclas' }
       ]
     },
     {
-      q: "3. Qual instrumento fricciona cordas com um arco de crina para produzir um som agudo e lírico?",
-      options: [
-        { text: "Violino", isCorrect: true, inst: "violino" },
-        { text: "Violão", isCorrect: false },
-        { text: "Bateria", isCorrect: false }
+      q: 'Qual destes instrumentos utiliza um arco com crina de cavalo para friccionar suas cordas?',
+      opts: [
+        { text: '🎻 Violino', points: 'cordas' },
+        { text: '🎸 Violão', points: 'cordas' },
+        { text: '🎹 Teclado', points: 'teclas' }
       ]
     },
     {
-      q: "4. Qual instrumento possui teclas pretas e brancas dispostas em ordem harmônica?",
-      options: [
-        { text: "Teclado", isCorrect: true, inst: "teclado" },
-        { text: "Violão", isCorrect: false },
-        { text: "Bateria", isCorrect: false }
+      q: 'O teclado musical permite tocar notas graves e agudas simultaneamente com facilidade?',
+      opts: [
+        { text: 'Sim, é ideal para harmonia e melodia', points: 'teclas' },
+        { text: 'Não, só toca uma nota de cada vez', points: 'percussao' }
       ]
     },
     {
-      q: "5. Se você quer tocar um instrumento versátil para Bossa Nova e MPB, qual é a escolha ideal?",
-      options: [
-        { text: "Bateria", isCorrect: false },
-        { text: "Violão", isCorrect: true, inst: "violao" },
-        { text: "Violino", isCorrect: false }
+      q: 'Qual instrumento é símbolo tradicional da Bossa Nova e do MPB nas praias brasileiras?',
+      opts: [
+        { text: '🎸 Violão', points: 'cordas' },
+        { text: '🥁 Bateria', points: 'percussao' },
+        { text: '🎻 Violino', points: 'cordas' }
       ]
     },
     {
-      q: "6. Qual instrumento da família das percussões utiliza pedal para o bumbo e baquetas?",
-      options: [
-        { text: "Bateria", isCorrect: true, inst: "bateria" },
-        { text: "Teclado", isCorrect: false },
-        { text: "Violino", isCorrect: false }
+      q: 'Para criar um som de impacto explosivo no final de uma virada musical, usamos:',
+      opts: [
+        { text: '🥁 Prato de Ataque (Crash) da Bateria', points: 'percussao' },
+        { text: '🎸 Uma corda solta do Violão', points: 'cordas' },
+        { text: '🎹 Tecla central do teclado', points: 'teclas' }
       ]
     },
     {
-      q: "7. Em uma orquestra clássica, qual desses quatro instrumentos lidera a seção de cordas agudas?",
-      options: [
-        { text: "Violino", isCorrect: true, inst: "violino" },
-        { text: "Teclado", isCorrect: false },
-        { text: "Bateria", isCorrect: false }
+      q: 'Qual instrumento é fundamental em uma orquestra sinfônica para conduzir temas dramáticos?',
+      opts: [
+        { text: '🎻 Violino', points: 'cordas' },
+        { text: '🎸 Violão elétrico', points: 'cordas' },
+        { text: '🥁 Caixas de marcha', points: 'percussao' }
       ]
     },
     {
-      q: "8. Qual instrumento é capaz de simular sons de pianos, sintetizadores e timbres digitais variados?",
-      options: [
-        { text: "Teclado", isCorrect: true, inst: "teclado" },
-        { text: "Violão", isCorrect: false },
-        { text: "Bateria", isCorrect: false }
+      q: 'O que a Bateria, o Teclado, o Violão e o Violino têm em comum no Sonora?',
+      opts: [
+        { text: 'Todos são inclusivos, acessíveis e expressivos!', points: 'todos' },
+        { text: 'São exatamente os mesmos sons', points: 'nenhum' }
       ]
     }
   ];
 
-  let currentQuizIndex = 0;
-  const quizScores = { violao: 0, teclado: 0, bateria: 0, violino: 0 };
+  let quizCurrentIndex = 0;
+  let quizScores = { cordas: 0, teclas: 0, percussao: 0 };
 
-  const qCard = document.getElementById('quiz-question-card');
-  const rCard = document.getElementById('quiz-result-card');
-  const qText = document.getElementById('quiz-question-text');
-  const qOptions = document.getElementById('quiz-options-container');
-  const qCounter = document.getElementById('quiz-counter');
-  const qProgress = document.getElementById('quiz-progress-fill');
-  const btnRestartQuiz = document.getElementById('btn-restart-quiz');
+  const quizCard = $('#quiz-question-card');
+  const quizResultCard = $('#quiz-result-card');
+  const quizText = $('#quiz-question-text');
+  const quizOptionsContainer = $('#quiz-options-container');
+  const quizCounter = $('#quiz-counter');
+  const quizProgressFill = $('#quiz-progress-fill');
+  const btnRestartQuiz = $('#btn-restart-quiz');
 
   function renderQuizQuestion() {
-    if (currentQuizIndex >= quizQuestions.length) {
-      showQuizResult();
+    if (quizCurrentIndex >= quizQuestions.length) {
+      showQuizResults();
       return;
     }
 
-    const qData = quizQuestions[currentQuizIndex];
-    if (qText) qText.textContent = qData.q;
-    if (qCounter) qCounter.textContent = `Pergunta ${currentQuizIndex + 1} de ${quizQuestions.length}`;
-    if (qProgress) qProgress.style.width = `${((currentQuizIndex) / quizQuestions.length) * 100}%`;
+    const qData = quizQuestions[quizCurrentIndex];
+    if (quizText) quizText.textContent = qData.q;
+    if (quizCounter) quizCounter.textContent = `Pergunta ${quizCurrentIndex + 1} de ${quizQuestions.length}`;
 
-    if (qOptions) {
-      qOptions.innerHTML = '';
-      qData.options.forEach(opt => {
+    const progressPct = Math.round(((quizCurrentIndex) / quizQuestions.length) * 100);
+    if (quizProgressFill) quizProgressFill.style.width = `${progressPct}%`;
+
+    if (quizOptionsContainer) {
+      quizOptionsContainer.innerHTML = '';
+      qData.opts.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'quiz-opt-btn';
         btn.textContent = opt.text;
         btn.addEventListener('click', () => {
-          if (opt.inst) {
-            quizScores[opt.inst] = (quizScores[opt.inst] || 0) + 1;
+          if (opt.points && quizScores[opt.points] !== undefined) {
+            quizScores[opt.points]++;
           }
-          currentQuizIndex++;
+          quizCurrentIndex++;
           renderQuizQuestion();
         });
-        qOptions.appendChild(btn);
+        quizOptionsContainer.appendChild(btn);
+      });
+    }
+  }
+
+  function showQuizResults() {
+    if (quizCard) quizCard.hidden = true;
+    if (quizResultCard) quizResultCard.hidden = false;
+    if (quizProgressFill) quizProgressFill.style.width = '100%';
+
+    let topCategory = 'cordas';
+    if (quizScores.teclas > quizScores[topCategory]) topCategory = 'teclas';
+    if (quizScores.percussao > quizScores[topCategory]) topCategory = 'percussao';
+
+    const matchInst = instrumentsData.find(i => i.category === topCategory) || instrumentsData[0];
+
+    const resultTitle = $('#quiz-result-title');
+    const resultText = $('#quiz-result-text');
+    const resultPreview = $('#quiz-result-instrument-preview');
+
+    if (resultTitle) resultTitle.textContent = `Sua maior afinidade: ${matchInst.name}!`;
+    if (resultText) resultText.textContent = `Com base nas suas respostas, você demonstra forte sintonia com a família de ${matchInst.categoryLabel}.`;
+
+    if (resultPreview) {
+      resultPreview.innerHTML = `
+        <div class="rec-item" style="margin-top: 1rem;">
+          <h4>${escapeHTML(matchInst.name)}</h4>
+          <p>${escapeHTML(matchInst.desc)}</p>
+          <button class="pill-btn highlight" id="btn-quiz-play-match" style="margin-top: 0.5rem;">🔊 Ouvir ${escapeHTML(matchInst.name)}</button>
+        </div>
+      `;
+
+      $('#btn-quiz-play-match')?.addEventListener('click', () => {
+        playInstrumentSound(matchInst.soundType, matchInst.freq);
       });
     }
 
-    announceToSR(qData.q);
-  }
-
-  function showQuizResult() {
-    if (qCard) qCard.hidden = true;
-    if (rCard) rCard.hidden = false;
-    if (qProgress) qProgress.style.width = '100%';
-
-    // Determinar o instrumento com maior pontuação
-    let topInstKey = 'teclado';
-    let maxVal = -1;
-    for (const key in quizScores) {
-      if (quizScores[key] > maxVal) {
-        maxVal = quizScores[key];
-        topInstKey = key;
-      }
-    }
-
-    const winner = instrumentsData.find(i => i.id === topInstKey) || instrumentsData[1];
-
-    const rTitle = document.getElementById('quiz-result-title');
-    const rText = document.getElementById('quiz-result-text');
-    const rPreview = document.getElementById('quiz-result-instrument-preview');
-
-    if (rTitle) rTitle.textContent = `Sua maior afinidade é com: ${winner.name}!`;
-    if (rText) rText.textContent = winner.desc;
-    if (rPreview) {
-      rPreview.innerHTML = `
-        <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 16px; margin: 1.5rem 0; border: 1px solid var(--border-highlight);">
-          <span style="color: var(--secondary-accent); font-weight:700;">${winner.categoryLabel}</span>
-          <h4 style="font-size: 1.5rem; color: #fff; margin: 0.5rem 0;">${winner.name}</h4>
-          <p style="color: var(--text-muted);">${winner.history}</p>
-        </div>
-      `;
-    }
-
-    announceToSR(`Resultado do quiz: Seu instrumento ideal é ${winner.name}`);
+    speakText(`Resultado do quiz: Sua maior afinidade é o ${matchInst.name}.`);
   }
 
   btnRestartQuiz?.addEventListener('click', () => {
-    currentQuizIndex = 0;
-    for (const k in quizScores) quizScores[k] = 0;
-    if (qCard) qCard.hidden = false;
-    if (rCard) rCard.hidden = true;
+    quizCurrentIndex = 0;
+    quizScores = { cordas: 0, teclas: 0, percussao: 0 };
+    if (quizCard) quizCard.hidden = false;
+    if (quizResultCard) quizResultCard.hidden = true;
     renderQuizQuestion();
   });
 
   renderQuizQuestion();
 
   /* ==========================================================================
-     13. PERCURSO GUIADO DE BOAS-VINDAS (ONBOARDING)
+     15. PERCURSO GUIADO (ONBOARDING TOUR)
      ========================================================================== */
-  const tourModal = document.getElementById('guided-tour-modal');
-  const btnStartTour = document.getElementById('btn-start-tour');
-  const btnSkipTour = document.getElementById('btn-skip-tour');
 
-  try {
-    if (!localStorage.getItem('sonora_tour_completed')) {
-      setTimeout(() => {
-        tourModal?.showModal();
-      }, 1000);
-    }
-  } catch (e) {
-    console.warn("Incapaz de verificar estado do tour no localStorage.", e);
+  const tourModal = $('#guided-tour-modal');
+  const btnStartTour = $('#btn-start-tour');
+  const btnSkipTour = $('#btn-skip-tour');
+
+  const tourVisited = safeStorageGet('sonora_tour_visited');
+  if (!tourVisited && tourModal) {
+    setTimeout(() => {
+      tourModal.showModal();
+    }, 1000);
   }
 
   btnStartTour?.addEventListener('click', () => {
-    tourModal?.close();
-    try { localStorage.setItem('sonora_tour_completed', 'true'); } catch (e) {}
-    const accSection = document.getElementById('meu-jeito');
-    accSection?.scrollIntoView({ behavior: 'smooth' });
-    announceToSR("Redirecionado para a seção de acessibilidade.");
+    safeStorageSet('sonora_tour_visited', 'true');
+    tourModal.close();
+    speakText('Iniciando o Sonora. Use a tecla TAB para navegar entre os controles de acessibilidade e os instrumentos.');
+    $('#meu-jeito')?.scrollIntoView({ behavior: 'smooth' });
   });
 
   btnSkipTour?.addEventListener('click', () => {
-    tourModal?.close();
-    try { localStorage.setItem('sonora_tour_completed', 'true'); } catch (e) {}
+    safeStorageSet('sonora_tour_visited', 'true');
+    tourModal.close();
   });
 
 });
