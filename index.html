@@ -277,7 +277,7 @@
           <div class="recorder-controls">
             <button id="btn-record" class="record-btn" aria-pressed="false"><span class="dot" aria-hidden="true"></span> Gravar Sequência</button>
             <button id="btn-play-recording" class="pill-btn" disabled>▶️ Reproduzir Gravação</button>
-            <button id="btn-clear-recording" class="pill-btn outline" disabled>🗑️️ Limpar</button>
+            <button id="btn-clear-recording" class="pill-btn outline" disabled>🗑 Limpar</button>
           </div>
           <div class="recording-status" id="recording-status-text" aria-live="polite">Nenhuma gravação armazenada.</div>
         </div>
@@ -308,7 +308,7 @@
         </div>
 
         <div class="piano-keys-wrapper" id="piano-keys-wrapper" role="region" aria-label="Teclas do Piano">
-          <!-- Teclas inseridas dinamicamente com suporte semântico completo -->
+          <!-- Teclas inseridas dinamicamente -->
         </div>
       </div>
     </section>
@@ -397,19 +397,19 @@
         <p class="section-sub">Filtre por categorias, explore a história e escute demonstrações em áudio.</p>
       </div>
 
-      <!-- Filtros Semânticos de Categoria -->
+      <!-- Filtros Semânticos de Categoria (Aria-Pressed) -->
       <div class="catalog-filters" aria-label="Filtrar catálogo por família de instrumentos">
-        <button class="filter-btn active" data-filter="all">Todos (12)</button>
-        <button class="filter-btn" data-filter="teclas">🎹 Teclas</button>
-        <button class="filter-btn" data-filter="cordas">🎸 Cordas</button>
-        <button class="filter-btn" data-filter="percussao">🥁 Percussão</button>
-        <button class="filter-btn" data-filter="sopros">🎺 Sopros</button>
-        <button class="filter-btn" data-filter="eletronicos">🎛️ Eletrônicos</button>
-        <button class="filter-btn" data-filter="mundo">🌎 Do Mundo</button>
+        <button class="filter-btn active" data-filter="all" aria-pressed="true">Todos (12)</button>
+        <button class="filter-btn" data-filter="teclas" aria-pressed="false">🎹 Teclas</button>
+        <button class="filter-btn" data-filter="cordas" aria-pressed="false">🎸 Cordas</button>
+        <button class="filter-btn" data-filter="percussao" aria-pressed="false">🥁 Percussão</button>
+        <button class="filter-btn" data-filter="sopros" aria-pressed="false">🎺 Sopros</button>
+        <button class="filter-btn" data-filter="eletronicos" aria-pressed="false">🎛️ Eletrônicos</button>
+        <button class="filter-btn" data-filter="mundo" aria-pressed="false">🌎 Do Mundo</button>
       </div>
 
       <div class="catalog-grid" id="catalog-grid">
-        <!-- Inserido dinamicamente via JS -->
+        <!-- Inserido dinamicamente via JS sem onclick inline -->
       </div>
     </section>
 
@@ -443,7 +443,7 @@
 
         <div id="quiz-result-card" class="quiz-card" hidden>
           <span class="badge">SEU RESULTADO NO QUIZ</span>
-          <h3 id="quiz-result-title">Diagnóstico Sonoro Concluído</h3>
+          <h3 id="quiz-result-title">Sintonia Sonora Revelada</h3>
           <p id="quiz-result-text"></p>
           <div id="quiz-result-instrument-preview" class="quiz-instrument-result"></div>
           <button id="btn-restart-quiz" class="pill-btn highlight">Refazer Quiz</button>
