@@ -200,12 +200,6 @@ body {
   font-size: 0.8rem;
 }
 
-.pill-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
 .icon-btn {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-color);
@@ -262,7 +256,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   ESTRUTURA DAS SEÇÕES (Com Scroll Margin para Header Fixo)
+   ESTRUTURA DAS SEÇÕES
    -------------------------------------------------------------------------- */
 main {
   margin-top: 70px;
@@ -272,7 +266,6 @@ section {
   padding: 6rem 2rem;
   max-width: 1280px;
   margin: 0 auto;
-  scroll-margin-top: 80px;
 }
 
 .section-header {
@@ -728,7 +721,7 @@ section {
   border-radius: 50%;
 }
 
-.record-btn[aria-pressed="true"] .dot {
+.record-btn.recording .dot {
   animation: blink 1s infinite;
 }
 
@@ -785,7 +778,6 @@ section {
   user-select: none;
   padding-bottom: 1rem;
   overflow-x: auto;
-  max-width: 100%;
 }
 
 .piano-key {
@@ -798,13 +790,10 @@ section {
   padding-bottom: 1rem;
   font-weight: 700;
   transition: background 0.1s, transform 0.1s;
-  border: none;
-  font-family: inherit;
 }
 
 .piano-key.white {
   width: 55px;
-  min-width: 45px;
   height: 220px;
   background: #f3f4f6;
   color: #111827;
@@ -815,12 +804,11 @@ section {
 
 .piano-key.black {
   width: 36px;
-  min-width: 30px;
   height: 130px;
   background: #1f2937;
   color: #f9fafb;
-  margin-left: -18px;
-  margin-right: -18px;
+  margin-left: -20px;
+  margin-right: -20px;
   z-index: 2;
   border: 1px solid #111827;
 }
@@ -868,7 +856,6 @@ section {
   cursor: pointer;
   transition: all 0.1s ease;
   color: var(--text-bright);
-  font-family: inherit;
 }
 
 .drum-pad:hover {
@@ -1038,8 +1025,6 @@ section {
   padding: 2.5rem;
   max-width: 600px;
   width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
 }
 
@@ -1248,7 +1233,6 @@ section {
   color: var(--text-bright);
   padding: 3rem;
   max-width: 500px;
-  width: 90%;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
 }
 
@@ -1321,42 +1305,22 @@ body[data-simple-mode="true"] .control-btn {
   border: 2px solid #fff !important;
 }
 
-/* Alto Contraste com Legibilidade Preservada */
+/* Alto Contraste */
 body[data-high-contrast="true"] {
   --bg-dark: #000000;
   --bg-card: #000000;
-  --bg-card-hover: #1a1a1a;
-  --text-main: #ffffff;
+  --text-main: #ffff00;
   --text-bright: #ffffff;
   --text-muted: #ffffff;
   --border-color: #ffffff;
-  --border-highlight: #ffff00;
   --primary-accent: #ffff00;
-  --secondary-accent: #ffff00;
-  --primary-gradient: none;
-}
-
-body[data-high-contrast="true"] .gradient-text {
-  background: none !important;
-  -webkit-background-clip: unset !important;
-  -webkit-text-fill-color: #ffff00 !important;
-  color: #ffff00 !important;
 }
 
 body[data-high-contrast="true"] button,
-body[data-high-contrast="true"] a.btn-primary,
-body[data-high-contrast="true"] a.btn-secondary,
-body[data-high-contrast="true"] a.pill-btn {
-  border: 3px solid #ffffff !important;
-  color: #ffffff !important;
-  background: #000000 !important;
-}
-
-body[data-high-contrast="true"] button.active,
-body[data-high-contrast="true"] button[aria-pressed="true"],
-body[data-high-contrast="true"] .filter-btn.active {
-  background: #ffffff !important;
-  color: #000000 !important;
+body[data-high-contrast="true"] a {
+  border: 3px solid #fff !important;
+  color: #fff !important;
+  background: #000 !important;
 }
 
 /* Contraste Suave */
@@ -1364,30 +1328,24 @@ body[data-soft-contrast="true"] {
   --bg-dark: #1f2937;
   --bg-card: #374151;
   --text-main: #f3f4f6;
-  --text-bright: #ffffff;
-  --text-muted: #d1d5db;
   --primary-accent: #818cf8;
 }
 
 /* Controles Maiores */
 body[data-large-controls="true"] button,
-body[data-large-controls="true"] .pill-btn,
-body[data-large-controls="true"] .control-btn {
+body[data-large-controls="true"] .pill-btn {
   font-size: 1.1rem;
-  padding: 0.9rem 1.5rem;
-  min-height: 48px;
+  padding: 0.8rem 1.4rem;
 }
 
 /* REDUÇÃO DE MOVIMENTO */
-body[data-motion-reduce="true"] *,
-body[data-motion-reduce="true"] *::before,
-body[data-motion-reduce="true"] *::after {
+body[data-motion-reduce="true"] * {
   animation: none !important;
   transition: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  * {
     animation: none !important;
     transition: none !important;
   }
@@ -1412,7 +1370,7 @@ body[data-motion-reduce="true"] *::after {
   }
   
   .hero-title {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
   }
   
   .top-nav {
@@ -1425,18 +1383,5 @@ body[data-motion-reduce="true"] *::after {
   
   .nav-accessibility-quick .label {
     display: none;
-  }
-
-  .piano-keys-wrapper {
-    justify-content: flex-start;
-  }
-
-  .studio-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .modal-dialog {
-    padding: 1.5rem;
   }
 }
