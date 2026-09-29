@@ -91,7 +91,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Ajuste de Fonte
+  // ==========================================
+  // ACESSIBILIDADE - ALTO CONTRASTE E LEITOR
+  // ==========================================
+  const btnContraste = document.getElementById('btn-contraste');
+  btnContraste?.addEventListener('click', () => {
+    document.body.classList.toggle('alto-contraste');
+  });
+
+  const btnLerPagina = document.getElementById('btn-ler-pagina');
+  btnLerPagina?.addEventListener('click', () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // Para leituras anteriores
+      const texto = "Bem-vindo ao Estúdio Musical Interativo. Aqui podes praticar bateria manual, tocar teclado virtual, usar o metrônomo, afinar instrumentos e fazer um quiz musical.";
+      const utterance = new SpeechSynthesisUtterance(texto);
+      utterance.lang = 'pt-PT';
+      window.speechSynthesis.speak(utterance);
+    }
+  });
+
+  // Ajuste do Tamanho de Fonte
   let tamanhoFonteAtual = 100;
   document.getElementById('btn-fonte-aumentar')?.addEventListener('click', () => {
     if (tamanhoFonteAtual < 130) {
