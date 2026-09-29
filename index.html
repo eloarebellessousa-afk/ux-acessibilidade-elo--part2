@@ -3,431 +3,502 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Estúdio Musical Interativo & Acessível</title>
+  <title>Sonora — Experiência Digital Musical Inclusiva</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <!-- Three.js para o fundo 3D -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Three.js CDN para a experiência visual 3D -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+  <script src="script.js" defer></script>
 </head>
-<body>
+<body data-simple-mode="false" data-high-contrast="false" data-soft-contrast="false" data-motion-reduce="false">
 
-  <!-- Atalho para leitores de tela e navegação por teclado -->
-  <a href="#conteudo-principal" class="link-pular">Pular para o conteúdo principal</a>
+  <!-- Fundo 3D Interativo Multicamada -->
+  <div id="canvas-container" aria-hidden="true"></div>
 
-  <!-- Fundo 3D Interativo (Decorativo) -->
-  <canvas id="bg-canvas-3d" aria-hidden="true"></canvas>
+  <!-- Leitor de Tela Acessível / Anunciador Dinâmico -->
+  <div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- Sistema de Iluminação Visual DMX -->
-  <div class="painel-dmx" aria-hidden="true">
-    <div class="luz-dmx"></div>
-    <div class="luz-dmx"></div>
-    <div class="luz-dmx"></div>
-    <div class="luz-dmx"></div>
-  </div>
+  <!-- Barra de Acessibilidade Rápida Superior -->
+  <header class="top-nav" role="banner">
+    <a href="#hero" class="brand-logo">SONORA<span class="dot">.</span></a>
+    
+    <div class="nav-accessibility-quick">
+      <button id="btn-quick-simple-mode" class="pill-btn highlight" aria-pressed="false">
+        <span class="icon">✨</span> <span class="label">Modo Simples</span>
+      </button>
+      <button id="btn-quick-speech" class="icon-btn" title="Ler conteúdo da tela" aria-label="Ler conteúdo da tela">
+        🔊
+      </button>
+      <a href="#meu-jeito" class="pill-btn outline">
+        <span class="icon">♿</span> <span class="label">Meu Jeito de Usar</span>
+      </a>
+    </div>
+  </header>
 
-  <!-- Sistema de Toast / Notificações Acessíveis Global -->
-  <div id="toast-container" aria-live="polite" aria-atomic="true" class="toast-container"></div>
-
-  <!-- Modal de Boas-Vindas / Primeiro Acesso -->
-  <div id="modal-boas-vindas" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-modal">
-    <div class="modal-card">
-      <h2 id="titulo-modal">👋 Bem-vindo ao Estúdio Musical Acessível!</h2>
-      <p>Este espaço foi projetado para permitir que todas as pessoas, especialmente idosos e pessoas com diferentes necessidades visuais, motoras ou auditivas, explorem e criem música com autonomia.</p>
-      <div class="modal-acoes">
-        <button id="btn-iniciar-experiencia" class="btn-destaque-grande">🚀 Começar Experiência</button>
-        <button id="btn-abrir-tutorial-inicial" class="btn-secundario">🧭 Me Guie (Tutorial)</button>
-      </div>
+  <!-- Banner Persistente quando o Modo Simples está Ativo -->
+  <div id="simple-mode-banner" class="simple-banner" hidden>
+    <div class="banner-content">
+      <span>✨ <strong>Modo Simples Ativado:</strong> Interface despoluída, navegação direta e foco ampliado.</span>
+      <button id="btn-disable-simple-mode" class="pill-btn outline small">Sair do Modo Simples</button>
     </div>
   </div>
 
-  <!-- Modal do Modo Experiência Guiada (Tutorial Step-by-Step) -->
-  <div id="modal-tutorial" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="tut-titulo" style="display: none;">
-    <div class="modal-card modal-tutorial-card">
-      <div class="tut-header">
-        <span id="tut-passo-num" class="badge-passo">Passo 1 de 6</span>
-        <button id="btn-fechar-tut" class="btn-fechar" aria-label="Fechar tutorial">&times;</button>
+  <main id="main-content">
+
+    <!-- 1. HERO SECTION -->
+    <section id="hero" class="hero-section" aria-label="Apresentação Inicial">
+      <div class="hero-container">
+        <div class="hero-text-block">
+          <span class="tagline">Uma Nova Forma de Sentir a Música</span>
+          <h1 class="hero-title">Música sem barreiras, feita para <span class="gradient-text">todo mundo</span>.</h1>
+          <p class="hero-description">
+            Explore sons, ritmos, instrumentos e criação digital em uma plataforma desenhada para respeitar a sua forma única de navegar e interagir com o mundo.
+          </p>
+          <div class="hero-actions">
+            <a href="#hub-musical" class="btn-primary">
+              <span>Começar Experiência</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="#meu-jeito" class="btn-secondary">
+              <span>Explorar Acessibilidade</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-interactive-stage" aria-label="Visualizador sonoro interativo da página inicial">
+          <div class="stage-orb" id="hero-orb" tabIndex="0" role="button" aria-label="Toque para emitir uma nota e pulsar o ambiente">
+            <span class="orb-core"></span>
+            <span class="orb-pulse"></span>
+            <div class="orb-label">Clique para Tocar</div>
+          </div>
+          <div class="live-sound-caption" id="hero-sound-caption">Aguardando interatividade sonora...</div>
+        </div>
       </div>
-      <h3 id="tut-titulo">Conheça o Painel de Acessibilidade</h3>
-      <p id="tut-descricao">Ajuste tamanhos de texto, contrastes e modos de visualização simplificados para navegar com total conforto.</p>
-      <div class="tut-acoes">
-        <button id="btn-tut-anterior" class="btn-secundario" disabled>Anterior</button>
-        <button id="btn-tut-executar" class="btn-destaque-pequeno">Ir para Área</button>
-        <button id="btn-tut-proximo" class="btn-principal">Próximo</button>
+    </section>
+
+    <!-- 2. SEÇÃO: POR QUE ESTE SITE EXISTE? -->
+    <section id="sobre" class="manifesto-section" aria-label="Por que este site existe">
+      <div class="section-header">
+        <span class="section-kicker">Filosofia de Design</span>
+        <h2 class="section-title">A música une. A tecnologia não deve separar.</h2>
+        <p class="section-sub">Acessibilidade não é uma funcionalidade escondida no menu. É a fundação sobre a qual cada nota deste projeto foi construída.</p>
       </div>
+
+      <div class="stories-grid">
+        <article class="story-card">
+          <div class="story-icon">👁️</div>
+          <h3>"Preciso de textos maiores e contraste claro."</h3>
+          <p>Ajuste escalas de fonte, altere contraste e amplie o foco visual para ler com conforto sem estresse visual.</p>
+        </article>
+        <article class="story-card">
+          <div class="story-icon">✋</div>
+          <h3>"Tenho dificuldade para acertar botões pequenos."</h3>
+          <p>Ative áreas de toque expandidas, layouts espaçados e controles generosos desenhados para gestos sem esforço.</p>
+        </article>
+        <article class="story-card">
+          <div class="story-icon">🔊</div>
+          <h3>"Prefiro receber informações visual e textualmente."</h3>
+          <p>O som aqui ganha cor, vibração e descrição em tempo real para quem precisa ou prefere sentir a música visualmente.</p>
+        </article>
+        <article class="story-card">
+          <div class="story-icon">⌨️</div>
+          <h3>"Navego exclusivamente usando o teclado."</h3>
+          <p>Atalhos intuitivos, indicadores de foco ultraluminosos e navegação fluida sem dependência do ponteiro do mouse.</p>
+        </article>
+        <article class="story-card">
+          <div class="story-icon">🧘</div>
+          <h3>"Prefiro uma interface com menos movimento."</h3>
+          <p>Desative animações e fundos 3D com um toque, garantindo uma experiência suave e sem estímulos excessivos.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 3. CENTRO DE ACESSIBILIDADE: MEU JEITO DE USAR -->
+    <section id="meu-jeito" class="accessibility-hub-section" aria-label="Centro de Acessibilidade - Meu Jeito de Usar">
+      <div class="section-header">
+        <span class="section-kicker">♿ Configuração Única</span>
+        <h2 class="section-title">Meu Jeito de Usar</h2>
+        <p class="section-sub">Personalize como você enxerga, ouve e interage com o Sonora. Veja as mudanças acontecerem em tempo real.</p>
+      </div>
+
+      <div class="hub-container">
+        <!-- Painel de Controles -->
+        <div class="hub-controls-panel">
+          
+          <!-- Tab Category: VISÃO -->
+          <fieldset class="control-group">
+            <legend><span class="icon">👁️</span> Visão</legend>
+            <div class="control-grid">
+              <button id="btn-font-increase" class="control-btn">Aumentar Fonte (+)</button>
+              <button id="btn-font-decrease" class="control-btn">Diminuir Fonte (-)</button>
+              <button id="btn-high-contrast" class="control-btn toggle-btn">Alto Contraste</button>
+              <button id="btn-soft-contrast" class="control-btn toggle-btn">Contraste Suave</button>
+            </div>
+          </fieldset>
+
+          <!-- Tab Category: ÁUDIO -->
+          <fieldset class="control-group">
+            <legend><span class="icon">🔊</span> Áudio e Retorno</legend>
+            <div class="control-grid">
+              <label class="range-label">
+                Volume Geral
+                <input type="range" id="master-volume" min="0" max="1" step="0.05" value="0.8">
+              </label>
+              <button id="btn-toggle-speech" class="control-btn toggle-btn">Sintetizador de Voz</button>
+              <button id="btn-toggle-visual-sound" class="control-btn toggle-btn active">Feedback Visual do Som</button>
+            </div>
+          </fieldset>
+
+          <!-- Tab Category: INTERAÇÃO E MOVIMENTO -->
+          <fieldset class="control-group">
+            <legend><span class="icon">✋</span> Interação & Movimento</legend>
+            <div class="control-grid">
+              <button id="btn-toggle-simple-mode" class="control-btn toggle-btn highlight">Modo Simples</button>
+              <button id="btn-reduce-motion" class="control-btn toggle-btn">Reduzir Animações</button>
+              <button id="btn-large-controls" class="control-btn toggle-btn">Controles Maiores</button>
+            </div>
+          </fieldset>
+
+        </div>
+
+        <!-- Painel de Pré-visualização Interativa -->
+        <div class="hub-preview-panel">
+          <div class="preview-card" id="accessibility-preview">
+            <span class="preview-badge">Prévia da Sua Interface</span>
+            <h3>Texto e Botões Adaptados</h3>
+            <p>Este card reflete exatamente suas escolhas de tamanho, cores, foco e estilo em tempo real.</p>
+            <div class="preview-actions">
+              <button class="preview-sample-btn">Botão Exemplo</button>
+              <span class="preview-status" id="preview-status-text">Configurações padrão ativas.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. HUB MUSICAL POR EXPERIÊNCIAS -->
+    <section id="hub-musical" class="hub-navigation-section" aria-label="Hub de Experiências Musicais">
+      <div class="section-header">
+        <span class="section-kicker">Mapa do Site</span>
+        <h2 class="section-title">O que você quer vivenciar hoje?</h2>
+      </div>
+
+      <div class="hub-nav-grid">
+        <a href="#estudio-secao" class="experience-card" data-exp="estudio">
+          <div class="exp-icon">🎼</div>
+          <div class="exp-info">
+            <h3>CRIAR</h3>
+            <p>Monte melodias, ritmos e grave suas composições no Estúdio Sonora.</p>
+          </div>
+          <span class="exp-arrow">→</span>
+        </a>
+
+        <a href="#teclado-secao" class="experience-card" data-exp="teclado">
+          <div class="exp-icon">🎹</div>
+          <div class="exp-info">
+            <h3>TOCAR</h3>
+            <p>Teclado expressivo com resposta visual, modos livres e desafios de aprendizado.</p>
+          </div>
+          <span class="exp-arrow">→</span>
+        </a>
+
+        <a href="#bateria-secao" class="experience-card" data-exp="bateria">
+          <div class="exp-icon">🥁</div>
+          <div class="exp-info">
+            <h3>RITMAR</h3>
+            <p>Pads dinâmicos de percussão, acompanhamentos e ritmos guiados.</p>
+          </div>
+          <span class="exp-arrow">→</span>
+        </a>
+
+        <a href="#descubra-secao" class="experience-card" data-exp="perfil">
+          <div class="exp-icon">✨</div>
+          <div class="exp-info">
+            <h3>DESCUBRIR</h3>
+            <p>Descubra seu perfil musical através de uma experiência de sensações.</p>
+          </div>
+          <span class="exp-arrow">→</span>
+        </a>
+
+        <a href="#catalogo-secao" class="experience-card" data-exp="catalogo">
+          <div class="exp-icon">🎸</div>
+          <div class="exp-info">
+            <h3>EXPLORAR</h3>
+            <p>Catálogo imersivo de instrumentos com demonstração de áudio e curiosidades.</p>
+          </div>
+          <span class="exp-arrow">→</span>
+        </a>
+
+        <a href="#quiz-secao" class="experience-card" data-exp="quiz">
+          <div class="exp-icon">🧠</div>
+          <div class="exp-info">
+            <h3>APRENDER</h3>
+            <p>Quiz interativo com 8 perguntas para revelar seu instrumento ideal.</p>
+          </div>
+          <span class="exp-arrow">→</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- 5. O ESTÚDIO COMPLETO (SALA DE CRIAÇÃO) -->
+    <section id="estudio-secao" class="studio-section" aria-label="Sala de Criação - Meu Estúdio">
+      <div class="studio-header">
+        <div>
+          <span class="section-kicker">🎼 Sala de Criação</span>
+          <h2 class="section-title">Meu Estúdio Digital</h2>
+        </div>
+        <div class="studio-global-controls">
+          <div class="metronome-box">
+            <button id="btn-toggle-metronome" class="pill-btn outline">⏱️ Metrônomo: <span id="metronome-status">Desligado</span></button>
+            <input type="range" id="metronome-bpm" min="40" max="200" value="120" title="Andamento em BPM">
+            <span id="bpm-display">120 BPM</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="studio-workspace">
+        <!-- Visualizador de Áudio Central do Estúdio -->
+        <div class="studio-visualizer-container">
+          <canvas id="audio-visualizer-canvas"></canvas>
+          <div id="visualizer-text-feedback" class="visualizer-text-feedback">Aguardando emissão de áudio para renderizar frequências...</div>
+        </div>
+
+        <!-- Gravador & Sequenciador -->
+        <div class="studio-recorder-bar">
+          <div class="recorder-controls">
+            <button id="btn-record" class="record-btn"><span class="dot"></span> Gravar Nova Sequência</button>
+            <button id="btn-play-recording" class="pill-btn" disabled>▶️ Reproduzir</button>
+            <button id="btn-clear-recording" class="pill-btn outline" disabled>🗑️ Limpar</button>
+          </div>
+          <div class="recording-status" id="recording-status-text">Nenhuma gravação na memória.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. TECLADO MUSICAL CINEMATOGRÁFICO -->
+    <section id="teclado-secao" class="keyboard-experience-section" aria-label="Teclado Musical Interativo">
+      <div class="section-header">
+        <span class="section-kicker">🎹 Expressão Melódica</span>
+        <h2 class="section-title">Teclado Sonora</h2>
+        <p class="section-sub">Alterne entre exploração livre, aprendizado guiado e desafios de memória auditiva.</p>
+      </div>
+
+      <div class="keyboard-modes-nav">
+        <button id="btn-keymode-free" class="mode-tab active">Modo Livre</button>
+        <button id="btn-keymode-learn" class="mode-tab">Modo Aprender</button>
+        <button id="btn-keymode-challenge" class="mode-tab">Modo Desafio</button>
+      </div>
+
+      <div id="keyboard-guide-banner" class="keyboard-guide-banner" hidden>
+        <p id="keyboard-guide-text">Toque a nota indicada para avançar!</p>
+      </div>
+
+      <!-- Container do Teclado -->
+      <div class="keyboard-stage">
+        <div class="keyboard-notes-display" id="keyboard-notes-display">
+          <span class="current-note">Pressione uma tecla ou use o teclado do computador</span>
+        </div>
+
+        <div class="piano-keys-wrapper" id="piano-keys-wrapper" role="region" aria-label="Teclas do piano">
+          <!-- Teclas geradas e controladas por JS para máxima acessibilidade -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. BATERIA - PADS DE PERCUSSÃO -->
+    <section id="bateria-secao" class="drums-experience-section" aria-label="Bateria e Percussão">
+      <div class="section-header">
+        <span class="section-kicker">🥁 Força Rítmica</span>
+        <h2 class="section-title">Estação de Bateria</h2>
+        <p class="section-sub">Pads táteis e visuais responsivos. Experimente acompanhar um ritmo de exemplo.</p>
+      </div>
+
+      <div class="drum-actions-bar">
+        <button id="btn-play-demo-rhythm" class="pill-btn highlight">🥁 OUVIR RITMO DE EXEMPLO</button>
+        <button id="btn-stop-demo-rhythm" class="pill-btn outline" hidden>⏹️ Parar Exemplo</button>
+      </div>
+
+      <div class="drum-pads-grid" id="drum-pads-grid">
+        <button class="drum-pad" data-sound="kick" data-key="A">
+          <span class="pad-key">A</span>
+          <span class="pad-name">Bumbo</span>
+          <span class="pad-sub">(Kick)</span>
+        </button>
+        <button class="drum-pad" data-sound="snare" data-key="S">
+          <span class="pad-key">S</span>
+          <span class="pad-name">Caixa</span>
+          <span class="pad-sub">(Snare)</span>
+        </button>
+        <button class="drum-pad" data-sound="hihat" data-key="D">
+          <span class="pad-key">D</span>
+          <span class="pad-name">Chimbal</span>
+          <span class="pad-sub">(Hi-Hat)</span>
+        </button>
+        <button class="drum-pad" data-sound="tom" data-key="F">
+          <span class="pad-key">F</span>
+          <span class="pad-name">Tons</span>
+          <span class="pad-sub">(Tom-tom)</span>
+        </button>
+        <button class="drum-pad" data-sound="crash" data-key="G">
+          <span class="pad-key">G</span>
+          <span class="pad-name">Prato</span>
+          <span class="pad-sub">(Crash)</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 8. EXPERIÊNCIA "DESCUBRA SEU SOM" -->
+    <section id="descubra-secao" class="sound-discovery-section" aria-label="Descubra seu Perfil Musical">
+      <div class="section-header">
+        <span class="section-kicker">✨ Experiência Sensorial</span>
+        <h2 class="section-title">Descubra seu Perfil Musical</h2>
+        <p class="section-sub">Responda o que ressoa com sua energia e receba um diagnóstico de afinidade sonora.</p>
+      </div>
+
+      <div class="discovery-card-container">
+        <div id="discovery-quiz-step" class="discovery-step">
+          <h3>Como você se sente ou gostaria de se sentir agora?</h3>
+          <div class="sound-mood-options">
+            <button class="mood-btn" data-mood="calm">🌙 Sons calmos, fluidos e acústicos</button>
+            <button class="mood-btn" data-mood="energetic">⚡ Sons energéticos, ritmados e marcantes</button>
+            <button class="mood-btn" data-mood="creative">🎵 Melodias complexas e harmônicas</button>
+            <button class="mood-btn" data-mood="curious">🎻 Instrumentos do mundo e timbres exóticos</button>
+          </div>
+        </div>
+
+        <div id="discovery-result-step" class="discovery-step" hidden>
+          <span class="badge">SEU PERFIL MUSICAL</span>
+          <h3 id="discovery-profile-title">Perfil Harmonioso & Reflexivo</h3>
+          <p id="discovery-profile-desc">Você busca na música um espaço de tranquilidade, introspecção e foco visual-auditivo leve.</p>
+          
+          <div class="recommended-instruments-wrapper">
+            <h4>Instrumentos recomendados para você:</h4>
+            <div id="discovery-recommendations-list" class="recommendations-list">
+              <!-- Inserido dinamicamente -->
+            </div>
+          </div>
+
+          <button id="btn-restart-discovery" class="pill-btn outline">Refazer Teste</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. CATÁLOGO INTERATIVO DE INSTRUMENTOS -->
+    <section id="catalogo-secao" class="catalog-section" aria-label="Catálogo de Instrumentos">
+      <div class="section-header">
+        <span class="section-kicker">🎸 Exploração Sonora</span>
+        <h2 class="section-title">Catálogo Curado de Instrumentos</h2>
+        <p class="section-sub">Filtre por famílias, ouça timbres e conheça curiosidades históricas.</p>
+      </div>
+
+      <div class="catalog-filters" role="tablist" aria-label="Filtros do Catálogo">
+        <button class="filter-btn active" data-filter="all">Todos</button>
+        <button class="filter-btn" data-filter="cordas">🎸 Cordas</button>
+        <button class="filter-btn" data-filter="percussao">🥁 Percussão</button>
+        <button class="filter-btn" data-filter="teclas">🎹 Teclas</button>
+        <button class="filter-btn" data-filter="sopros">🎺 Sopros</button>
+        <button class="filter-btn" data-filter="mundo">🌎 Do Mundo</button>
+      </div>
+
+      <div class="catalog-grid" id="catalog-grid">
+        <!-- Renderizado dinamicamente via JS com detalhes completos -->
+      </div>
+    </section>
+
+    <!-- Modal Detalhado de Instrumento -->
+    <dialog id="instrument-modal" class="modal-dialog">
+      <div class="modal-content" id="modal-content-body">
+        <!-- Preenchido via JavaScript -->
+      </div>
+    </dialog>
+
+    <!-- 10. QUIZ MUSICAL DE APRENDIZADO -->
+    <section id="quiz-secao" class="quiz-section" aria-label="Quiz Musical">
+      <div class="section-header">
+        <span class="section-kicker">🧠 Desafio de Conhecimento</span>
+        <h2 class="section-title">Quiz de Afinidade Musical</h2>
+        <p class="section-sub">Responda a 8 perguntas para testar seus conhecimentos e descobrir seu instrumento ideal.</p>
+      </div>
+
+      <div class="quiz-wrapper">
+        <div class="quiz-progress-bar">
+          <div class="quiz-progress-fill" id="quiz-progress-fill" style="width: 0%;"></div>
+        </div>
+        <div class="quiz-counter" id="quiz-counter">Pergunta 1 de 8</div>
+
+        <div id="quiz-question-card" class="quiz-card">
+          <h3 id="quiz-question-text">Carregando pergunta...</h3>
+          <div id="quiz-options-container" class="quiz-options">
+            <!-- Opções renderizadas via JS -->
+          </div>
+        </div>
+
+        <div id="quiz-result-card" class="quiz-card" hidden>
+          <span class="badge">RESULTADO DO QUIZ</span>
+          <h3 id="quiz-result-title">Incrível! Seu resultado está pronto.</h3>
+          <p id="quiz-result-text"></p>
+          <div id="quiz-result-instrument-preview" class="quiz-instrument-result"></div>
+          <button id="btn-restart-quiz" class="pill-btn highlight">Refazer Quiz</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. CONQUISTAS & MINHA JORNADA MUSICAL -->
+    <section id="jornada-secao" class="journey-section" aria-label="Minha Jornada e Conquistas">
+      <div class="section-header">
+        <span class="section-kicker">🏆 Evolução Pessoal</span>
+        <h2 class="section-title">Minha Jornada Musical</h2>
+        <p class="section-sub">Explore o site, toque sons e configure a interface para desbloquear conquistas.</p>
+      </div>
+
+      <div class="journey-progress-box">
+        <div class="journey-label">
+          <span>Progresso Geral da Exploração</span>
+          <strong id="journey-percentage-text">0%</strong>
+        </div>
+        <div class="journey-bar">
+          <div class="journey-bar-fill" id="journey-bar-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <div class="achievements-grid" id="achievements-grid">
+        <!-- Renderizado via JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL DA EXPERIÊNCIA GUIADA (ONBOARDING) -->
+  <dialog id="guided-tour-modal" class="tour-modal">
+    <div class="tour-modal-content">
+      <span class="tour-step-badge" id="tour-step-badge">Passo 1 de 6</span>
+      <h2 id="tour-step-title">Bem-vindo ao Sonora!</h2>
+      <p id="tour-step-desc">Gostaria de um pequeno percurso guiado para conhecer a experiência e personalizar a acessibilidade?</p>
+      
+      <div class="tour-modal-actions">
+        <button id="btn-start-tour" class="btn-primary">SIM, ME GUIE</button>
+        <button id="btn-skip-tour" class="btn-secondary">PREFIRO EXPLORAR</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- NOTIFICAÇÃO DE CONQUISTA UNLOCKED (TOAST) -->
+  <div id="achievement-toast" class="achievement-toast" hidden aria-live="assertive">
+    <div class="toast-icon">🏆</div>
+    <div class="toast-info">
+      <span class="toast-title">Conquista Desbloqueada!</span>
+      <span class="toast-name" id="toast-achievement-name">Primeiro Som</span>
     </div>
   </div>
 
-  <div class="container">
+  <footer class="footer-section">
+    <div class="footer-container">
+      <p><strong>SONORA</strong> — Experiência Musical Digital Inclusiva. Projetado com foco em acessibilidade universal.</p>
+      <p class="credits">Desenvolvido como um ecossistema acessível, sem barreiras visuais, motoras ou cognitivas.</p>
+    </div>
+  </footer>
 
-    <!-- HEADER & BARRA DE ACESSIBILIDADE PRINCIPAL -->
-    <header role="banner">
-      <div class="barra-acessibilidade" role="region" aria-label="Acessibilidade Principal">
-        <button id="btn-painel-acessibilidade" class="btn-acess-destaque" aria-expanded="false" aria-controls="painel-config-acessibilidade">
-          ♿ Painel de Acessibilidade
-        </button>
-        <button id="btn-modo-simples" class="btn-toggle-simples" aria-pressed="false">
-          👴 Modo Simples (Idosos)
-        </button>
-        <button id="btn-ler-resumo" class="btn-ler-tela" aria-label="Ler resumo da página via áudio">
-          🔊 Ler Resumo da Página
-        </button>
-      </div>
-
-      <!-- PAINEL COMPLETO DE CONFIGURAÇÕES DE ACESSIBILIDADE (EXPANSÍVEL) -->
-      <section id="painel-config-acessibilidade" class="painel-acessibilidade-expandido" style="display: none;" aria-label="Configurações Detalhadas de Acessibilidade">
-        <div class="grid-acessibilidade">
-          <!-- Categoria Visão -->
-          <div class="card-acess-categoria">
-            <h3>👁️ Visão</h3>
-            <div class="controle-linha">
-              <span>Tamanho do Texto:</span>
-              <div class="grupo-botoes-p">
-                <button id="btn-fonte-dim" aria-label="Diminuir texto">A-</button>
-                <button id="btn-fonte-reset" aria-label="Restaurar tamanho de texto padrão">A</button>
-                <button id="btn-fonte-aum" aria-label="Aumentar texto">A+</button>
-              </div>
-            </div>
-            <div class="controle-linha">
-              <span>Modo de Contraste:</span>
-              <div class="grupo-botoes-p">
-                <button id="btn-contraste-alto">Alto Contraste</button>
-                <button id="btn-contraste-suave">Modo Suave</button>
-                <button id="btn-contraste-normal">Padrão</button>
-              </div>
-            </div>
-            <div class="controle-linha">
-              <label for="select-espacamento">Espaçamento de Texto:</label>
-              <select id="select-espacamento">
-                <option value="normal">Normal</option>
-                <option value="largo">Largo (+Linhas & Letras)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Categoria Áudio & Fala -->
-          <div class="card-acess-categoria">
-            <h3>🔊 Áudio & Fala</h3>
-            <div class="controle-linha">
-              <label for="vol-master-geral">Volume Geral:</label>
-              <input type="range" id="vol-master-geral" min="0" max="1" step="0.05" value="0.7">
-            </div>
-            <div class="controle-linha">
-              <label for="chk-feedback-sonoro">Feedback Sonoro nos Botões:</label>
-              <input type="checkbox" id="chk-feedback-sonoro" checked>
-            </div>
-            <button id="btn-parar-fala" class="btn-perigo-suave">⏹️ Parar Leitura de Voz</button>
-          </div>
-
-          <!-- Categoria Interação & Navegação -->
-          <div class="card-acess-categoria">
-            <h3>✋ Interação & Movimento</h3>
-            <div class="controle-linha">
-              <label for="chk-reduzir-movimento">Reduzir Animações / 3D:</label>
-              <input type="checkbox" id="chk-reduzir-movimento">
-            </div>
-            <div class="controle-linha">
-              <label for="select-tema-3d">Tema do Fundo 3D:</label>
-              <select id="select-tema-3d">
-                <option value="cosmos">Cosmos (Azul)</option>
-                <option value="neon">Neon Vibrante</option>
-                <option value="aurora">Aurora (Verde e Calmo)</option>
-              </select>
-            </div>
-            <button id="btn-restaurar-tudo" class="btn-restaurar">🔄 Restaurar Padrões do Site</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- HERO SECTION -->
-      <div class="hero-header">
-        <h1>🎶 Estúdio Musical Interativo</h1>
-        <p class="subtitulo-hero">Uma experiência digital inclusiva, vibrante e acessível para todas as idades criarem, aprenderem e explorarem sons sem barreiras.</p>
-        
-        <div class="botoes-hero">
-          <a href="#secao-bateria" class="btn-hero-primario">🥁 Iniciar Bateria</a>
-          <a href="#secao-teclado" class="btn-hero-secundario">🎹 Tocar Teclado</a>
-          <button id="btn-iniciar-guiado" class="btn-hero-terciario">🧭 Iniciar Modo Guiado</button>
-        </div>
-      </div>
-
-      <!-- PAINEL DE JORNADA & CONQUISTAS DO USUÁRIO -->
-      <div class="painel-jornada-conquistas" role="region" aria-label="Sua Jornada e Conquistas">
-        <div class="jornada-progresso">
-          <span>Sua Jornada Musical:</span>
-          <div class="indicador-passos">
-            <span id="passo-1" class="passo-bolinha concluido" title="Entrou no site">● Início</span>
-            <span id="passo-2" class="passo-bolinha" title="Explorou a bateria ou teclado">○ Tocou</span>
-            <span id="passo-3" class="passo-bolinha" title="Usou metrônomo ou afinador">○ Praticou</span>
-            <span id="passo-4" class="passo-bolinha" title="Gravou uma música ou fez quiz">○ Concluiu</span>
-          </div>
-        </div>
-        <div class="conquistas-container">
-          <span class="titulo-conquistas">🏆 Conquistas Desbloqueadas:</span>
-          <div id="lista-badges" class="lista-badges">
-            <span id="badge-primeiro-som" class="badge-conquista bloqueada" title="Toque qualquer som para desbloquear">🎵 Primeiro Som</span>
-            <span id="badge-ritmo" class="badge-conquista bloqueada" title="Toque a bateria para desbloquear">🥁 Ritmista</span>
-            <span id="badge-maestro" class="badge-conquista bloqueada" title="Grave uma sequência para desbloquear">🎼 Maestro</span>
-            <span id="badge-explorador" class="badge-conquista bloqueada" title="Realize o Quiz musical">🎧 Explorador</span>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- CONTEÚDO PRINCIPAL DA PÁGINA -->
-    <main id="conteudo-principal" role="main">
-
-      <!-- SEÇÃO DESCUBRA SEU SOM (NOVA SEÇÃO DE EXPERIÊNCIA RÁPIDA) -->
-      <section class="secao-descubra-som" aria-label="Descubra Seu Som">
-        <h2>✨ Descubra o Seu Som Ideal</h2>
-        <p>Escolha a sensação sonora que você deseja experimentar agora:</p>
-        <div class="grid-sensacoes">
-          <button class="btn-sensacao" data-estilo="calmo">🎵 Calmo & Relaxante</button>
-          <button class="btn-sensacao" data-estilo="ritmico">🥁 Rítmico & Vigoroso</button>
-          <button class="btn-sensacao" data-estilo="melodico">🎹 Melódico & Harmônico</button>
-          <button class="btn-sensacao" data-estilo="energetico">⚡ Energético & Festivo</button>
-        </div>
-        <div id="feedback-sensacao" class="card-resultado-sensacao" style="display: none;" aria-live="polite"></div>
-      </section>
-
-      <!-- SEÇÃO BATERIA MANUAL E MODOS DE PRÁTICA -->
-      <section id="secao-bateria" class="secao-bateria" aria-label="Bateria Interativa Manual">
-        <div class="cabecalho-secao">
-          <h2>🥁 Bateria Acessível</h2>
-          <div class="botoes-extra-secao">
-            <button id="btn-demo-ritmo" class="btn-acao-suave">▶️ Ritmo de Demonstração</button>
-            <button id="btn-pratica-bateria" class="btn-acao-suave">🎯 Modo Prática (Repita o Som)</button>
-          </div>
-        </div>
-        <p class="instrucao-secao">Clique nos botões abaixo ou use as teclas numéricas (1 a 5) do seu teclado.</p>
-
-        <div class="grid-pads">
-          <button class="pad-som" data-som="bumbo" aria-label="Tocar Bumbo (Atalho Tecla 1)">
-            <span class="pad-nome">Bumbo</span>
-            <span class="pad-tecla">Tecla 1</span>
-          </button>
-          <button class="pad-som" data-som="caixa" aria-label="Tocar Caixa (Atalho Tecla 2)">
-            <span class="pad-nome">Caixa</span>
-            <span class="pad-tecla">Tecla 2</span>
-          </button>
-          <button class="pad-som" data-som="prato" aria-label="Tocar Prato (Atalho Tecla 3)">
-            <span class="pad-nome">Prato</span>
-            <span class="pad-tecla">Tecla 3</span>
-          </button>
-          <button class="pad-som" data-som="tom" aria-label="Tocar Tom-Tom (Atalho Tecla 4)">
-            <span class="pad-nome">Tom-Tom</span>
-            <span class="pad-tecla">Tecla 4</span>
-          </button>
-          <button class="pad-som" data-som="palma" aria-label="Tocar Palma (Atalho Tecla 5)">
-            <span class="pad-nome">Palma</span>
-            <span class="pad-tecla">Tecla 5</span>
-          </button>
-        </div>
-        <div id="status-pratica-bateria" class="caixa-status-instrucao" aria-live="polite"></div>
-      </section>
-
-      <!-- SEÇÃO TECLADO MUSICAL INTERATIVO -->
-      <section id="secao-teclado" class="secao-teclado" aria-label="Teclado Musical Interativo">
-        <div class="cabecalho-secao">
-          <h2>🎹 Teclado Interativo</h2>
-          <button id="btn-modo-aula-teclado" class="btn-acao-suave">🎓 Modo Aula (Aprenda uma Sequência)</button>
-        </div>
-
-        <!-- Controles de Timbre e Volume -->
-        <div class="controles-teclado">
-          <div class="grupo-input">
-            <label for="seletor-timbre">Timbre:</label>
-            <select id="seletor-timbre" aria-label="Selecionar timbre do instrumento">
-              <option value="sine">Suave (Flauta/Senoide)</option>
-              <option value="triangle">Encorpado (Piano/Triângulo)</option>
-              <option value="square">Retro (8-bit/Quadrada)</option>
-              <option value="sawtooth">Brilhante (Metais/Dente de Serra)</option>
-            </select>
-          </div>
-          
-          <div class="grupo-input">
-            <label for="volume-estudio">Volume Teclado:</label>
-            <input type="range" id="volume-estudio" min="0" max="1" step="0.05" value="0.7" aria-label="Controle de volume do teclado">
-          </div>
-        </div>
-
-        <!-- Teclado Visual -->
-        <div class="teclado-container" role="region" aria-label="Teclas do Piano">
-          <button class="tecla" data-nota="261.63" data-nome="Dó (C4)" data-key="a" aria-label="Tecla Dó, atalho A">A<span>Dó</span></button>
-          <button class="tecla" data-nota="293.66" data-nome="Ré (D4)" data-key="s" aria-label="Tecla Ré, atalho S">S<span>Ré</span></button>
-          <button class="tecla" data-nota="329.63" data-nome="Mi (E4)" data-key="d" aria-label="Tecla Mi, atalho D">D<span>Mi</span></button>
-          <button class="tecla" data-nota="349.23" data-nome="Fá (F4)" data-key="f" aria-label="Tecla Fá, atalho F">F<span>Fá</span></button>
-          <button class="tecla" data-nota="392.00" data-nome="Sol (G4)" data-key="g" aria-label="Tecla Sol, atalho G">G<span>Sol</span></button>
-          <button class="tecla" data-nota="440.00" data-nome="Lá (A4)" data-key="h" aria-label="Tecla Lá, atalho H">H<span>Lá</span></button>
-          <button class="tecla" data-nota="493.88" data-nome="Si (B4)" data-key="j" aria-label="Tecla Si, atalho J">J<span>Si</span></button>
-          <button class="tecla" data-nota="523.25" data-nome="Dó Agudo (C5)" data-key="k" aria-label="Tecla Dó Agudo, atalho K">K<span>Dó</span></button>
-        </div>
-
-        <div id="display-nota" class="display-nota-info" aria-live="polite">Clique em uma tecla ou use as letras do seu teclado (A, S, D, F, G, H, J, K)</div>
-
-        <div id="status-modo-aula" class="caixa-status-instrucao" aria-live="polite"></div>
-
-        <!-- Central de Gravação de Áudio/Música -->
-        <div class="gravador-container">
-          <div class="status-gravacao-texto" id="texto-status-gravacao">Estado: Pronto para gravar</div>
-          <div class="botoes-gravador">
-            <button id="btn-record" aria-label="Iniciar ou parar gravação de áudio">🔴 Gravar</button>
-            <button id="btn-play-loop" disabled aria-label="Reproduzir música gravada">▶️ Reproduzir</button>
-            <button id="btn-limpar-gravacao" disabled aria-label="Limpar gravação atual">🗑️ Limpar</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- SEÇÃO FERRAMENTAS: METRÔNOMO E AFINADOR -->
-      <section id="secao-ferramentas" class="secao-ferramentas" aria-label="Ferramentas Musicais">
-        
-        <!-- Metrônomo Acessível -->
-        <div class="bloco-ferramenta">
-          <h3>⏱️ Metrônomo</h3>
-          <p class="desc-ferramenta">Acompanhe o tempo rítmico das suas músicas.</p>
-
-          <div class="bpm-display-container">
-            <button id="btn-bpm-menos" class="btn-mais-menos" aria-label="Diminuir velocidade BPM">-</button>
-            <div class="display-bpm-valor"><span id="val-bpm">120</span> <small>BPM</small></div>
-            <button id="btn-bpm-mais" class="btn-mais-menos" aria-label="Aumentar velocidade BPM">+</button>
-          </div>
-
-          <input type="range" id="slider-bpm" min="40" max="208" value="120" aria-label="Ajustar velocidade BPM">
-
-          <div class="presets-bpm">
-            <button class="btn-preset-bpm" data-bpm="60">Lento (60)</button>
-            <button class="btn-preset-bpm" data-bpm="120">Moderado (120)</button>
-            <button class="btn-preset-bpm" data-bpm="160">Rápido (160)</button>
-          </div>
-
-          <div class="botoes-inline">
-            <button id="btn-iniciar-metronomo" class="btn-principal">▶️ Iniciar</button>
-            <button id="btn-parar-metronomo" class="btn-secundario">⏹️ Parar</button>
-          </div>
-          <div id="pulso-visual" class="pulso-metronomo" aria-hidden="true"></div>
-        </div>
-
-        <!-- Afinador Visual & Falado -->
-        <div class="bloco-ferramenta">
-          <h3>🎯 Afinador de Referência</h3>
-          <p class="desc-ferramenta">Selecione uma nota abaixo para ouvir e calibrar o seu instrumento.</p>
-
-          <div class="grid-ref">
-            <button class="btn-nota-ref" data-freq="82.41" data-nome="Mi (E2)" data-pos="10">E2 (Mi)</button>
-            <button class="btn-nota-ref" data-freq="110.00" data-nome="Lá (A2)" data-pos="30">A2 (Lá)</button>
-            <button class="btn-nota-ref" data-freq="146.83" data-nome="Ré (D3)" data-pos="50">D3 (Ré)</button>
-            <button class="btn-nota-ref" data-freq="196.00" data-nome="Sol (G3)" data-pos="70">G3 (Sol)</button>
-            <button class="btn-nota-ref" data-freq="440.00" data-nome="Lá (A4)" data-pos="90">A4 (Lá)</button>
-          </div>
-
-          <div class="regua-afinador" aria-hidden="true">
-            <div id="ponteiro-afinador"></div>
-          </div>
-          <div id="status-afinador" class="status-afinador-texto" aria-live="polite">Selecione uma nota de referência acima</div>
-        </div>
-      </section>
-
-      <!-- CATÁLOGO AMPLIADO DE INSTRUMENTOS -->
-      <section id="secao-catalogo" class="secao-catalogo" aria-label="Catálogo Completo de Instrumentos">
-        <h2>🎸 Catálogo Musical Inclusivo</h2>
-        <p class="subtitulo-secao">Explore instrumentos de diferentes culturas e famílias sonoras.</p>
-
-        <div class="filtros-busca">
-          <input type="text" id="input-busca" placeholder="🔎 Digite para pesquisar instrumento..." aria-label="Pesquisar instrumento pelo nome">
-          <select id="filtro-categoria" aria-label="Filtrar por família de instrumento">
-            <option value="todos">Todas as Famílias</option>
-            <option value="cordas">Cordas</option>
-            <option value="teclas">Teclas</option>
-            <option value="percussao">Percussão</option>
-            <option value="sopros">Sopros</option>
-          </select>
-        </div>
-
-        <!-- Grid Dinâmico de Cards de Instrumentos -->
-        <div id="grid-cards-instrumentos" class="grid-cards">
-          <!-- Inserido dinamicamente via JS com dezenas de opções completas -->
-        </div>
-        <div id="estado-vazio-catalogo" class="estado-vazio" style="display: none;">
-          <p>🔍 Nenhum instrumento foi encontrado com esses filtros. Tente pesquisar outro termo.</p>
-        </div>
-      </section>
-
-      <!-- QUIZ COMPLETO DE RECOMENDAÇÃO -->
-      <section id="secao-quiz" class="secao-quiz" aria-label="Quiz Musical">
-        <h2>❓ Quiz: Qual Instrumento Combina com Você?</h2>
-        <p class="subtitulo-secao">Responda às perguntas simples para receber uma recomendação personalizada de aprendizado.</p>
-
-        <div id="quiz-form" class="container-quiz-perguntas">
-          
-          <div class="pergunta-card">
-            <p class="pergunta-titulo">1. O que você mais gosta de sentir ao ouvir música?</p>
-            <label><input type="radio" name="qp1" value="cordas" checked> Harmonia acolhedora para relaxar e cantar</label>
-            <label><input type="radio" name="qp1" value="teclas"> Melodias ricas e arranjos expressivos</label>
-            <label><input type="radio" name="qp1" value="percussao"> Ritmo marcante, energia e vontade de dançar</label>
-            <label><input type="radio" name="qp1" value="sopros"> Sons expressivos semelhantes à voz humana</label>
-          </div>
-
-          <div class="pergunta-card">
-            <p class="pergunta-titulo">2. Como é o seu espaço e rotina ideal de prática?</p>
-            <label><input type="radio" name="qp2" value="cordas" checked> Praticar no sofá, na varanda ou em viagens</label>
-            <label><input type="radio" name="qp2" value="teclas"> Um canto calmo com postura confortável</label>
-            <label><input type="radio" name="qp2" value="percussao"> Um ambiente para se movimentar e descarregar energia</label>
-            <label><input type="radio" name="qp2" value="sopros"> Práticas leves e focadas no controle do sopro/respiração</label>
-          </div>
-
-          <div class="pergunta-card">
-            <p class="pergunta-titulo">3. Como você prefere aprender um novo exercício?</p>
-            <label><input type="radio" name="qp3" value="cordas" checked> Ouvindo e repetindo os acordes no seu tempo</label>
-            <label><input type="radio" name="qp3" value="teclas"> Visualizando as notas organizadas passo a passo</label>
-            <label><input type="radio" name="qp3" value="percussao"> Acompanhando a palmas e a batida do tempo</label>
-            <label><input type="radio" name="qp3" value="sopros"> Treinando frases curtas e expressivas</label>
-          </div>
-
-          <button id="btn-calcular-quiz" class="btn-destaque-grande">📊 Ver Minha Recomendação</button>
-        </div>
-
-        <div id="painel-resultado-quiz" class="painel-resultado-quiz" style="display: none;" aria-live="polite">
-          <div id="quiz-emoji" class="quiz-emoji-destaque"></div>
-          <h3 id="quiz-titulo-resultado"></h3>
-          <p id="quiz-desc-resultado"></p>
-          <div id="barras-compatibilidade" class="barras-compatibilidade"></div>
-          <button id="btn-reiniciar-quiz" class="btn-secundario-pequeno">🔄 Refazer Quiz</button>
-        </div>
-      </section>
-
-      <!-- SEÇÃO DE ATALHOS DE TECLADO -->
-      <section id="secao-atalhos" class="secao-atalhos" aria-label="Atalhos do Teclado">
-        <h2>⌨️ Atalhos Rápidos de Teclado</h2>
-        <div class="grid-atalhos">
-          <div class="card-atalho"><kbd>A</kbd> até <kbd>K</kbd> <span>Teclas do Teclado Musical</span></div>
-          <div class="card-atalho"><kbd>1</kbd> até <kbd>5</kbd> <span>Sons de Bateria</span></div>
-          <div class="card-atalho"><kbd>M</kbd> <span>Iniciar/Parar Metrônomo</span></div>
-          <div class="card-atalho"><kbd>B</kbd> <span>Rolar até a Bateria</span></div>
-          <div class="card-atalho"><kbd>?</kbd> <span>Abrir / Fechar Painel de Acessibilidade</span></div>
-        </div>
-      </section>
-
-    </main>
-
-    <!-- FOOTER E INFORMÁTICA SOCIAL -->
-    <footer role="contentinfo">
-      <div class="conteudo-footer">
-        <h3>🎶 Projeto de Acessibilidade & Inclusão Musical</h3>
-        <p>Desenvolvido para demonstrar que a tecnologia moderna, a interatividade 3D e o design elegante podem coexistir de forma harmoniosa com a acessibilidade plena para pessoas idosas e com necessidades diversas.</p>
-        
-        <nav aria-label="Navegação do Rodapé">
-          <ul class="links-footer">
-            <li><a href="#secao-bateria">Bateria</a></li>
-            <li><a href="#secao-teclado">Teclado</a></li>
-            <li><a href="#secao-ferramentas">Ferramentas</a></li>
-            <li><a href="#secao-catalogo">Catálogo</a></li>
-            <li><a href="#secao-quiz">Quiz</a></li>
-          </ul>
-        </nav>
-        <p class="copyright">© 2026 - Estúdio Musical Interativo. Todos os direitos reservados.</p>
-      </div>
-    </footer>
-
-  </div>
-
-  <script src="script.js"></script>
 </body>
 </html>
