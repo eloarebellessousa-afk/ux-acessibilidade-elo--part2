@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clube da Música • Plataforma Interativa Dark 3D</title>
 <link rel="stylesheet" href="style.css">
-<!-- Three.js para o Fundo 3D Interativo -->
+<!-- Engine Three.js para o Fundo 3D Interativo -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-<!-- Canvas do Fundo 3D Interativo que segue o mouse -->
+<!-- Canvas do Fundo 3D Interativo -->
 <canvas id="bg-canvas-3d"></canvas>
 
 <!-- Link de Acessibilidade -->
@@ -33,9 +33,9 @@
   
   <div class="grupo-estilo-fundo">
     <span class="rotulo-mini">Ambiente 3D:</span>
-    <button class="btn-tema-3d ativo" data-tema="cosmos">🌌 Cosmos</button>
-    <button class="btn-tema-3d" data-tema="neon">⚡ Neon</button>
-    <button class="btn-tema-3d" data-tema="aurora">🟢 Aurora</button>
+    <button class="btn-tema-3d ativo" onclick="mudarCorParticulas(0x3b82f6)">🌌 Cosmos</button>
+    <button class="btn-tema-3d" onclick="mudarCorParticulas(0xec4899)">⚡ Neon</button>
+    <button class="btn-tema-3d" onclick="mudarCorParticulas(0x22c55e)">🟢 Aurora</button>
   </div>
 </nav>
 
@@ -74,32 +74,21 @@
     <div class="painel-filtros">
       <div class="filtro-grupo">
         <label for="filtro-categoria"><strong>Categoria:</strong></label>
-        <select id="filtro-categoria" class="seletor-custom">
+        <select id="filtro-categoria" class="seletor-custom" onchange="filtrarCards()">
           <option value="todos">Todos os Tipos</option>
           <option value="cordas">Cordas</option>
           <option value="teclas">Teclas</option>
-          <option value="sopro">Sopro</option>
           <option value="percussao">Percussão</option>
         </select>
       </div>
 
-      <div class="filtro-grupo">
-        <label for="filtro-dificuldade"><strong>Nível:</strong></label>
-        <select id="filtro-dificuldade" class="seletor-custom">
-          <option value="todos">Todos os Níveis</option>
-          <option value="facil">Iniciante</option>
-          <option value="medio">Intermediário</option>
-          <option value="avancado">Avançado</option>
-        </select>
-      </div>
-
       <div class="filtro-grupo busca-box">
-        <input type="text" id="input-busca" placeholder="🔍 Buscar por nome..." class="input-texto">
+        <input type="text" id="input-busca" placeholder="🔍 Buscar por nome..." class="input-texto" onkeyup="filtrarCards()">
       </div>
     </div>
 
     <div class="grade-instrumentos" id="grade-instrumentos">
-      <article class="card-instrumento" data-categoria="cordas" data-dificuldade="facil">
+      <article class="card-instrumento" data-categoria="cordas" data-nome="violão acústico">
         <div class="tag-nivel facil">Iniciante Amigável</div>
         <header class="card-cabecalho">
           <span class="emoji-instrumento" aria-hidden="true">🎸</span>
@@ -108,17 +97,13 @@
             <span class="categoria">Cordas • Harmônico</span>
           </div>
         </header>
-        <div class="etiquetas-caracteristicas">
-          <span class="etiqueta">Acompanhamento</span>
-          <span class="etiqueta">Versátil</span>
-        </div>
         <p class="descricao">Perfeito para criar bases, canções ao vivo e harmonias.</p>
         <section class="bloco-audio">
-          <button class="btn-tocar-demo" data-demo="violao">▶️ Ouvir Demonstração</button>
+          <button class="btn-tocar-demo" onclick="tocarArpejo([261.63, 329.63, 392.00, 523.25])">▶️ Ouvir Demonstração</button>
         </section>
       </article>
 
-      <article class="card-instrumento" data-categoria="teclas" data-dificuldade="facil">
+      <article class="card-instrumento" data-categoria="teclas" data-nome="teclado synthesizer">
         <div class="tag-nivel facil">Acesso Imediato</div>
         <header class="card-cabecalho">
           <span class="emoji-instrumento" aria-hidden="true">🎹</span>
@@ -127,17 +112,13 @@
             <span class="categoria">Teclas • Digital</span>
           </div>
         </header>
-        <div class="etiquetas-caracteristicas">
-          <span class="etiqueta">Lógica Clara</span>
-          <span class="etiqueta">Polifônico</span>
-        </div>
         <p class="descricao">Ideal para compreender a teoria musical com clareza visual.</p>
         <section class="bloco-audio">
-          <button class="btn-tocar-demo" data-demo="piano">▶️ Ouvir Demonstração</button>
+          <button class="btn-tocar-demo" onclick="tocarArpejo([440.00, 554.37, 659.25, 880.00])">▶️ Ouvir Demonstração</button>
         </section>
       </article>
 
-      <article class="card-instrumento" data-categoria="percussao" data-dificuldade="medio">
+      <article class="card-instrumento" data-categoria="percussao" data-nome="bateria eletrônica">
         <div class="tag-nivel medio">Motor Rítmico</div>
         <header class="card-cabecalho">
           <span class="emoji-instrumento" aria-hidden="true">🥁</span>
@@ -146,13 +127,9 @@
             <span class="categoria">Percussão • Modulada</span>
           </div>
         </header>
-        <div class="etiquetas-caracteristicas">
-          <span class="etiqueta">Groove</span>
-          <span class="etiqueta">Coordenação</span>
-        </div>
         <p class="descricao">A força do tempo e da métrica para todas as músicas.</p>
         <section class="bloco-audio">
-          <button class="btn-tocar-demo" data-demo="bateria">▶️ Ouvir Demonstração</button>
+          <button class="btn-tocar-demo" onclick="tocarRitmoBateria()">▶️ Ouvir Demonstração</button>
         </section>
       </article>
     </div>
@@ -162,16 +139,16 @@
   <section class="conteudo-aba secao-estudio-aba">
     <div class="caixa-interativa">
       <h2>🎹 Estúdio Synthesizer Dark Pro</h2>
-      <p>Toque com o mouse ou aperte as teclas do seu teclado físico (A, W, S, E, D, F, T, G, Y, H, U, J, K):</p>
+      <p>Toque com o mouse ou use o teclado físico (A, W, S, E, D, F, T, G, Y, H, U, J, K):</p>
 
       <div class="controles-estudio">
         <div class="grupo-estudio">
           <label for="seletor-timbre"><strong>Timbre:</strong></label>
           <select id="seletor-timbre" class="seletor-custom">
-            <option value="piano">🎹 Piano Digital</option>
-            <option value="synth">⚡ Synth Neon</option>
-            <option value="orgao">🎺 Órgão Retro</option>
-            <option value="cordas">🎻 Synth Strings</option>
+            <option value="sine">🎹 Piano Suave</option>
+            <option value="sawtooth">⚡ Synth Neon</option>
+            <option value="square">🎺 Órgão Retro</option>
+            <option value="triangle">🎻 Synth Strings</option>
           </select>
         </div>
 
@@ -182,19 +159,19 @@
       </div>
 
       <div class="teclado-visual" id="teclado-estudio">
-        <button class="tecla branca" data-nota="261.63" data-nome="DÓ" data-key="a"><span>DÓ<br><small>(A)</small></span></button>
-        <button class="tecla preta" data-nota="277.18" data-nome="DÓ#" data-key="w"><span>W</span></button>
-        <button class="tecla branca" data-nota="293.66" data-nome="RÉ" data-key="s"><span>RÉ<br><small>(S)</small></span></button>
-        <button class="tecla preta" data-nota="311.13" data-nome="RÉ#" data-key="e"><span>E</span></button>
-        <button class="tecla branca" data-nota="329.63" data-nome="MI" data-key="d"><span>MI<br><small>(D)</small></span></button>
-        <button class="tecla branca" data-nota="349.23" data-nome="FÁ" data-key="f"><span>FÁ<br><small>(F)</small></span></button>
-        <button class="tecla preta" data-nota="369.99" data-nome="FÁ#" data-key="t"><span>T</span></button>
-        <button class="tecla branca" data-nota="392.00" data-nome="SOL" data-key="g"><span>SOL<br><small>(G)</small></span></button>
-        <button class="tecla preta" data-nota="415.30" data-nome="SOL#" data-key="y"><span>Y</span></button>
-        <button class="tecla branca" data-nota="440.00" data-nome="LÁ" data-key="h"><span>LÁ<br><small>(H)</small></span></button>
-        <button class="tecla preta" data-nota="466.16" data-nome="LÁ#" data-key="u"><span>U</span></button>
-        <button class="tecla branca" data-nota="493.88" data-nome="SI" data-key="j"><span>SI<br><small>(J)</small></span></button>
-        <button class="tecla branca" data-nota="523.25" data-nome="DÓ 2" data-key="k"><span>DÓ 2<br><small>(K)</small></span></button>
+        <button class="tecla branca" data-nota="261.63" data-nome="DÓ" data-key="a" onclick="tocarNotaVisual(261.63, 'DÓ', this)"><span>DÓ<br><small>(A)</small></span></button>
+        <button class="tecla preta" data-nota="277.18" data-nome="DÓ#" data-key="w" onclick="tocarNotaVisual(277.18, 'DÓ#', this)"><span>W</span></button>
+        <button class="tecla branca" data-nota="293.66" data-nome="RÉ" data-key="s" onclick="tocarNotaVisual(293.66, 'RÉ', this)"><span>RÉ<br><small>(S)</small></span></button>
+        <button class="tecla preta" data-nota="311.13" data-nome="RÉ#" data-key="e" onclick="tocarNotaVisual(311.13, 'RÉ#', this)"><span>E</span></button>
+        <button class="tecla branca" data-nota="329.63" data-nome="MI" data-key="d" onclick="tocarNotaVisual(329.63, 'MI', this)"><span>MI<br><small>(D)</small></span></button>
+        <button class="tecla branca" data-nota="349.23" data-nome="FÁ" data-key="f" onclick="tocarNotaVisual(349.23, 'FÁ', this)"><span>FÁ<br><small>(F)</small></span></button>
+        <button class="tecla preta" data-nota="369.99" data-nome="FÁ#" data-key="t" onclick="tocarNotaVisual(369.99, 'FÁ#', this)"><span>T</span></button>
+        <button class="tecla branca" data-nota="392.00" data-nome="SOL" data-key="g" onclick="tocarNotaVisual(392.00, 'SOL', this)"><span>SOL<br><small>(G)</small></span></button>
+        <button class="tecla preta" data-nota="415.30" data-nome="SOL#" data-key="y" onclick="tocarNotaVisual(415.30, 'SOL#', this)"><span>Y</span></button>
+        <button class="tecla branca" data-nota="440.00" data-nome="LÁ" data-key="h" onclick="tocarNotaVisual(440.00, 'LÁ', this)"><span>LÁ<br><small>(H)</small></span></button>
+        <button class="tecla preta" data-nota="466.16" data-nome="LÁ#" data-key="u" onclick="tocarNotaVisual(466.16, 'LÁ#', this)"><span>U</span></button>
+        <button class="tecla branca" data-nota="493.88" data-nome="SI" data-key="j" onclick="tocarNotaVisual(493.88, 'SI', this)"><span>SI<br><small>(J)</small></span></button>
+        <button class="tecla branca" data-nota="523.25" data-nome="DÓ 2" data-key="k" onclick="tocarNotaVisual(523.25, 'DÓ 2', this)"><span>DÓ 2<br><small>(K)</small></span></button>
       </div>
 
       <div class="display-nota" id="display-nota">
@@ -215,10 +192,10 @@
         </div>
 
         <div class="controles-metronomo">
-          <input type="range" id="slider-bpm" min="50" max="180" value="120" class="slider-largo">
+          <input type="range" id="slider-bpm" min="50" max="180" value="120" class="slider-largo" oninput="document.getElementById('val-bpm').innerText = this.value">
           <div class="botoes-metronomo">
-            <button id="btn-iniciar-metronomo" class="btn-acao">▶️ Iniciar Pulso</button>
-            <button id="btn-parar-metronomo" class="btn-acao secundario">⏹️ Parar</button>
+            <button onclick="iniciarMetronomo()" class="btn-acao">▶️ Iniciar Pulso</button>
+            <button onclick="pararMetronomo()" class="btn-acao secundario">⏹️ Parar</button>
           </div>
         </div>
       </div>
@@ -227,12 +204,10 @@
 
       <h3>🎛️ Pads de Percussão Reativa:</h3>
       <div class="soundboard-grid">
-        <button class="pad-som" data-tipo-som="bumbo">🥁<br>Bumbo</button>
-        <button class="pad-som" data-tipo-som="caixa">💥<br>Caixa</button>
-        <button class="pad-som" data-tipo-som="prato">🔔<br>Hi-Hat</button>
-        <button class="pad-som" data-tipo-som="prato-aberto">✨<br>Prato Aberto</button>
-        <button class="pad-som" data-tipo-som="palma">👏<br>Palma</button>
-        <button class="pad-som" data-tipo-som="vinil">🪩<br>Scratch FX</button>
+        <button class="pad-som" onclick="tocarPercussao('bumbo', this)">🥁<br>Bumbo</button>
+        <button class="pad-som" onclick="tocarPercussao('caixa', this)">💥<br>Caixa</button>
+        <button class="pad-som" onclick="tocarPercussao('prato', this)">🔔<br>Hi-Hat</button>
+        <button class="pad-som" onclick="tocarPercussao('palma', this)">👏<br>Palma</button>
       </div>
     </div>
   </section>
@@ -243,10 +218,10 @@
       <h2>🎯 Treinador Visual de Ouvido e Afinação</h2>
       <div class="painel-afinador">
         <div class="seletor-nota-afinador">
-          <button class="btn-nota-ref" data-freq="261.63" data-nome="Dó (C4)">Dó (C4)</button>
-          <button class="btn-nota-ref" data-freq="329.63" data-nome="Mi (E4)">Mi (E4)</button>
-          <button class="btn-nota-ref" data-freq="392.00" data-nome="Sol (G4)">Sol (G4)</button>
-          <button class="btn-nota-ref" data-freq="440.00" data-nome="Lá (A4)">Lá (A4 - 440Hz)</button>
+          <button class="btn-nota-ref" onclick="testarAfinacao(261.63, 'Dó (C4)', 20)">Dó (C4)</button>
+          <button class="btn-nota-ref" onclick="testarAfinacao(329.63, 'Mi (E4)', 50)">Mi (E4)</button>
+          <button class="btn-nota-ref" onclick="testarAfinacao(392.00, 'Sol (G4)', 80)">Sol (G4)</button>
+          <button class="btn-nota-ref" onclick="testarAfinacao(440.00, 'Lá (A4 - 440Hz)', 50)">Lá (A4 - 440Hz)</button>
         </div>
 
         <div class="display-afinador">
@@ -255,7 +230,7 @@
         </div>
 
         <div class="status-afinador" id="status-afinador">
-          Clique em uma nota para gerar a freqüência e testar o timbre.
+          Clique em uma nota de referência para testar o sinal do oscilador.
         </div>
       </div>
     </div>
@@ -265,80 +240,19 @@
   <section class="conteudo-aba secao-quiz-aba">
     <div class="caixa-interativa">
       <h2>📋 Quiz Diagnóstico Musical Completo Pro</h2>
-      <p>Responda às 4 perguntas abaixo para calcular com precisão o seu perfil e o instrumento ideal:</p>
+      <p>Responda às perguntas abaixo para calcular o seu perfil e instrumento ideal:</p>
 
       <form id="quiz-form" onsubmit="return false;">
-        
         <fieldset class="quiz-pergunta">
           <legend><strong>1. Qual experiência sonora você deseja alcançar?</strong></legend>
           <div class="quiz-opcoes-grid">
-            <label class="card-opcao-quiz">
-              <input type="radio" name="p1" value="violao" checked>
-              <span>🗣️ Cantar acompanhado e criar momentos acolhedores.</span>
-            </label>
-            <label class="card-opcao-quiz">
-              <input type="radio" name="p1" value="teclado">
-              <span>🎹 Criar arranjos e composições completas.</span>
-            </label>
-            <label class="card-opcao-quiz">
-              <input type="radio" name="p1" value="bateria">
-              <span>⚡ Descarregar energia no ritmo e velocidade.</span>
-            </label>
+            <label class="card-opcao-quiz"><input type="radio" name="p1" value="violao" checked> <span>🗣️ Cantar acompanhado e criar harmonias.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="p1" value="teclado"> <span>🎹 Criar composições completas e arranjos.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="p1" value="bateria"> <span>⚡ Ritmo, velocidade e impacto percussivo.</span></label>
           </div>
         </fieldset>
 
-        <fieldset class="quiz-pergunta">
-          <legend><strong>2. Qual o seu ambiente principal de prática?</strong></legend>
-          <div class="quiz-opcoes-grid">
-            <label class="card-opcao-quiz">
-              <input type="radio" name="p2" value="casa" checked>
-              <span>🏠 Quarto/Casa (precisa de fones de ouvido ou som ambiente suave).</span>
-            </label>
-            <label class="card-opcao-quiz">
-              <input type="radio" name="p2" value="viagem">
-              <span>✈️ Em viagens, parques ou encontros ao ar livre.</span>
-            </label>
-            <label class="card-opcao-quiz">
-              <input type="radio" name="p2" value="palco">
-              <span>🎙️ Estúdios e palcos de apresentação.</span>
-            </label>
-          </div>
-        </fieldset>
-
-        <fieldset class="quiz-pergunta">
-          <legend><strong>3. Quanto tempo pretende dedicar aos treinos por semana?</strong></legend>
-          <div class="quiz-opcoes-grid">
-            <label class="card-opcao-quiz">
-              <input type="radio" name="p3" value="pouco" checked>
-              <span>⏱️ 15 a 30 minutos por dia (ritmo leve).</span>
-            </label>
-            <label class="card-opcao-quiz">
-              <input type="radio" name="p3" value="medio">
-              <span>⏱️ 1 hora por dia (ritmo constante).</span>
-            </label>
-            <label class="card-opcao-quiz">
-              <input type="radio" name="p3" value="muito">
-              <span>⏱️ Mais de 2 horas diárias (foco profissional).</span>
-            </label>
-          </div>
-        </fieldset>
-
-        <fieldset class="quiz-pergunta">
-          <legend><strong>4. Qual estilo visual e sonoro te atrai mais?</strong></legend>
-          <div class="quiz-opcoes-grid">
-            <label class="card-opcao-quiz">
-              <input type="radio" name="p4" value="classico" checked>
-              <span>🎻 Orgânico, clássico e acústico.</span>
-            </label>
-            <label class="card-opcao-quiz">
-              <input type="radio" name="p4" value="moderno">
-              <span>⚡ Digital, eletrônico e dinâmico.</span>
-            </label>
-          </div>
-        </fieldset>
-
-        <button id="btn-calcular-quiz" type="button" class="btn-acao primario-grande">✨ Processar Diagnóstico Musical</button>
-
+        <button type="button" onclick="processarQuiz()" class="btn-acao primario-grande">✨ Processar Diagnóstico Musical</button>
       </form>
 
       <div class="painel-resultado-quiz" id="painel-resultado-quiz" style="display: none;">
@@ -349,18 +263,222 @@
             <p id="quiz-desc-resultado">Avaliando perfil...</p>
           </div>
         </div>
-        <div class="detalhes-resultado-analise" id="quiz-detalhes-analise"></div>
       </div>
-
     </div>
   </section>
 
 </div>
 
 <footer class="rodape">
-  <p>🌟 <strong>Clube da Música Dark Pro</strong> • Experiência 100% Interativa em HTML & CSS.</p>
+  <p>🌟 <strong>Clube da Música Dark Pro</strong> • Experiência 100% Interativa com Web Audio API & Three.js 3D.</p>
 </footer>
 
-<script src="script.js"></script>
+<!-- SCRIPT DE ÁUDIO, INTERAÇÃO E AMBIENTE 3D -->
+<script>
+// --- FUNDO 3D INTERATIVO (THREE.JS SEGUINDO O MOUSE) ---
+let scene, camera, renderer, particles, particleMaterial;
+let mouseX = 0, mouseY = 0;
+
+function init3D() {
+  const canvas = document.getElementById('bg-canvas-3d');
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.z = 400;
+
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const geometry = new THREE.BufferGeometry();
+  const count = 700;
+  const positions = new Float32Array(count * 3);
+
+  for (let i = 0; i < count * 3; i++) {
+    positions[i] = (Math.random() - 0.5) * 1000;
+  }
+
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  particleMaterial = new THREE.PointsMaterial({ size: 3, color: 0x3b82f6, transparent: true, opacity: 0.8 });
+  particles = new THREE.Points(geometry, particleMaterial);
+  scene.add(particles);
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX - window.innerWidth / 2) * 0.1;
+    mouseY = (e.clientY - window.innerHeight / 2) * 0.1;
+  });
+
+  animate();
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (particles) {
+    particles.rotation.x += 0.001;
+    particles.rotation.y += 0.002;
+    camera.position.x += (mouseX - camera.position.x) * 0.05;
+    camera.position.y += (-mouseY - camera.position.y) * 0.05;
+    camera.lookAt(scene.position);
+  }
+  renderer.render(scene, camera);
+}
+
+function mudarCorParticulas(corHex) {
+  if (particleMaterial) particleMaterial.color.setHex(corHex);
+}
+
+window.addEventListener('resize', () => {
+  if (camera && renderer) {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+});
+
+// --- SINTETIZADOR NATIVO (WEB AUDIO API) ---
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function obterAudioContext() {
+  if (!audioCtx) audioCtx = new AudioContext();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function tocarSom(freq, duracao = 0.8, tipo = null) {
+  const ctx = obterAudioContext();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  const tipoSelecionado = tipo || document.getElementById('seletor-timbre')?.value || 'sine';
+  const vol = parseFloat(document.getElementById('volume-estudio')?.value || 0.7);
+
+  osc.type = tipoSelecionado;
+  osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+  gain.gain.setValueAtTime(vol, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duracao);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start();
+  osc.stop(ctx.currentTime + duracao);
+}
+
+function tocarNotaVisual(freq, nome, elemento) {
+  tocarSom(freq);
+  document.getElementById('display-nota').innerHTML = `Nota Ativa: <strong>${nome} (${freq} Hz)</strong>`;
+  if (elemento) {
+    elemento.classList.add('ativa');
+    setTimeout(() => elemento.classList.remove('ativa'), 200);
+  }
+}
+
+function tocarArpejo(notas) {
+  notas.forEach((nota, idx) => {
+    setTimeout(() => tocarSom(nota, 0.6), idx * 180);
+  });
+}
+
+function tocarPercussao(tipo, el) {
+  if (el) {
+    el.classList.add('hit');
+    setTimeout(() => el.classList.remove('hit'), 150);
+  }
+  if (tipo === 'bumbo') tocarSom(60, 0.3, 'sine');
+  else if (tipo === 'caixa') tocarSom(220, 0.2, 'triangle');
+  else if (tipo === 'prato') tocarSom(800, 0.1, 'square');
+  else tocarSom(400, 0.15, 'sine');
+}
+
+function tocarRitmoBateria() {
+  tocarPercussao('bumbo');
+  setTimeout(() => tocarPercussao('prato'), 150);
+  setTimeout(() => tocarPercussao('caixa'), 300);
+  setTimeout(() => tocarPercussao('prato'), 450);
+}
+
+// --- METRÔNOMO ---
+let timerMetronomo = null;
+function iniciarMetronomo() {
+  pararMetronomo();
+  const bpm = parseInt(document.getElementById('slider-bpm').value);
+  const ms = (60 / bpm) * 1000;
+  const pulso = document.getElementById('pulso-visual');
+
+  timerMetronomo = setInterval(() => {
+    tocarSom(1000, 0.05, 'sine');
+    pulso.classList.add('piscar');
+    setTimeout(() => pulso.classList.remove('piscar'), 100);
+  }, ms);
+}
+
+function pararMetronomo() {
+  if (timerMetronomo) clearInterval(timerMetronomo);
+}
+
+// --- AFINADOR ---
+function testarAfinacao(freq, nome, posPonteiro) {
+  tocarSom(freq, 1.2);
+  document.getElementById('ponteiro-afinador').style.left = posPonteiro + '%';
+  document.getElementById('status-afinador').innerHTML = `Frequência emitida: <strong>${nome}</strong>`;
+}
+
+// --- FILTRO DE BUSCA DO CATÁLOGO ---
+function filtrarCards() {
+  const cat = document.getElementById('filtro-categoria').value;
+  const busca = document.getElementById('input-busca').value.toLowerCase();
+  
+  document.querySelectorAll('.card-instrumento').forEach(card => {
+    const cardCat = card.dataset.categoria;
+    const cardNome = card.dataset.nome;
+    const atendeCat = (cat === 'todos' || cardCat === cat);
+    const atendeBusca = cardNome.includes(busca);
+    
+    card.style.display = (atendeCat && atendeBusca) ? 'flex' : 'none';
+  });
+}
+
+// --- QUIZ ---
+function processarQuiz() {
+  const p1 = document.querySelector('input[name="p1"]:checked')?.value;
+  const res = document.getElementById('painel-resultado-quiz');
+  res.style.display = 'block';
+
+  if (p1 === 'bateria') {
+    document.getElementById('quiz-emoji').textContent = '🥁';
+    document.getElementById('quiz-titulo-resultado').textContent = 'Bateria Eletrônica Pro';
+    document.getElementById('quiz-desc-resultado').textContent = 'Perfil Rítmico: Desenvolva coordenação motoro-espacial e tempo absoluto.';
+  } else if (p1 === 'teclado') {
+    document.getElementById('quiz-emoji').textContent = '🎹';
+    document.getElementById('quiz-titulo-resultado').textContent = 'Teclado Synthesizer Pro';
+    document.getElementById('quiz-desc-resultado').textContent = 'Perfil Harmônico: Perfeito para visão ampla de arranjos e composição digital.';
+  } else {
+    document.getElementById('quiz-emoji').textContent = '🎸';
+    document.getElementById('quiz-titulo-resultado').textContent = 'Violão Acústico';
+    document.getElementById('quiz-desc-resultado').textContent = 'Perfil Versátil: Ótimo para voz e violão, acompanhamentos e transporte facilitado.';
+  }
+}
+
+// --- MAPEAMENTO DE TECLADO FÍSICO ---
+window.addEventListener('keydown', (e) => {
+  const btn = document.querySelector(`.tecla[data-key="${e.key.toLowerCase()}"]`);
+  if (btn && !e.repeat) {
+    btn.click();
+  }
+});
+
+// AUMENTO E DIMINUIÇÃO DE FONTE
+let tamanhoFonte = 100;
+document.getElementById('btn-fonte-aumentar').onclick = () => {
+  if(tamanhoFonte < 130) { tamanhoFonte += 5; document.body.style.fontSize = tamanhoFonte + '%'; }
+};
+document.getElementById('btn-fonte-diminuir').onclick = () => {
+  if(tamanhoFonte > 85) { tamanhoFonte -= 5; document.body.style.fontSize = tamanhoFonte + '%'; }
+};
+
+window.onload = () => {
+  init3D();
+};
+</script>
 </body>
 </html>
