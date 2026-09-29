@@ -6,206 +6,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   /* ==========================================================================
-     1. SISTEMA DE ÁUDIO WEB AUDIO API (SINTETIZADOR & GERADOR DE SOM)
-     ========================================================================== */
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  let audioCtx = null;
-  let masterGain = null;
-  let analyser = null;
-
-  function initAudio() {
-    if (!audioCtx) {
-      audioCtx = new AudioContext();
-      masterGain = audioCtx.createGain();
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64;
-      
-      const volInput = document.getElementById('master-volume');
-      masterGain.gain.value = volInput ? parseFloat(volInput.value) : 0.8;
-      
-      masterGain.connect(analyser);
-      analyser.connect(audioCtx.destination);
-    }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-  }
-
-  // Tocar Notas Harmônicas Sintetizadas
-  function playSynthNote(freq, duration = 0.8, type = 'sine') {
-    initAudio();
-    const osc = audioCtx.createOscillator();
-    const noteGain = audioCtx.createGain();
-
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-
-    noteGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    noteGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-
-    osc.connect(noteGain);
-    noteGain.connect(masterGain);
-
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
-
-    pulse3DEnvironment();
-  }
-
-  // Sons Sintetizados da Bateria sem Dependência de Internet
-  function playDrumSound(type) {
-    initAudio();
-    const now = audioCtx.currentTime;
-
-    if (type === 'kick') {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.frequency.setValueAtTime(130, now);
-      osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.4);
-      gain.gain.setValueAtTime(1, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-      osc.connect(gain);
-      gain.connect(masterGain);
-      osc.start(now);
-      osc.stop(now + 0.4);
-    } else if (type === 'snare') {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(240, now);
-      gain.gain.setValueAtTime(0.7, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-      osc.connect(gain);
-      gain.connect(masterGain);
-      osc.start(now);
-      osc.stop(now + 0.2);
-    } else if (type === 'hihat') {
-      const bufferSize = audioCtx.sampleRate * 0.08;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const output = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.value = 7500;
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(masterGain);
-      noise.start(now);
-    } else {
-      playSynthNote(type === 'crash' ? 880 : 220, 0.4, 'triangle');
-    }
-
-    pulse3DEnvironment();
-  }
-
-  /* ==========================================================================
-     2. AMBIENTE 3D DINÂMICO MULTICAMADA (THREE.JS)
-     ========================================================================== */
-  let scene, camera, renderer, particleSystem, lightMesh;
-  let mouseX = 0, mouseY = 0;
-  let animFrameId = null;
-
-  function init3D() {
-    const container = document.getElementById('canvas-container');
-    if (!container || typeof THREE === 'undefined') return;
-
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 400;
-
-    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
-
-    // Partículas (Orbe de Timbres)
-    const particleCount = 280;
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-
-    for (let i = 0; i < particleCount * 3; i++) {
-      positions[i] = (Math.random() - 0.5) * 800;
-    }
-
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const material = new THREE.PointsMaterial({
-      color: 0x7952f5,
-      size: 4,
-      transparent: true,
-      opacity: 0.6
-    });
-
-    particleSystem = new THREE.Points(geometry, material);
-    scene.add(particleSystem);
-
-    // Mesh Geométrico Central
-    const orbGeo = new THREE.IcosahedronGeometry(45, 2);
-    const orbMat = new THREE.MeshBasicMaterial({
-      color: 0x00f2fe,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.15
-    });
-    lightMesh = new THREE.Mesh(orbGeo, orbMat);
-    scene.add(lightMesh);
-
-    document.addEventListener('mousemove', (e) => {
-      mouseX = (e.clientX - window.innerWidth / 2) * 0.05;
-      mouseY = (e.clientY - window.innerHeight / 2) * 0.05;
-    });
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    animate3D();
-  }
-
-  function animate3D() {
-    if (document.body.getAttribute('data-motion-reduce') === 'true') {
-      if (animFrameId) cancelAnimationFrame(animFrameId);
-      return;
-    }
-
-    animFrameId = requestAnimationFrame(animate3D);
-
-    if (particleSystem) {
-      particleSystem.rotation.y += 0.001;
-      particleSystem.rotation.x += 0.0005;
-    }
-
-    if (lightMesh) {
-      lightMesh.rotation.x += 0.004;
-      lightMesh.rotation.y += 0.004;
-    }
-
-    camera.position.x += (mouseX - camera.position.x) * 0.05;
-    camera.position.y += (-mouseY - camera.position.y) * 0.05;
-    camera.lookAt(scene.position);
-
-    renderer.render(scene, camera);
-  }
-
-  function pulse3DEnvironment() {
-    if (lightMesh && document.body.getAttribute('data-motion-reduce') !== 'true') {
-      lightMesh.scale.set(1.25, 1.25, 1.25);
-      setTimeout(() => lightMesh.scale.set(1, 1, 1), 200);
-    }
-  }
-
-  init3D();
-
-  /* ==========================================================================
-     3. GERENCIADOR DE ACESSIBILIDADE & MODO SIMPLES
+     0. REGISTRADOR DE ANÚNCIOS PARA LEITORES DE TELA (SR)
      ========================================================================== */
   const srAnnouncer = document.getElementById('sr-announcer');
 
@@ -224,7 +25,90 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Toggle Modo Simples Reorganizado
+  /* ==========================================================================
+     1. GAMIFICAÇÃO & CONQUISTAS (INICIALIZAÇÃO PRIORITÁRIA)
+     ========================================================================== */
+  const achievements = [
+    { id: 'ach-first-sound', title: 'Primeiro Som', desc: 'Tocou sua primeira nota no Sonora.', icon: '🎵' },
+    { id: 'ach-melody', title: 'Melodista', desc: 'Completou uma sequência no Modo Aprender.', icon: '🎹' },
+    { id: 'ach-rhythm', title: 'Ritmo Puro', desc: 'Experimentou os pads de percussão.', icon: '🥁' },
+    { id: 'ach-explorer', title: 'Explorador Sonoro', desc: 'Descobriu seu perfil musical.', icon: '✨' },
+    { id: 'ach-acc', title: 'Acessibilidade Total', desc: 'Personalizou suas preferências de uso.', icon: '♿' },
+    { id: 'ach-creator', title: 'Criador Musical', desc: 'Gravou sua própria sequência de notas.', icon: '🎼' }
+  ];
+
+  let unlockedIds = new Set();
+  try {
+    const saved = localStorage.getItem('sonora_achievements');
+    if (saved) {
+      unlockedIds = new Set(JSON.parse(saved));
+    }
+  } catch (e) {
+    console.warn("Não foi possível carregar conquistas do localStorage.", e);
+  }
+
+  function renderAchievements() {
+    const grid = document.getElementById('achievements-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    achievements.forEach(ach => {
+      const isUnlocked = unlockedIds.has(ach.id);
+      const card = document.createElement('div');
+      card.className = `achievement-card ${isUnlocked ? 'unlocked' : ''}`;
+      card.innerHTML = `
+        <div class="ach-icon" aria-hidden="true">${ach.icon}</div>
+        <div class="ach-info">
+          <span class="ach-title">${ach.title}</span>
+          <span class="ach-desc">${ach.desc}</span>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    const percentage = Math.round((unlockedIds.size / achievements.length) * 100);
+    const barFill = document.getElementById('journey-bar-fill');
+    const percentText = document.getElementById('journey-percentage-text');
+    if (barFill) barFill.style.width = `${percentage}%`;
+    if (percentText) percentText.textContent = `${percentage}%`;
+  }
+
+  function unlockAchievement(id) {
+    if (!unlockedIds.has(id)) {
+      unlockedIds.add(id);
+      try {
+        localStorage.setItem('sonora_achievements', JSON.stringify(Array.from(unlockedIds)));
+      } catch (e) {
+        console.warn("Não foi possível salvar conquista.", e);
+      }
+      renderAchievements();
+
+      const ach = achievements.find(a => a.id === id);
+      if (ach) {
+        showAchievementToast(ach);
+      }
+    }
+  }
+
+  function showAchievementToast(ach) {
+    const toast = document.getElementById('achievement-toast');
+    const toastName = document.getElementById('toast-achievement-name');
+    if (toast && toastName) {
+      toastName.textContent = ach.title;
+      toast.hidden = false;
+      announceToSR(`Conquista desbloqueada: ${ach.title}`);
+      setTimeout(() => {
+        toast.hidden = true;
+      }, 4000);
+    }
+  }
+
+  // Renderizar o estado inicial das conquistas
+  renderAchievements();
+
+  /* ==========================================================================
+     2. GERENCIADOR DE ACESSIBILIDADE & MODO SIMPLES (SEGURA PÓS-CONQUISTAS)
+     ========================================================================== */
   const btnSimpleMode = document.getElementById('btn-toggle-simple-mode');
   const btnQuickSimple = document.getElementById('btn-quick-simple-mode');
   const btnDisableSimple = document.getElementById('btn-disable-simple-mode');
@@ -237,14 +121,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnQuickSimple) btnQuickSimple.setAttribute('aria-pressed', isEnabled);
     if (btnSimpleMode) btnSimpleMode.setAttribute('aria-pressed', isEnabled);
 
-    localStorage.setItem('sonora_simple_mode', isEnabled);
+    try {
+      localStorage.setItem('sonora_simple_mode', isEnabled);
+    } catch (e) {
+      console.warn("Não foi possível salvar preferencia.", e);
+    }
+    
     announceToSR(isEnabled ? "Modo Simples ativado. Layout limpo e direto." : "Modo Completo ativado.");
     unlockAchievement('ach-acc');
   }
 
-  // Carregar preferência salva
-  if (localStorage.getItem('sonora_simple_mode') === 'true') {
-    setSimpleMode(true);
+  // Carregar preferência salva do Modo Simples com segurança
+  try {
+    if (localStorage.getItem('sonora_simple_mode') === 'true') {
+      setSimpleMode(true);
+    }
+  } catch (e) {
+    console.warn("Incapaz de acessar localStorage para preferência inicial.", e);
   }
 
   [btnSimpleMode, btnQuickSimple].forEach(btn => {
@@ -323,18 +216,213 @@ document.addEventListener('DOMContentLoaded', () => {
     announceToSR(!active ? "Controles maiores ativados." : "Controles normais.");
   });
 
+  document.getElementById('btn-quick-speech')?.addEventListener('click', () => {
+    speakText("Você está no Sonora, uma experiência digital musical focada em acessibilidade universal.");
+  });
+
+  /* ==========================================================================
+     3. SISTEMA DE ÁUDIO WEB AUDIO API
+     ========================================================================== */
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  let audioCtx = null;
+  let masterGain = null;
+  let analyser = null;
+
+  function initAudio() {
+    if (!audioCtx) {
+      audioCtx = new AudioContext();
+      masterGain = audioCtx.createGain();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64;
+      
+      const volInput = document.getElementById('master-volume');
+      masterGain.gain.value = volInput ? parseFloat(volInput.value) : 0.8;
+      
+      masterGain.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
   document.getElementById('master-volume')?.addEventListener('input', (e) => {
     if (masterGain) {
       masterGain.gain.value = parseFloat(e.target.value);
     }
   });
 
-  document.getElementById('btn-quick-speech')?.addEventListener('click', () => {
-    speakText("Você está no Sonora, uma experiência digital musical focada em acessibilidade universal.");
-  });
+  function playSynthNote(freq, duration = 0.8, type = 'sine') {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const noteGain = audioCtx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+    noteGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    noteGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+    osc.connect(noteGain);
+    noteGain.connect(masterGain);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+
+    pulse3DEnvironment();
+  }
+
+  function playDrumSound(type) {
+    initAudio();
+    const now = audioCtx.currentTime;
+
+    if (type === 'kick') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.setValueAtTime(130, now);
+      osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.4);
+      gain.gain.setValueAtTime(1, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    } else if (type === 'snare') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(240, now);
+      gain.gain.setValueAtTime(0.7, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    } else if (type === 'hihat') {
+      const bufferSize = audioCtx.sampleRate * 0.08;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 7500;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+      noise.start(now);
+    } else {
+      playSynthNote(type === 'crash' ? 880 : 220, 0.4, 'triangle');
+    }
+
+    pulse3DEnvironment();
+  }
 
   /* ==========================================================================
-     4. HERO INTERATIVO
+     4. AMBIENTE 3D DINÂMICO THREE.JS
+     ========================================================================== */
+  let scene, camera, renderer, particleSystem, lightMesh;
+  let mouseX = 0, mouseY = 0;
+  let animFrameId = null;
+
+  function init3D() {
+    const container = document.getElementById('canvas-container');
+    if (!container || typeof THREE === 'undefined') return;
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 400;
+
+    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    const particleCount = 280;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount * 3; i++) {
+      positions[i] = (Math.random() - 0.5) * 800;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const material = new THREE.PointsMaterial({
+      color: 0x7952f5,
+      size: 4,
+      transparent: true,
+      opacity: 0.6
+    });
+
+    particleSystem = new THREE.Points(geometry, material);
+    scene.add(particleSystem);
+
+    const orbGeo = new THREE.IcosahedronGeometry(45, 2);
+    const orbMat = new THREE.MeshBasicMaterial({
+      color: 0x00f2fe,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.15
+    });
+    lightMesh = new THREE.Mesh(orbGeo, orbMat);
+    scene.add(lightMesh);
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX - window.innerWidth / 2) * 0.05;
+      mouseY = (e.clientY - window.innerHeight / 2) * 0.05;
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate3D();
+  }
+
+  function animate3D() {
+    if (document.body.getAttribute('data-motion-reduce') === 'true') {
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      return;
+    }
+
+    animFrameId = requestAnimationFrame(animate3D);
+
+    if (particleSystem) {
+      particleSystem.rotation.y += 0.001;
+      particleSystem.rotation.x += 0.0005;
+    }
+
+    if (lightMesh) {
+      lightMesh.rotation.x += 0.004;
+      lightMesh.rotation.y += 0.004;
+    }
+
+    camera.position.x += (mouseX - camera.position.x) * 0.05;
+    camera.position.y += (-mouseY - camera.position.y) * 0.05;
+    camera.lookAt(scene.position);
+
+    renderer.render(scene, camera);
+  }
+
+  function pulse3DEnvironment() {
+    if (lightMesh && document.body.getAttribute('data-motion-reduce') !== 'true') {
+      lightMesh.scale.set(1.25, 1.25, 1.25);
+      setTimeout(() => lightMesh.scale.set(1, 1, 1), 200);
+    }
+  }
+
+  init3D();
+
+  /* ==========================================================================
+     5. HERO INTERATIVO
      ========================================================================== */
   const heroOrb = document.getElementById('hero-orb');
   const heroSoundCaption = document.getElementById('hero-sound-caption');
@@ -351,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     5. TECLADO MUSICAL COMPLETO (3 MODOS)
+     6. TECLADO MUSICAL
      ========================================================================== */
   const notesData = [
     { note: 'C4', key: 'C', freq: 261.63, type: 'white' },
@@ -368,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { note: 'B4', key: 'K', freq: 493.88, type: 'white' }
   ];
 
-  let currentKeyMode = 'free'; // 'free', 'learn', 'challenge'
+  let currentKeyMode = 'free';
   let learnSequence = ['C4', 'E4', 'G4', 'C4'];
   let learnStep = 0;
 
@@ -410,7 +498,6 @@ document.addEventListener('DOMContentLoaded', () => {
       recordedNotes.push({ note: item.note, freq: item.freq, time: Date.now() - recordStartTime });
     }
 
-    // Lógica do Modo Aprender/Desafio
     if (currentKeyMode === 'learn' || currentKeyMode === 'challenge') {
       if (item.note === learnSequence[learnStep]) {
         learnStep++;
@@ -430,7 +517,6 @@ document.addEventListener('DOMContentLoaded', () => {
     unlockAchievement('ach-first-sound');
   }
 
-  // Modos do Teclado
   document.getElementById('btn-keymode-free')?.addEventListener('click', (e) => {
     currentKeyMode = 'free';
     updateKeyModeUI(e.target);
@@ -485,7 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildKeyboard();
 
   /* ==========================================================================
-     6. BATERIA & PADS
+     7. BATERIA & PADS
      ========================================================================== */
   const drumPads = document.querySelectorAll('.drum-pad');
   let demoRhythmInterval = null;
@@ -503,7 +589,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Demonstrador de Ritmo
   const btnPlayDemo = document.getElementById('btn-play-demo-rhythm');
   const btnStopDemo = document.getElementById('btn-stop-demo-rhythm');
 
@@ -531,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ==========================================================================
-     7. ESTÚDIO, GRAVAÇÃO & METRÔNOMO
+     8. ESTÚDIO, GRAVAÇÃO & VISUALIZADOR OTIMIZADO
      ========================================================================== */
   let isRecording = false;
   let recordStartTime = 0;
@@ -550,8 +635,8 @@ document.addEventListener('DOMContentLoaded', () => {
       btnRecord.classList.add('recording');
       btnRecord.setAttribute('aria-pressed', 'true');
       btnRecord.innerHTML = '<span class="dot"></span> Parar Gravação';
-      if (recStatus) recStatus.textContent = "Gravando notas e ritmos...";
-      announceToSR("Gravação iniciada.");
+      if (recStatus) recStatus.textContent = "Gravando sua sequência de notas...";
+      announceToSR("Gravação de notas iniciada.");
     } else {
       isRecording = false;
       btnRecord.classList.remove('recording');
@@ -617,17 +702,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bpmDisplay) bpmDisplay.textContent = `${e.target.value} BPM`;
   });
 
-  // Renderizador do Canvas Visualizador
+  // Renderizador Otimizado do Canvas Visualizador
   const canvas = document.getElementById('audio-visualizer-canvas');
   if (canvas) {
     const ctx = canvas.getContext('2d');
-    function drawVisualizer() {
-      requestAnimationFrame(drawVisualizer);
-      if (canvas.width !== canvas.parentElement.clientWidth) {
+    let freqDataBuffer = null;
+
+    function resizeCanvasIfNeeded() {
+      if (canvas.width !== canvas.parentElement.clientWidth || canvas.height !== canvas.parentElement.clientHeight) {
         canvas.width = canvas.parentElement.clientWidth;
         canvas.height = canvas.parentElement.clientHeight;
       }
+    }
 
+    function drawVisualizer() {
+      requestAnimationFrame(drawVisualizer);
+
+      if (document.body.getAttribute('data-motion-reduce') === 'true') {
+        return;
+      }
+
+      resizeCanvasIfNeeded();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (!analyser) {
@@ -636,15 +731,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-      analyser.getByteFrequencyData(dataArray);
+      if (!freqDataBuffer) {
+        freqDataBuffer = new Uint8Array(analyser.frequencyBinCount);
+      }
+      analyser.getByteFrequencyData(freqDataBuffer);
 
+      const bufferLength = freqDataBuffer.length;
       const barWidth = (canvas.width / bufferLength) * 1.5;
       let x = 0;
 
       for (let i = 0; i < bufferLength; i++) {
-        const barHeight = (dataArray[i] / 255) * canvas.height;
+        const barHeight = (freqDataBuffer[i] / 255) * canvas.height;
         ctx.fillStyle = `hsl(${i * 12 + 220}, 80%, 60%)`;
         ctx.fillRect(x, canvas.height - barHeight, barWidth - 2, barHeight);
         x += barWidth;
@@ -654,7 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     8. PERFIL MUSICAL SENSORIAL
+     9. PERFIL MUSICAL SENSORIAL
      ========================================================================== */
   const moodBtns = document.querySelectorAll('.mood-btn');
   const discoveryQuiz = document.getElementById('discovery-quiz-step');
@@ -689,266 +786,243 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('btn-restart-discovery')?.addEventListener('click', () => {
-    if (discoveryQuiz) discoveryQuiz.hidden = false;
     if (discoveryResult) discoveryResult.hidden = true;
+    if (discoveryQuiz) discoveryQuiz.hidden = false;
   });
 
   /* ==========================================================================
-     9. CATÁLOGO DE INSTRUMENTOS (12 INSTRUMENTOS CURADOS)
+     10. CATÁLOGO DE INSTRUMENTOS (DADOS & EVENTOS DINÂMICOS)
      ========================================================================== */
-  const instruments = [
-    { id: '1', name: 'Piano de Cauda', category: 'teclas', desc: 'Clássico expressivo de ampla extensão dinâmica.', detail: 'Composto por mais de 12.000 peças que acionam martelos de feltro contra cordas de aço.' },
-    { id: '2', name: 'Sintetizador Modular', category: 'eletronicos', desc: 'Escultura sonora através de ondas sintéticas.', detail: 'Gera timbres únicos modulando frequências e envelopes elétricos.' },
-    { id: '3', name: 'Violino', category: 'cordas', desc: 'Voz aguda e expressiva das orquestras.', detail: 'Instrumento friccionado por arco com 4 cordas e ressonância em madeira nobre.' },
-    { id: '4', name: 'Guitarra Elétrica', category: 'cordas', desc: 'Ícone da música moderna e solos marcantes.', detail: 'Converte a vibração de cordas de aço em sinais elétricos via captadores magnéticos.' },
-    { id: '5', name: 'Bateria Acústica', category: 'percussao', desc: 'Base rítmica e pulsante para diversos estilos.', detail: 'Combina bumbos, caixas e pratos para ditar o tempo em conjunto.' },
-    { id: '6', name: 'Congas Tradicionais', category: 'percussao', desc: 'Tambores caribenhos de som quente.', detail: 'Tocados diretamente com as mãos em peles tencionadas.' },
-    { id: '7', name: 'Flauta Transversal', category: 'sopros', desc: 'Timbre aéreo, brilhante e veloz.', detail: 'Embora construída em metal, pertence à família das madeiras pelo sopro indireto.' },
-    { id: '8', name: 'Saxofone Alto', category: 'sopros', desc: 'Expressividade marcante no Jazz e Blues.', detail: 'Utiliza palheta simples e chaves de metal para alterar o comprimento da coluna de ar.' },
-    { id: '9', name: 'Koto Japonês', category: 'mundo', desc: 'Cítara tradicional asiática de 13 cordas.', detail: 'Instrumento nacional do Japão tocado com dedais especiais de madeira ou marfim.' },
-    { id: '10', name: 'Didgeridoo', category: 'mundo', desc: 'Sopro ancestral dos povos aborígenes.', detail: 'Produz um zumbido grave característico através da técnica de respiração circular.' },
-    { id: '11', name: 'Theremin', category: 'eletronicos', desc: 'Tocado sem qualquer contato físico.', detail: 'Controlado pela aproximação das mãos em duas antenas de rádio frequência.' },
-    { id: '12', name: 'Clavinete Digital', category: 'teclas', desc: 'Timbre rítmico percussivo e encorpado.', detail: 'Pioneiro na música pop e funk dos anos 70, adaptado para reprodução digital.' }
+  const instrumentsData = [
+    { id: 1, name: "Piano de Cauda", cat: "teclas", badge: "Teclas", desc: "Instrumento harmônico de cordas percutidas.", history: "Criado em 1700 por Bartolomeo Cristofori na Itália.", freq: 261.63 },
+    { id: 2, name: "Sintetizador Modular", cat: "eletronicos", badge: "Eletrônicos", desc: "Gerador analógico e digital de frequências e timbres.", history: "Popularizado por Robert Moog nos anos 1960.", freq: 440.00 },
+    { id: 3, name: "Violino", cat: "cordas", badge: "Cordas", desc: "Instrumento friccionado por arco de alta expressividade.", history: "Aprimorado pelos luthiers de Cremona nos séculos XVI e XVII.", freq: 440.00 },
+    { id: 4, name: "Bateria Acústica", cat: "percussao", badge: "Percussão", desc: "Conjunto de tambores e pratos rítmicos.", history: "Evoluiu no início do século XX para o jazz americano.", freq: 130.00 },
+    { id: 5, name: "Flauta Transversal", cat: "sopros", badge: "Sopros", desc: "Instrumento de sopro de madeira/metal de som cristalino.", history: "Uma das famílias de instrumentos mais antigas do mundo.", freq: 523.25 },
+    { id: 6, name: "Guitarra Elétrica", cat: "cordas", badge: "Cordas", desc: "Cordas amplificadas eletromagneticamente.", history: "Transformou a música popular no século XX.", freq: 329.63 },
+    { id: 7, name: "Didgeridoo", cat: "mundo", badge: "Do Mundo", desc: "Sopro de ressonância grave de origem aborígene.", history: "Desenvolvido pelos povos nativos do norte da Austrália.", freq: 98.00 },
+    { id: 8, name: "Koto Japonês", cat: "mundo", badge: "Do Mundo", desc: "Cítara de 13 cordas com pontes móveis.", history: "Instrumento tradicional do Japão desde o século VIII.", freq: 293.66 },
+    { id: 9, name: "Saxofone Alto", cat: "sopros", badge: "Sopros", desc: "Sopro de palheta simples e corpo de latão.", history: "Inventado por Adolphe Sax na Bélgica em 1846.", freq: 392.00 },
+    { id: 10, name: "Theremin", cat: "eletronicos", badge: "Eletrônicos", desc: "Tocado sem contato físico, apenas por aproximação das mãos.", history: "Inventado por Léon Theremin em 1920.", freq: 587.33 },
+    { id: 11, name: "Congas", cat: "percussao", badge: "Percussão", desc: "Tambores afro-cubanos tocados diretamente com as mãos.", history: "Fundamentais para a salsa e rumba cubana.", freq: 180.00 },
+    { id: 12, name: "Órgão de Tubos", cat: "teclas", badge: "Teclas", desc: "O rei dos instrumentos, acionado por pressão de ar em tubos.", history: "Suas origens remontam à Grécia Antiga.", freq: 130.81 }
   ];
 
   const catalogGrid = document.getElementById('catalog-grid');
+  const filterBtns = document.querySelectorAll('.catalog-filters .filter-btn');
+  const instModal = document.getElementById('instrument-modal');
+  const modalBody = document.getElementById('modal-content-body');
+  let lastFocusedElement = null;
 
   function renderCatalog(filter = 'all') {
     if (!catalogGrid) return;
     catalogGrid.innerHTML = '';
 
-    const filtered = filter === 'all' ? instruments : instruments.filter(i => i.category === filter);
+    const filtered = filter === 'all' ? instrumentsData : instrumentsData.filter(i => i.cat === filter);
 
-    filtered.forEach(item => {
+    filtered.forEach(inst => {
       const card = document.createElement('article');
       card.className = 'instrument-card';
       card.innerHTML = `
         <div>
-          <span class="badge">${item.category}</span>
-          <h3>${item.name}</h3>
-          <p>${item.desc}</p>
+          <span class="badge">${inst.badge}</span>
+          <h3>${inst.name}</h3>
+          <p>${inst.desc}</p>
         </div>
-        <button class="pill-btn outline" onclick="openInstrumentModal('${item.id}')" aria-label="Ver detalhes sobre ${item.name}">Detalhes & Timbres</button>
+        <button class="pill-btn outline open-inst-btn" data-id="${inst.id}">Detalhes & Som</button>
       `;
+
+      card.querySelector('.open-inst-btn').addEventListener('click', (e) => {
+        lastFocusedElement = e.currentTarget;
+        openInstrumentModal(inst);
+      });
+
       catalogGrid.appendChild(card);
     });
   }
 
-  let lastActiveModalTrigger = null;
+  // Filtros com Semântica aria-pressed
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
 
-  window.openInstrumentModal = function(id) {
-    lastActiveModalTrigger = document.activeElement;
-    const item = instruments.find(i => i.id === id);
-    if (!item) return;
+      const filter = btn.dataset.filter;
+      renderCatalog(filter);
+      announceToSR(`Exibindo categoria: ${btn.textContent}`);
+    });
+  });
 
-    const modal = document.getElementById('instrument-modal');
-    const body = document.getElementById('modal-content-body');
-    
-    body.innerHTML = `
-      <span class="badge">${item.category}</span>
-      <h2 id="modal-title" style="font-size:2rem; margin:0.5rem 0; color:var(--text-bright);">${item.name}</h2>
-      <p style="margin-bottom:1.5rem; color: var(--text-muted);">${item.detail}</p>
-      <div style="display:flex; gap:1rem; flex-wrap:wrap;">
-        <button class="pill-btn highlight" id="btn-modal-play">🎧 Ouvir Demonstração</button>
-        <button class="pill-btn outline" id="btn-modal-close">Fechar (Esc)</button>
+  function openInstrumentModal(inst) {
+    if (!instModal || !modalBody) return;
+
+    modalBody.innerHTML = `
+      <span class="badge">${inst.badge}</span>
+      <h2 id="modal-title">${inst.name}</h2>
+      <p style="margin: 1rem 0; color: var(--text-muted);">${inst.desc}</p>
+      <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
+        <strong>História & Origem:</strong>
+        <p style="font-size: 0.9rem; margin-top: 0.5rem;">${inst.history}</p>
+      </div>
+      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+        <button id="btn-modal-play" class="pill-btn highlight">🔊 Ouvir Som</button>
+        <button id="btn-modal-close" class="pill-btn outline">Fechar</button>
       </div>
     `;
 
-    modal.showModal();
+    instModal.showModal();
 
-    document.getElementById('btn-modal-play')?.addEventListener('click', () => {
-      playSynthNote(440, 1.2, 'sine');
-      announceToSR(`Demonstração sonora do instrumento ${item.name} executada.`);
+    const btnPlay = document.getElementById('btn-modal-play');
+    const btnClose = document.getElementById('btn-modal-close');
+
+    btnPlay?.addEventListener('click', () => {
+      playSynthNote(inst.freq, 1.2, 'sine');
+      announceToSR(`Tocando amostra de ${inst.name}`);
     });
 
-    document.getElementById('btn-modal-close')?.addEventListener('click', closeModal);
+    btnClose?.addEventListener('click', closeModal);
 
-    unlockAchievement('ach-explorer');
-  };
+    instModal.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      closeModal();
+    }, { once: true });
 
-  function closeModal() {
-    const modal = document.getElementById('instrument-modal');
-    if (modal) modal.close();
-    if (lastActiveModalTrigger) lastActiveModalTrigger.focus();
+    btnClose?.focus();
   }
 
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      renderCatalog(e.target.dataset.filter);
-    });
-  });
+  function closeModal() {
+    if (instModal && instModal.open) {
+      instModal.close();
+      if (lastFocusedElement) {
+        lastFocusedElement.focus();
+      }
+    }
+  }
 
   renderCatalog();
 
   /* ==========================================================================
-     10. QUIZ MUSICAL REAL (8 PERGUNTAS)
+     11. QUIZ MUSICAL DE APRENDIZADO (8 PERGUNTAS)
      ========================================================================== */
   const quizQuestions = [
-    { q: '1. Que tipo de experiência sonora você prefere?', opts: [{ t: 'Acústica e Suave', score: 'teclas' }, { t: 'Forte e Rítmica', score: 'percussao' }, { t: 'Eletrônica e Futurista', score: 'eletronicos' }, { t: 'Expressiva e Melódica', score: 'cordas' }] },
-    { q: '2. Qual ambiente de criação te inspira mais?', opts: [{ t: 'Sala Sinfônica', score: 'teclas' }, { t: 'Palco de Festival', score: 'percussao' }, { t: 'Estúdio de Produção', score: 'eletronicos' }, { t: 'Encontro Intimista', score: 'cordas' }] },
-    { q: '3. Como você prefere interagir com a música?', opts: [{ t: 'Tocando teclas e acordes', score: 'teclas' }, { t: 'Marcando o tempo com baquetas/mãos', score: 'percussao' }, { t: 'Manipulando botões e frequências', score: 'eletronicos' }, { t: 'Dedilhando ou usando um arco', score: 'cordas' }] },
-    { q: '4. Qual o seu objetivo principal ao ouvir música?', opts: [{ t: 'Relaxar e meditar', score: 'teclas' }, { t: 'Sentir energia e dançar', score: 'percussao' }, { t: 'Explorar novos sons', score: 'eletronicos' }, { t: 'Emocionar-se com melodias', score: 'cordas' }] },
-    { q: '5. Se você fosse compor uma faixa, por onde começaria?', opts: [{ t: 'Pela harmonia de fundo', score: 'teclas' }, { t: 'Pelo ritmo da bateria', score: 'percussao' }, { t: 'Pela textura dos sintetizadores', score: 'eletronicos' }, { t: 'Pelo solo principal', score: 'cordas' }] },
-    { q: '6. Que cor você associa à sua energia sonora?', opts: [{ t: 'Azul sereno', score: 'teclas' }, { t: 'Vermelho vibrante', score: 'percussao' }, { t: 'Neon lilás', score: 'eletronicos' }, { t: 'Dourado aquecido', score: 'cordas' }] },
-    { q: '7. Como você lida com improvisação?', opts: [{ t: 'Prefiro estruturas conhecidas', score: 'teclas' }, { t: 'Adoro criar ritmos na hora', score: 'percussao' }, { t: 'Gosto de experimentar sem regras', score: 'eletronicos' }, { t: 'Sigo a intuição do momento', score: 'cordas' }] },
-    { q: '8. Escolha a sensação final que deseja sentir:', opts: [{ t: 'Equilíbrio mental', score: 'teclas' }, { t: 'Euforia e vitalidade', score: 'percussao' }, { t: 'Curiosidade constante', score: 'eletronicos' }, { t: 'Conexão profunda', score: 'cordas' }] }
+    { q: "Qual instrumento produz som através de martelos que batem em cordas metálicas?", opts: ["Piano", "Violino", "Flauta", "Bateria"], correct: 0 },
+    { q: "Qual família de instrumentos utiliza palhetas ou sopro de ar em tubos?", opts: ["Cordas", "Sopros", "Percussão", "Eletrônicos"], correct: 1 },
+    { q: "O instrumento Theremin tem como característica única:", opts: ["Ser tocado sem contato físico", "Ter 88 teclas", "Usar arco de crina", "Ser feito de bambu"], correct: 0 },
+    { q: "Qual elemento rítmico sustenta o pulso de uma música?", opts: ["Melodia", "Harmonia", "Percussão / Bateria", "Sintetizador"], correct: 2 },
+    { q: "O que caracteriza um sintetizador?", opts: ["Criação analógica/digital de sons e timbres", "Uso exclusivo de cordas de nylon", "Dependência de vento natural", "Necessidade de afinação com chave física"], correct: 0 },
+    { q: "O Koto é um instrumento tradicional de qual cultura?", opts: ["Indiana", "Japonesa", "Egípcia", "Celta"], correct: 1 },
+    { q: "Como o som de um violino é produzido predominantemente?", opts: ["Percussão de baquetas", "Fricção de arco nas cordas", "Injeção de ar sob pressão", "Teclas de madeira"], correct: 1 },
+    { q: "Qual o papel da acessibilidade universal em uma ferramenta digital musical?", opts: ["Limitar as escolhas do usuário", "Garantir que todas as pessoas possam criar e interagir", "Substituir músicos reais por IA", "Remover imagens da tela"], correct: 1 }
   ];
 
-  let currentQuizStep = 0;
-  let quizScores = { teclas: 0, percussao: 0, eletronicos: 0, cordas: 0 };
+  let currentQuizIndex = 0;
+  let quizScore = 0;
 
-  const quizQuestionText = document.getElementById('quiz-question-text');
-  const quizOptionsContainer = document.getElementById('quiz-options-container');
+  const quizCard = document.getElementById('quiz-question-card');
+  const quizResult = document.getElementById('quiz-result-card');
+  const quizText = document.getElementById('quiz-question-text');
+  const quizOptions = document.getElementById('quiz-options-container');
   const quizCounter = document.getElementById('quiz-counter');
-  const quizProgressFill = document.getElementById('quiz-progress-fill');
+  const quizProgress = document.getElementById('quiz-progress-fill');
 
-  function renderQuizStep() {
-    if (!quizQuestionText) return;
+  function renderQuizQuestion() {
+    if (!quizText || !quizOptions) return;
 
-    const currentItem = quizQuestions[currentQuizStep];
-    quizQuestionText.textContent = currentItem.q;
-    if (quizCounter) quizCounter.textContent = `Pergunta ${currentQuizStep + 1} de ${quizQuestions.length}`;
-    if (quizProgressFill) quizProgressFill.style.width = `${((currentQuizStep) / quizQuestions.length) * 100}%`;
+    const qData = quizQuestions[currentQuizIndex];
+    quizText.textContent = qData.q;
+    quizOptions.innerHTML = '';
 
-    quizOptionsContainer.innerHTML = '';
+    if (quizCounter) quizCounter.textContent = `Pergunta ${currentQuizIndex + 1} de ${quizQuestions.length}`;
+    if (quizProgress) quizProgress.style.width = `${((currentQuizIndex) / quizQuestions.length) * 100}%`;
 
-    currentItem.opts.forEach(opt => {
+    qData.opts.forEach((optText, i) => {
       const btn = document.createElement('button');
       btn.className = 'quiz-opt-btn';
-      btn.textContent = opt.t;
-      btn.addEventListener('click', () => {
-        quizScores[opt.score]++;
-        currentQuizStep++;
-        if (currentQuizStep < quizQuestions.length) {
-          renderQuizStep();
-        } else {
-          showQuizResult();
-        }
-      });
-      quizOptionsContainer.appendChild(btn);
+      btn.textContent = optText;
+      btn.addEventListener('click', () => handleQuizAnswer(i));
+      quizOptions.appendChild(btn);
     });
   }
 
-  function showQuizResult() {
-    document.getElementById('quiz-question-card').hidden = true;
-    const resCard = document.getElementById('quiz-result-card');
-    resCard.hidden = false;
-
-    if (quizProgressFill) quizProgressFill.style.width = '100%';
-
-    // Determinar categoria vencedora
-    let winnerCategory = 'teclas';
-    let maxVal = -1;
-    for (const [cat, val] of Object.entries(quizScores)) {
-      if (val > maxVal) {
-        maxVal = val;
-        winnerCategory = cat;
-      }
+  function handleQuizAnswer(selectedIndex) {
+    if (selectedIndex === quizQuestions[currentQuizIndex].correct) {
+      quizScore++;
+      announceToSR("Resposta correta!");
+    } else {
+      announceToSR("Resposta registrada.");
     }
 
-    const recommendations = {
-      teclas: "Seu perfil combina perfeitamente com o Piano de Cauda e Teclados Digitais!",
-      percussao: "Sua afinidade natural é com a Bateria Acústica e instrumentos de percussão!",
-      eletronicos: "Seu universo é o dos Sintetizadores Modulares e Theremin!",
-      cordas: "Sua alma ressoa com o Violino, Guitarra Elétrica e instrumentos de cordas!"
-    };
+    currentQuizIndex++;
+    if (currentQuizIndex < quizQuestions.length) {
+      renderQuizQuestion();
+    } else {
+      showQuizResults();
+    }
+  }
 
-    document.getElementById('quiz-result-text').textContent = recommendations[winnerCategory];
-    announceToSR("Quiz concluído com sucesso!");
-    unlockAchievement('ach-learner');
+  function showQuizResults() {
+    if (quizCard) quizCard.hidden = true;
+    if (quizResult) quizResult.hidden = false;
+    if (quizProgress) quizProgress.style.width = `100%`;
+
+    const title = document.getElementById('quiz-result-title');
+    const text = document.getElementById('quiz-result-text');
+
+    if (title) title.textContent = `Você acertou ${quizScore} de ${quizQuestions.length} perguntas!`;
+    if (text) {
+      text.textContent = quizScore >= 6 
+        ? "Sensacional! Você demonstra excelente percepção e afinidade com o universo musical inclusivo." 
+        : "Ótima exploração! Continue navegando pelo Sonora para aprofundar seu conhecimento sobre os timbres e instrumentos.";
+    }
+
+    announceToSR(`Quiz finalizado. Pontuação: ${quizScore} de ${quizQuestions.length}.`);
   }
 
   document.getElementById('btn-restart-quiz')?.addEventListener('click', () => {
-    currentQuizStep = 0;
-    quizScores = { teclas: 0, percussao: 0, eletronicos: 0, cordas: 0 };
-    document.getElementById('quiz-question-card').hidden = false;
-    document.getElementById('quiz-result-card').hidden = true;
-    renderQuizStep();
+    currentQuizIndex = 0;
+    quizScore = 0;
+    if (quizResult) quizResult.hidden = true;
+    if (quizCard) quizCard.hidden = false;
+    renderQuizQuestion();
   });
 
-  renderQuizStep();
+  renderQuizQuestion();
 
   /* ==========================================================================
-     11. GAMIFICAÇÃO & PERSISTÊNCIA
-     ========================================================================== */
-  const achievements = [
-    { id: 'ach-first-sound', name: 'Primeiro Som', desc: 'Emitiu uma nota no teclado ou no hero.' },
-    { id: 'ach-rhythm', name: 'Primeiro Ritmo', desc: 'Interagiu com a estação de bateria.' },
-    { id: 'ach-melody', name: 'Primeira Melodia', desc: 'Completou um desafio no teclado.' },
-    { id: 'ach-explorer', name: 'Explorador', desc: 'Explorou detalhes no acervo de instrumentos.' },
-    { id: 'ach-creator', name: 'Criador', desc: 'Gravou e salvou uma sequência no Estúdio.' },
-    { id: 'ach-acc', name: 'Personalizador', desc: 'Ajustou preferências no Centro de Acessibilidade.' },
-    { id: 'ach-learner', name: 'Aprendiz', desc: 'Concluiu o Quiz de Afinidade Sonora.' }
-  ];
-
-  let unlockedIds = JSON.parse(localStorage.getItem('sonora_achievements') || '[]');
-
-  function renderAchievements() {
-    const grid = document.getElementById('achievements-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-
-    achievements.forEach(ach => {
-      const isUnlocked = unlockedIds.includes(ach.id);
-      const card = document.createElement('div');
-      card.className = `achievement-card ${isUnlocked ? 'unlocked' : ''}`;
-      card.innerHTML = `
-        <div class="ach-icon" aria-hidden="true">${isUnlocked ? '🏆' : '🔒'}</div>
-        <div>
-          <span class="ach-title">${ach.name}</span>
-          <span class="ach-desc">${ach.desc}</span>
-        </div>
-      `;
-      grid.appendChild(card);
-    });
-
-    const pct = Math.round((unlockedIds.length / achievements.length) * 100);
-    const pctText = document.getElementById('journey-percentage-text');
-    const pctBar = document.getElementById('journey-bar-fill');
-    if (pctText) pctText.textContent = `${pct}%`;
-    if (pctBar) pctBar.style.width = `${pct}%`;
-  }
-
-  function unlockAchievement(id) {
-    if (!unlockedIds.includes(id)) {
-      unlockedIds.push(id);
-      localStorage.setItem('sonora_achievements', JSON.stringify(unlockedIds));
-      renderAchievements();
-
-      const ach = achievements.find(a => a.id === id);
-      if (ach) {
-        const toast = document.getElementById('achievement-toast');
-        const toastName = document.getElementById('toast-achievement-name');
-        if (toastName) toastName.textContent = ach.name;
-        if (toast) {
-          toast.hidden = false;
-          setTimeout(() => toast.hidden = true, 4000);
-        }
-      }
-    }
-  }
-
-  renderAchievements();
-
-  /* ==========================================================================
-     12. PERCURSO GUIADO (ONBOARDING)
+     12. PERCURSO GUIADO (ONBOARDING MODAL)
      ========================================================================== */
   const tourModal = document.getElementById('guided-tour-modal');
-  if (tourModal && !localStorage.getItem('sonora_tour_completed')) {
-    setTimeout(() => tourModal.showModal(), 800);
+  const btnStartTour = document.getElementById('btn-start-tour');
+  const btnSkipTour = document.getElementById('btn-skip-tour');
+
+  try {
+    const tourDone = localStorage.getItem('sonora_tour_done');
+    if (!tourDone && tourModal) {
+      setTimeout(() => tourModal.showModal(), 800);
+    }
+  } catch (e) {
+    console.warn("Não foi possível ler status do tour.", e);
   }
 
-  document.getElementById('btn-start-tour')?.addEventListener('click', () => {
-    localStorage.setItem('sonora_tour_completed', 'true');
-    tourModal.close();
-    setSimpleMode(true);
+  btnStartTour?.addEventListener('click', () => {
+    try {
+      localStorage.setItem('sonora_tour_done', 'true');
+    } catch (e) {}
+    if (tourModal) tourModal.close();
+    window.location.hash = '#meu-jeito';
+    announceToSR("Redirecionado para o centro de acessibilidade Meu Jeito de Usar.");
   });
 
-  document.getElementById('btn-skip-tour')?.addEventListener('click', () => {
-    localStorage.setItem('sonora_tour_completed', 'true');
-    tourModal.close();
+  btnSkipTour?.addEventListener('click', () => {
+    try {
+      localStorage.setItem('sonora_tour_done', 'true');
+    } catch (e) {}
+    if (tourModal) tourModal.close();
+    announceToSR("Percurso guiado encerrado.");
   });
 
 });
