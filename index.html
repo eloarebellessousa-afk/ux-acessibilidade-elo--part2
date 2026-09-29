@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clube da Música • Plataforma Interativa</title>
+<title>Clube da Música • Plataforma Interativa & Estúdio Virtual</title>
 <link rel="stylesheet" href="style.css">
 <!-- Three.js CDN para o Fundo 3D Interativo -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -13,329 +13,844 @@
 <!-- Canvas do Fundo 3D -->
 <canvas id="bg-canvas-3d"></canvas>
 
-<!-- Link de Acessibilidade -->
+<!-- Link de Acessibilidade de Teclado -->
 <a href="#conteudo-principal" class="link-atalho">Pular para o conteúdo principal</a>
 
-<!-- Gatilhos de Acessibilidade -->
-<input type="checkbox" id="chk-fonte" class="controle-oculto">
+<!-- Gatilhos de Acessibilidade CSS -->
 <input type="checkbox" id="chk-contraste" class="controle-oculto">
+<input type="checkbox" id="chk-monocromatico" class="controle-oculto">
 
-<div class="pagina-wrapper">
+<div class="pagina-wrapper" id="app-wrapper">
 
-<!-- Barra de Acessibilidade Superior -->
-<nav class="barra-acessibilidade" aria-label="Acessibilidade">
-<label for="chk-fonte" class="btn-acessibilidade" tabindex="0" role="button">
-🔍 Letras Maiores (A+)
-</label>
-<label for="chk-contraste" class="btn-acessibilidade" tabindex="0" role="button">
-👁️ Alto Contraste
-</label>
+<!-- Barra de Acessibilidade Superior Ampliada -->
+<nav class="barra-acessibilidade" aria-label="Acessibilidade e Ajustes">
+  <div class="grupo-acessibilidade">
+    <button id="btn-fonte-aumentar" class="btn-acessibilidade" title="Aumentar fonte" aria-label="Aumentar fonte">A+</button>
+    <button id="btn-fonte-diminuir" class="btn-acessibilidade" title="Diminuir fonte" aria-label="Diminuir fonte">A-</button>
+    <label for="chk-contraste" class="btn-acessibilidade" tabindex="0" role="button">👁️ Alto Contraste</label>
+    <label for="chk-monocromatico" class="btn-acessibilidade" tabindex="0" role="button">🔳 Monocromático</label>
+    <button id="btn-leitor-voz" class="btn-acessibilidade" title="Ouvir Resumo da Página">🔊 Ler Página</button>
+  </div>
+  
+  <div class="grupo-estilo-fundo">
+    <span class="rotulo-mini">Ambiente 3D:</span>
+    <button class="btn-tema-3d ativo" data-tema="cosmos">🌌 Cosmos</button>
+    <button class="btn-tema-3d" data-tema="neon">⚡ Neon</button>
+    <button class="btn-tema-3d" data-tema="aurora">🟢 Aurora</button>
+  </div>
 </nav>
 
 <!-- Cabeçalho Principal -->
 <header class="cabecalho">
-<div class="icone-animado" aria-hidden="true">🎵</div>
-<h1>Clube da Música</h1>
-<p class="subtitulo">Sua plataforma interativa para aprender, ouvir e escolher o instrumento musical ideal!</p>
+  <div class="icone-animado" aria-hidden="true">🎼</div>
+  <h1>Clube da Música</h1>
+  <p class="subtitulo">Sua plataforma imersiva para aprender, experimentar sons em tempo real e encontrar o seu instrumento ideal!</p>
 
-<div class="banner-beneficios">
-<span class="selo-beneficio">🧠 Exercita a Memória</span>
-<span class="selo-beneficio">🖐️ Fortalece a Coordenação</span>
-<span class="selo-beneficio">😊 Traz Bem-Estar</span>
-</div>
+  <div class="banner-beneficios">
+    <span class="selo-beneficio">🧠 Estímulo Cognitivo</span>
+    <span class="selo-beneficio">🖐️ Coordenação Motora</span>
+    <span class="selo-beneficio">😊 Alívio do Estresse</span>
+    <span class="selo-beneficio">🎧 Experiência Multissensorial</span>
+  </div>
 </header>
 
-<!-- SISTEMA DE NAVEGAÇÃO POR ABAS -->
+<!-- NAVEGAÇÃO POR ABAS -->
 <div class="sistema-abas">
-<input type="radio" name="abas" id="aba-catalogo" class="controle-oculto" checked>
-<input type="radio" name="abas" id="aba-quiz" class="controle-oculto">
-<input type="radio" name="abas" id="aba-pratica" class="controle-oculto">
+  <input type="radio" name="abas" id="aba-catalogo" class="controle-oculto" checked>
+  <input type="radio" name="abas" id="aba-estudio" class="controle-oculto">
+  <input type="radio" name="abas" id="aba-ritmo" class="controle-oculto">
+  <input type="radio" name="abas" id="aba-quiz" class="controle-oculto">
 
-<!-- Botões das Abas -->
-<nav class="menu-abas" aria-label="Navegação Principal">
-<label for="aba-catalogo" class="btn-aba" tabindex="0">🎸 Catálogo de Som</label>
-<label for="aba-quiz" class="btn-aba" tabindex="0">🎯 Quiz Recomendador</label>
-<label for="aba-pratica" class="btn-aba" tabindex="0">🎹 Exercício Prático</label>
-</nav>
+  <!-- Botões das Abas -->
+  <nav class="menu-abas" aria-label="Navegação Principal">
+    <label for="aba-catalogo" class="btn-aba" tabindex="0">🎸 Catálogo Sonoro</label>
+    <label for="aba-estudio" class="btn-aba" tabindex="0">🎹 Estúdio & Piano Virtual</label>
+    <label for="aba-ritmo" class="btn-aba" tabindex="0">🥁 Laboratório de Ritmo</label>
+    <label for="aba-quiz" class="btn-aba" tabindex="0">🎯 Quiz Recomendador</label>
+  </nav>
 
-<!-- CONTEÚDO DA ABA 1: CATÁLOGO -->
-<section id="conteudo-principal" class="conteudo-aba secao-catalogo">
-<div class="grade-instrumentos">
+  <!-- ==========================================
+       ABA 1: CATÁLOGO DE INSTRUMENTOS E FILTROS
+  ========================================== -->
+  <section id="conteudo-principal" class="conteudo-aba secao-catalogo">
+    
+    <!-- Filtros do Catálogo -->
+    <div class="painel-filtros">
+      <div class="filtro-grupo">
+        <label for="filtro-categoria"><strong>Categoria:</strong></label>
+        <select id="filtro-categoria" class="seletor-custom">
+          <option value="todos">Todos os Tipos</option>
+          <option value="cordas">Instrumentos de Cordas</option>
+          <option value="teclas">Teclas & Pianos</option>
+          <option value="sopro">Instrumentos de Sopro</option>
+          <option value="percussao">Percussão & Bateria</option>
+        </select>
+      </div>
 
-<!-- CARD 1: VIOLÃO -->
-<article class="card-instrumento">
-<div class="tag-nivel facil">Fácil de Começar</div>
+      <div class="filtro-grupo">
+        <label for="filtro-dificuldade"><strong>Nível:</strong></label>
+        <select id="filtro-dificuldade" class="seletor-custom">
+          <option value="todos">Todos os Níveis</option>
+          <option value="facil">Fácil de Começar</option>
+          <option value="medio">Intermediário</option>
+          <option value="avancado">Desafio Avançado</option>
+        </select>
+      </div>
 
-<header class="card-cabecalho">
-<span class="emoji-instrumento" aria-hidden="true">🎸</span>
-<div>
-<h2>Violão</h2>
-<span class="categoria">Instrumento de Cordas</span>
-</div>
-</header>
+      <div class="filtro-grupo busca-box">
+        <input type="text" id="input-busca" placeholder="🔍 Buscar instrumento..." class="input-texto">
+      </div>
+    </div>
 
-<div class="etiquetas-caracteristicas">
-<span class="etiqueta">Acompanhamento</span>
-<span class="etiqueta">Voz & Canto</span>
-</div>
+    <!-- Grade de Instrumentos -->
+    <div class="grade-instrumentos" id="grade-instrumentos">
 
-<div class="medidores">
-<div class="medidor-item">
-<span>Conforto nos Dedos:</span>
-<div class="barras"><span style="width: 70%"></span></div>
-</div>
-<div class="medidor-item">
-<span>Portabilidade:</span>
-<div class="barras"><span style="width: 80%"></span></div>
-</div>
-</div>
+      <!-- CARD 1: VIOLÃO -->
+      <article class="card-instrumento" data-categoria="cordas" data-dificuldade="facil">
+        <div class="tag-nivel facil">Fácil de Começar</div>
+        <header class="card-cabecalho">
+          <span class="emoji-instrumento" aria-hidden="true">🎸</span>
+          <div>
+            <h2>Violão</h2>
+            <span class="categoria">Cordas • Acústico</span>
+          </div>
+        </header>
 
-<p class="descricao">
-O grande companheiro das reuniões em família! Ideal para quem gosta de cantar e acompanhar melodias marcantes.
-</p>
+        <div class="etiquetas-caracteristicas">
+          <span class="etiqueta">Voz & Canto</span>
+          <span class="etiqueta">Popular</span>
+        </div>
 
-<!-- Áudio com Ondas Sonoras -->
-<section class="bloco-audio">
-<div class="cabecalho-audio">
-<label for="audio-violao" class="rotulo-audio">🎧 Ouça o som do Violão:</label>
-<div class="ondas-sonoras" aria-hidden="true">
-<span></span><span></span><span></span><span></span>
-</div>
-</div>
-<audio id="audio-violao" controls preload="none">
-<source src="som-violao.ogg" type="audio/ogg">
-Seu navegador não suporta este áudio.
-</audio>
-</section>
+        <div class="medidores">
+          <div class="medidor-item">
+            <span>Conforto nos Dedos:</span>
+            <div class="barras"><span style="width: 70%"></span></div>
+          </div>
+          <div class="medidor-item">
+            <span>Portabilidade:</span>
+            <div class="barras"><span style="width: 85%"></span></div>
+          </div>
+        </div>
 
-<details class="sanfona-info">
-<summary class="btn-detalhes">✨ Dicas Práticas & Saúde</summary>
-<div class="conteudo-detalhes">
-<div class="secao-info dica-acessibilidade">
-<h3>💡 Dica de Ouro:</h3>
-<p>Prefira <strong>cordas de nylon</strong> no início. Elas diminuem a pressão necessária e evitam dores nos dedos.</p>
-</div>
-<div class="secao-info">
-<h3>🎯 Saúde das Mãos:</h3>
-<p>Trabalha o alongamento dos dedos e fortalece a aderência da mão.</p>
-</div>
-</div>
-</details>
-</article>
+        <p class="descricao">O grande clássico! Ideal para acompanhar rodadas de conversa, MPB, pop e música sertaneja.</p>
 
-<!-- CARD 2: TECLADO -->
-<article class="card-instrumento">
-<div class="tag-nivel muito-facil">Muito Confortável</div>
+        <section class="bloco-audio">
+          <div class="cabecalho-audio">
+            <span class="rotulo-audio">🎧 Demonstração Sonora:</span>
+            <div class="ondas-sonoras" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          </div>
+          <audio controls preload="none">
+            <source src="som-violao.ogg" type="audio/ogg">
+          </audio>
+        </section>
 
-<header class="card-cabecalho">
-<span class="emoji-instrumento" aria-hidden="true">🎹</span>
-<div>
-<h2>Teclado / Piano</h2>
-<span class="categoria">Instrumento de Teclas</span>
-</div>
-</header>
+        <details class="sanfona-info">
+          <summary class="btn-detalhes">✨ Dicas & Benefícios</summary>
+          <div class="conteudo-detalhes">
+            <div class="secao-info">
+              <h3>💡 Dica de Ouro:</h3>
+              <p>Inicie com cordas de nylon para diminuir a tensão nos dedos durante os primeiros treinos.</p>
+            </div>
+            <div class="secao-info">
+              <h3>🎯 Saúde Cerebral:</h3>
+              <p>Estimula a coordenação motora fina e fortalece a memória de sequências musicais.</p>
+            </div>
+          </div>
+        </details>
+      </article>
 
-<div class="etiquetas-caracteristicas">
-<span class="etiqueta">Toque Suave</span>
-<span class="etiqueta">Versátil</span>
-</div>
+      <!-- CARD 2: TECLADO -->
+      <article class="card-instrumento" data-categoria="teclas" data-dificuldade="facil">
+        <div class="tag-nivel facil">Muito Confortável</div>
+        <header class="card-cabecalho">
+          <span class="emoji-instrumento" aria-hidden="true">🎹</span>
+          <div>
+            <h2>Teclado / Piano</h2>
+            <span class="categoria">Teclas • Eletrônico</span>
+          </div>
+        </header>
 
-<div class="medidores">
-<div class="medidor-item">
-<span>Conforto nos Dedos:</span>
-<div class="barras"><span style="width: 100%"></span></div>
-</div>
-<div class="medidor-item">
-<span>Portabilidade:</span>
-<div class="barras"><span style="width: 60%"></span></div>
-</div>
-</div>
+        <div class="etiquetas-caracteristicas">
+          <span class="etiqueta">Toque Leve</span>
+          <span class="etiqueta">Versátil</span>
+        </div>
 
-<p class="descricao">
-Excelente para quem busca facilidade. O som sai limpo com apenas um toque leve nas teclas, sem exigir força.
-</p>
+        <div class="medidores">
+          <div class="medidor-item">
+            <span>Conforto nos Dedos:</span>
+            <div class="barras"><span style="width: 100%"></span></div>
+          </div>
+          <div class="medidor-item">
+            <span>Portabilidade:</span>
+            <div class="barras"><span style="width: 60%"></span></div>
+          </div>
+        </div>
 
-<section class="bloco-audio">
-<div class="cabecalho-audio">
-<label for="audio-teclado" class="rotulo-audio">🎧 Ouça o som do Teclado:</label>
-<div class="ondas-sonoras" aria-hidden="true">
-<span></span><span></span><span></span><span></span>
-</div>
-</div>
-<audio id="audio-teclado" controls preload="none">
-<source src="som-teclado.ogg" type="audio/ogg">
-Seu navegador não suporta este áudio.
-</audio>
-</section>
+        <p class="descricao">Visual e intuitivo. O som sai limpo instantaneamente ao pressionar qualquer tecla suavemente.</p>
 
-<details class="sanfona-info">
-<summary class="btn-detalhes">✨ Dicas Práticas & Saúde</summary>
-<div class="conteudo-detalhes">
-<div class="secao-info dica-acessibilidade">
-<h3>💡 Dica de Ouro:</h3>
-<p>Coloque <strong>adesivos coloridos</strong> nas teclas para identificar as notas musicais rapidamente.</p>
-</div>
-<div class="secao-info">
-<h3>🎯 Saúde Cerebral:</h3>
-<p>Ativa os dois hemisférios cerebrais simultaneamente ao coordenar a mão esquerda e a direita.</p>
-</div>
-</div>
-</details>
-</article>
+        <section class="bloco-audio">
+          <div class="cabecalho-audio">
+            <span class="rotulo-audio">🎧 Demonstração Sonora:</span>
+            <div class="ondas-sonoras" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          </div>
+          <audio controls preload="none">
+            <source src="som-teclado.ogg" type="audio/ogg">
+          </audio>
+        </section>
 
-<!-- CARD 3: UKULELE -->
-<article class="card-instrumento">
-<div class="tag-nivel super-facil">Super Leve</div>
+        <details class="sanfona-info">
+          <summary class="btn-detalhes">✨ Dicas & Benefícios</summary>
+          <div class="conteudo-detalhes">
+            <div class="secao-info">
+              <h3>💡 Dica de Ouro:</h3>
+              <p>Utilize o teclado virtual na nossa aba de Estúdio para aprender suas primeiras melodias agora!</p>
+            </div>
+            <div class="secao-info">
+              <h3>🎯 Ambidestria:</h3>
+              <p>Trabalha a independência das mãos e sincronia entre os dois lados do cérebro.</p>
+            </div>
+          </div>
+        </details>
+      </article>
 
-<header class="card-cabecalho">
-<span class="emoji-instrumento" aria-hidden="true">🪕</span>
-<div>
-<h2>Ukulele</h2>
-<span class="categoria">Instrumento Havaiano</span>
-</div>
-</header>
+      <!-- CARD 3: UKULELE -->
+      <article class="card-instrumento" data-categoria="cordas" data-dificuldade="facil">
+        <div class="tag-nivel facil">Super Leve</div>
+        <header class="card-cabecalho">
+          <span class="emoji-instrumento" aria-hidden="true">🪕</span>
+          <div>
+            <h2>Ukulele</h2>
+            <span class="categoria">Cordas • Havaiano</span>
+          </div>
+        </header>
 
-<div class="etiquetas-caracteristicas">
-<span class="etiqueta">Compacto</span>
-<span class="etiqueta">4 Cordas</span>
-</div>
+        <div class="etiquetas-caracteristicas">
+          <span class="etiqueta">4 Cordas</span>
+          <span class="etiqueta">Compacto</span>
+        </div>
 
-<div class="medidores">
-<div class="medidor-item">
-<span>Conforto nos Dedos:</span>
-<div class="barras"><span style="width: 90%"></span></div>
-</div>
-<div class="medidor-item">
-<span>Portabilidade:</span>
-<div class="barras"><span style="width: 100%"></span></div>
-</div>
-</div>
+        <div class="medidores">
+          <div class="medidor-item">
+            <span>Conforto nos Dedos:</span>
+            <div class="barras"><span style="width: 90%"></span></div>
+          </div>
+          <div class="medidor-item">
+            <span>Portabilidade:</span>
+            <div class="barras"><span style="width: 100%"></span></div>
+          </div>
+        </div>
 
-<p class="descricao">
-Super leve, divertido e rápido de aprender! Possui apenas 4 cordas de nylon e cabe facilmente em qualquer lugar.
-</p>
+        <p class="descricao">Compacto e radiante! Com poucas aulas já é possível tocar várias músicas completas.</p>
 
-<section class="bloco-audio">
-<div class="cabecalho-audio">
-<label for="audio-ukulele" class="rotulo-audio">🎧 Ouça o som do Ukulele:</label>
-<div class="ondas-sonoras" aria-hidden="true">
-<span></span><span></span><span></span><span></span>
-</div>
-</div>
-<audio id="audio-ukulele" controls preload="none">
-<source src="som-ukulele.ogg" type="audio/ogg">
-Seu navegador não suporta este áudio.
-</audio>
-</section>
+        <section class="bloco-audio">
+          <div class="cabecalho-audio">
+            <span class="rotulo-audio">🎧 Demonstração Sonora:</span>
+            <div class="ondas-sonoras" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          </div>
+          <audio controls preload="none">
+            <source src="som-ukulele.ogg" type="audio/ogg">
+          </audio>
+        </section>
 
-<details class="sanfona-info">
-<summary class="btn-detalhes">✨ Dicas Práticas & Saúde</summary>
-<div class="conteudo-detalhes">
-<div class="secao-info dica-acessibilidade">
-<h3>💡 Dica de Ouro:</h3>
-<p>Toque apoiado no colo enquanto assiste TV ou relaxa no sofá, sem cansar braços ou ombros.</p>
-</div>
-<div class="secao-info">
-<h3>🎯 Saúde Emocional:</h3>
-<p>O som alegre do Ukulele é excelente para aliviar o estresse e trazer sensação de bem-estar rápida.</p>
-</div>
-</div>
-</details>
-</article>
+        <details class="sanfona-info">
+          <summary class="btn-detalhes">✨ Dicas & Benefícios</summary>
+          <div class="conteudo-detalhes">
+            <div class="secao-info">
+              <h3>💡 Dica de Ouro:</h3>
+              <p>Inicie aprendendo os dois acordes mais simples: C (Dó) e Am (Lá menor).</p>
+            </div>
+          </div>
+        </details>
+      </article>
 
-</div>
-</section>
+      <!-- CARD 4: VIOLINO -->
+      <article class="card-instrumento" data-categoria="cordas" data-dificuldade="avancado">
+        <div class="tag-nivel avancado">Expressivo & Desafiador</div>
+        <header class="card-cabecalho">
+          <span class="emoji-instrumento" aria-hidden="true">🎻</span>
+          <div>
+            <h2>Violino</h2>
+            <span class="categoria">Cordas • Friccionadas</span>
+          </div>
+        </header>
 
-<!-- CONTEÚDO DA ABA 2: QUIZ INTERATIVO -->
-<section class="conteudo-aba secao-quiz-aba">
-<div class="caixa-interativa">
-<h2>🎯 Qual o instrumento perfeito para o seu momento?</h2>
-<p>Responda à pergunta abaixo para receber a nossa recomendação:</p>
+        <div class="etiquetas-caracteristicas">
+          <span class="etiqueta">Erudito & Pop</span>
+          <span class="etiqueta">Melódico</span>
+        </div>
 
-<div class="quiz-container">
-<input type="radio" name="quiz" id="res-violao" class="controle-oculto">
-<input type="radio" name="quiz" id="res-teclado" class="controle-oculto">
-<input type="radio" name="quiz" id="res-ukulele" class="controle-oculto">
+        <div class="medidores">
+          <div class="medidor-item">
+            <span>Precisão Auditiva:</span>
+            <div class="barras"><span style="width: 95%"></span></div>
+          </div>
+          <div class="medidor-item">
+            <span>Portabilidade:</span>
+            <div class="barras"><span style="width: 85%"></span></div>
+          </div>
+        </div>
 
-<div class="quiz-opcoes">
-<label for="res-violao" class="btn-opcao" tabindex="0">
-🗣️ Quero cantar músicas conhecidas acompanhando com acordes.
-</label>
-<label for="res-teclado" class="btn-opcao" tabindex="0">
-🎹 Prefiro tocar sentado confortavelmente com toques leves e sem fazer força.
-</label>
-<label for="res-ukulele" class="btn-opcao" tabindex="0">
-🏖️ Quero algo super leve, pequeno e fácil de levar para qualquer lugar.
-</label>
-</div>
+        <p class="descricao">Som emotivo e marcante. Excelente para exercitar a percepção auditiva fina e postura postural.</p>
 
-<!-- Respostas do Quiz -->
-<div class="resposta-card resultado-violao">
-<span class="resposta-icone">🎸</span>
-<div>
-<h3>Seu instrumento ideal é o <strong>Violão</strong>!</h3>
-<p>Ele é versátil, ótimo para rodas de conversa e perfeito para acompanhar quem gosta de cantar junto.</p>
-</div>
-</div>
+        <section class="bloco-audio">
+          <div class="cabecalho-audio">
+            <span class="rotulo-audio">🎧 Som do Violino:</span>
+            <div class="ondas-sonoras" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          </div>
+          <button class="btn-tocar-sintetizado" data-freq="440" data-tipo="sawtooth">🎻 Ouvir Nota Lá (A4)</button>
+        </section>
 
-<div class="resposta-card resultado-teclado">
-<span class="resposta-icone">🎹</span>
-<div>
-<h3>Seu instrumento ideal é o <strong>Teclado</strong>!</h3>
-<p>Extremamente confortável, permite tocar lindas músicas sem causar esforço nas articulações dos dedos.</p>
-</div>
-</div>
+        <details class="sanfona-info">
+          <summary class="btn-detalhes">✨ Dicas & Benefícios</summary>
+          <div class="conteudo-detalhes">
+            <div class="secao-info">
+              <h3>💡 Dica de Ouro:</h3>
+              <p>O uso do breu no arco é essencial para gerar o atrito correto nas cordas.</p>
+            </div>
+          </div>
+        </details>
+      </article>
 
-<div class="resposta-card resultado-ukulele">
-<span class="resposta-icone">🪕</span>
-<div>
-<h3>Seu instrumento ideal é o <strong>Ukulele</strong>!</h3>
-<p>Alegre e levinho, você aprenderá suas primeiras músicas em poucos dias de treino simples.</p>
-</div>
-</div>
-</div>
-</div>
-</section>
+      <!-- CARD 5: SAXOFONE -->
+      <article class="card-instrumento" data-categoria="sopro" data-dificuldade="medio">
+        <div class="tag-nivel medio">Emocionante</div>
+        <header class="card-cabecalho">
+          <span class="emoji-instrumento" aria-hidden="true">🎷</span>
+          <div>
+            <h2>Saxofone</h2>
+            <span class="categoria">Sopro • Madeiras/Metais</span>
+          </div>
+        </header>
 
-<!-- CONTEÚDO DA ABA 3: EXERCÍCIO PRÁTICO -->
-<section class="conteudo-aba secao-pratica-aba">
-<div class="caixa-interativa">
-<h2>🎹 Treino Visual: Conhecendo as Notas do Teclado</h2>
-<p>Passe o mouse ou toque nas teclas abaixo para visualizar o nome e a posição das notas principais no teclado:</p>
+        <div class="etiquetas-caracteristicas">
+          <span class="etiqueta">Jazz & MPB</span>
+          <span class="etiqueta">Expressivo</span>
+        </div>
 
-<!-- Mini Teclado Visual -->
-<div class="teclado-visual" aria-label="Teclado demonstrativo">
-<div class="tecla branca" tabindex="0"><span>DÓ</span></div>
-<div class="tecla preta"></div>
-<div class="tecla branca" tabindex="0"><span>RÉ</span></div>
-<div class="tecla preta"></div>
-<div class="tecla branca" tabindex="0"><span>MI</span></div>
-<div class="tecla branca" tabindex="0"><span>FÁ</span></div>
-<div class="tecla preta"></div>
-<div class="tecla branca" tabindex="0"><span>SOL</span></div>
-<div class="tecla preta"></div>
-<div class="tecla branca" tabindex="0"><span>LÁ</span></div>
-<div class="tecla preta"></div>
-<div class="tecla branca" tabindex="0"><span>SI</span></div>
-</div>
+        <div class="medidores">
+          <div class="medidor-item">
+            <span>Controle de Sopro:</span>
+            <div class="barras"><span style="width: 80%"></span></div>
+          </div>
+          <div class="medidor-item">
+            <span>Portabilidade:</span>
+            <div class="barras"><span style="width: 70%"></span></div>
+          </div>
+        </div>
 
-<div class="painel-dica">
-<strong>💡 Exercício de Memória:</strong> Tente memorizar a sequência <em>DÓ - RÉ - MI - FÁ - SOL - LÁ - SI</em>. Ela é a base para todos os instrumentos!
-</div>
-</div>
-</section>
+        <p class="descricao">Timbre encorpado e apaixonante. Fortalece a capacidade pulmonar e o controle de respiração.</p>
+
+        <section class="bloco-audio">
+          <div class="cabecalho-audio">
+            <span class="rotulo-audio">🎧 Som do Saxofone:</span>
+            <div class="ondas-sonoras" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          </div>
+          <button class="btn-tocar-sintetizado" data-freq="311.13" data-tipo="square">🎷 Ouvir Nota Mib (Eb4)</button>
+        </section>
+
+        <details class="sanfona-info">
+          <summary class="btn-detalhes">✨ Dicas & Benefícios</summary>
+          <div class="conteudo-detalhes">
+            <div class="secao-info">
+              <h3>💡 Dica de Respiração:</h3>
+              <p>Treine a respiração diafragmática para emitir notas longas e firmes.</p>
+            </div>
+          </div>
+        </details>
+      </article>
+
+      <!-- CARD 6: BATERIA ELETRÔNICA -->
+      <article class="card-instrumento" data-categoria="percussao" data-dificuldade="medio">
+        <div class="tag-nivel medio">Pura Energia</div>
+        <header class="card-cabecalho">
+          <span class="emoji-instrumento" aria-hidden="true">🥁</span>
+          <div>
+            <h2>Bateria Eletrônica</h2>
+            <span class="categoria">Percussão • Digital</span>
+          </div>
+        </header>
+
+        <div class="etiquetas-caracteristicas">
+          <span class="etiqueta">Com Fone de Ouvido</span>
+          <span class="etiqueta">Ritmo Puro</span>
+        </div>
+
+        <div class="medidores">
+          <div class="medidor-item">
+            <span>Independência de Membros:</span>
+            <div class="barras"><span style="width: 90%"></span></div>
+          </div>
+          <div class="medidor-item">
+            <span>Silenciosa com Fones:</span>
+            <div class="barras"><span style="width: 100%"></span></div>
+          </div>
+        </div>
+
+        <p class="descricao">Perfeita para praticar em qualquer horário sem incomodar os vizinhos. Acelera o raciocínio rítmico.</p>
+
+        <section class="bloco-audio">
+          <div class="cabecalho-audio">
+            <span class="rotulo-audio">🎧 Testar Bateria:</span>
+            <div class="ondas-sonoras" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          </div>
+          <button class="btn-tocar-sintetizado" data-freq="80" data-tipo="sine">🥁 Ouvir Bumbo Sincronizado</button>
+        </section>
+
+        <details class="sanfona-info">
+          <summary class="btn-detalhes">✨ Dicas & Benefícios</summary>
+          <div class="conteudo-detalhes">
+            <div class="secao-info">
+              <h3>💡 Vantagem Digital:</h3>
+              <p>Permite conectar fones e acompanhar suas faixas favoritas no celular.</p>
+            </div>
+          </div>
+        </details>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ==========================================
+       ABA 2: ESTÚDIO & PIANO VIRTUAL INTERATIVO
+  ========================================== -->
+  <section class="conteudo-aba secao-estudio-aba">
+    <div class="caixa-interativa">
+      <h2>🎹 Estúdio de Teclas & Sintetizador Real</h2>
+      <p>Toque no teclado abaixo usando o mouse, o toque na tela ou o <strong>teclado do seu computador</strong> (Teclas A, S, D, F, G, H, J, K):</p>
+
+      <!-- Seleção de Timbre -->
+      <div class="controles-estudio">
+        <div class="grupo-estudio">
+          <label for="seletor-timbre"><strong>Timbre do Instrumento:</strong></label>
+          <select id="seletor-timbre" class="seletor-custom">
+            <option value="sine">🎹 Piano Suave (Senoide)</option>
+            <option value="triangle">🎷 Sintetizador Warm (Triângulo)</option>
+            <option value="square">🎺 Órgão Vintage (Quadrada)</option>
+            <option value="sawtooth">🎻 Cordas Brilhantes (Dente de Serra)</option>
+          </select>
+        </div>
+
+        <div class="grupo-estudio">
+          <label for="volume-estudio"><strong>Volume Master:</strong></label>
+          <input type="range" id="volume-estudio" min="0" max="1" step="0.05" value="0.7">
+        </div>
+      </div>
+
+      <!-- Piano Interativo Completo -->
+      <div class="teclado-visual" id="teclado-estudio" aria-label="Teclado musical interativo">
+        <button class="tecla branca" data-nota="261.63" data-nome="DÓ" data-key="a"><span>DÓ<br><small>(A)</small></span></button>
+        <button class="tecla preta" data-nota="277.18" data-nome="DÓ#" data-key="w"><span>W</span></button>
+        <button class="tecla branca" data-nota="293.66" data-nome="RÉ" data-key="s"><span>RÉ<br><small>(S)</small></span></button>
+        <button class="tecla preta" data-nota="311.13" data-nome="RÉ#" data-key="e"><span>E</span></button>
+        <button class="tecla branca" data-nota="329.63" data-nome="MI" data-key="d"><span>MI<br><small>(D)</small></span></button>
+        <button class="tecla branca" data-nota="349.23" data-nome="FÁ" data-key="f"><span>FÁ<br><small>(F)</small></span></button>
+        <button class="tecla preta" data-nota="369.99" data-nome="FÁ#" data-key="t"><span>T</span></button>
+        <button class="tecla branca" data-nota="392.00" data-nome="SOL" data-key="g"><span>SOL<br><small>(G)</small></span></button>
+        <button class="tecla preta" data-nota="415.30" data-nome="SOL#" data-key="y"><span>Y</span></button>
+        <button class="tecla branca" data-nota="440.00" data-nome="LÁ" data-key="h"><span>LÁ<br><small>(H)</small></span></button>
+        <button class="tecla preta" data-nota="466.16" data-nome="LÁ#" data-key="u"><span>U</span></button>
+        <button class="tecla branca" data-nota="493.88" data-nome="SI" data-key="j"><span>SI<br><small>(J)</small></span></button>
+        <button class="tecla branca" data-nota="523.25" data-nome="DÓ 2" data-key="k"><span>DÓ 2<br><small>(K)</small></span></button>
+      </div>
+
+      <!-- Monitor da Nota Tocada -->
+      <div class="display-nota" id="display-nota">
+        <span>Nota Atual: <strong>Nenhuma tecla pressionada</strong></span>
+      </div>
+
+      <div class="painel-dica">
+        <strong>🎼 Guia de Música Fácil:</strong> Tente tocar a sequência das teclas do seu computador: <kbd>D</kbd> - <kbd>D</kbd> - <kbd>F</kbd> - <kbd>G</kbd> - <kbd>G</kbd> - <kbd>F</kbd> - <kbd>D</kbd> - <kbd>S</kbd> (Primeiros compassos da <em>Ode à Alegria</em> de Beethoven!).
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       ABA 3: RITMO & SOUNDBOARD DE EFEITOS
+  ========================================== -->
+  <section class="conteudo-aba secao-ritmo-aba">
+    <div class="caixa-interativa">
+      <h2>🥁 Metrônomo Visuossensorial & Soundboard</h2>
+      <p>Desenvolva seu pulso rítmico acompanhando o metrônomo e crie batidas combinando os efeitos sonoros abaixo:</p>
+
+      <!-- Seção do Metrônomo -->
+      <div class="painel-metronomo">
+        <div class="metronomo-visores">
+          <div class="pulso-visual" id="pulso-visual"></div>
+          <div class="bpm-numero"><span id="val-bpm">100</span> <small>BPM</small></div>
+        </div>
+
+        <div class="controles-metronomo">
+          <input type="range" id="slider-bpm" min="40" max="200" value="100" class="slider-largo">
+          <div class="botoes-metronomo">
+            <button id="btn-iniciar-metronomo" class="btn-acao">▶️ Iniciar Metrônomo</button>
+            <button id="btn-parar-metronomo" class="btn-acao secundario">⏹️ Parar</button>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divisor">
+
+      <h3>🎛️ Soundboard Interativo de Percussão:</h3>
+      <div class="soundboard-grid">
+        <button class="pad-som" data-tipo-som="bumbo">🥁<br>Bumbo</button>
+        <button class="pad-som" data-tipo-som="caixa">💥<br>Caixa</button>
+        <button class="pad-som" data-tipo-som="prato">🔔<br>Prato Hi-Hat</button>
+        <button class="pad-som" data-tipo-som="palma">👏<br>Palmas</button>
+        <button class="pad-som" data-tipo-som="vinil">🪩<br>Scratch Vinil</button>
+        <button class="pad-som" data-tipo-som="triangulo">🔺<br>Triângulo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       ABA 4: QUIZ RECOMENDADOR INTELIGENTE
+  ========================================== -->
+  <section class="conteudo-aba secao-quiz-aba">
+    <div class="caixa-interativa">
+      <h2>🎯 Descubra seu Instrumento Musical Ideal</h2>
+      <p>Responda às 3 perguntas abaixo para receber uma recomendação personalizada perfeita para o seu perfil:</p>
+
+      <div class="quiz-multi-etapas" id="quiz-form">
+        
+        <!-- Pergunta 1 -->
+        <fieldset class="quiz-pergunta">
+          <legend><strong>1. Qual o seu principal objetivo musical hoje?</strong></legend>
+          <div class="quiz-opcoes-grid">
+            <label class="card-opcao-quiz">
+              <input type="radio" name="p1" value="violao" checked>
+              <span>🗣️ Tocar para acompanhar canções e cantar junto.</span>
+            </label>
+            <label class="card-opcao-quiz">
+              <input type="radio" name="p1" value="teclado">
+              <span>🎹 Relaxar tocando notas e harmonias de forma suave.</span>
+            </label>
+            <label class="card-opcao-quiz">
+              <input type="radio" name="p1" value="ukulele">
+              <span>🏖️ Aprender algo super rápido, portátil e divertido.</span>
+            </label>
+            <label class="card-opcao-quiz">
+              <input type="radio" name="p1" value="bateria">
+              <span>⚡ Descarregar energia e praticar ritmos empolgantes.</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Pergunta 2 -->
+        <fieldset class="quiz-pergunta">
+          <legend><strong>2. Quanto tempo você pretende dedicar por dia?</strong></legend>
+          <div class="quiz-opcoes-grid">
+            <label class="card-opcao-quiz">
+              <input type="radio" name="p2" value="pouco" checked>
+              <span>⏱️ 10 a 15 minutos casuais.</span>
+            </label>
+            <label class="card-opcao-quiz">
+              <input type="radio" name="p2" value="medio">
+              <span>⏱️ 30 minutos constantes.</span>
+            </label>
+            <label class="card-opcao-quiz">
+              <input type="radio" name="p2" value="muito">
+              <span>⏱️ 1 hora ou mais para dominar os detalhes.</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <button id="btn-calcular-quiz" class="btn-acao primario-grande">✨ Ver Minha Recomendação Musical</button>
+
+        <!-- Resultado do Quiz -->
+        <div class="painel-resultado-quiz" id="painel-resultado-quiz" style="display: none;">
+          <div class="resultado-header">
+            <span class="emoji-resultado" id="quiz-emoji">🎸</span>
+            <div>
+              <h3 id="quiz-titulo-resultado">Seu instrumento recomendado!</h3>
+              <p id="quiz-desc-resultado">Baseado nas suas respostas...</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
 
 </div>
 
 <footer class="rodape">
-<p>🌟 <strong>Clube da Música</strong> • Cultivando a arte, a memória e a saúde em qualquer idade.</p>
+  <p>🌟 <strong>Clube da Música</strong> • Cultivando arte, bem-estar e diversão para todas as idades.</p>
 </footer>
 
 </div>
 
-<!-- SCRIPT DE EXECUÇÃO DO AMBIENTE 3D (THREE.JS) -->
+<!-- SCRIPT JS COMPLETO (SINTETIZADOR, CONTROLES 3D, ACESSIBILIDADE, RITMO E QUIZ) -->
 <script>
 window.addEventListener('DOMContentLoaded', () => {
+  /* ==========================================================================
+     1. SISTEMA WEB AUDIO API (SINTETIZADOR E SOMS REALISTAS)
+  ========================================================================== */
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  let audioCtx = null;
+
+  function obterAudioContext() {
+    if (!audioCtx) {
+      audioCtx = new AudioContext();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  // Função genérica para sintetizar tons e notas
+  function tocarNota(frequencia, tipoOscilador = 'sine', duracao = 0.8, volumeMax = 0.5) {
+    try {
+      const ctx = obterAudioContext();
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      osc.type = tipoOscilador;
+      osc.frequency.setValueAtTime(frequencia, ctx.currentTime);
+
+      // Envelope de Volume ADSR Suave
+      const volSelect = parseFloat(document.getElementById('volume-estudio')?.value || volumeMax);
+      gainNode.gain.setValueAtTime(0.01, ctx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(volSelect, ctx.currentTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duracao);
+
+      osc.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + duracao);
+    } catch (e) {
+      console.warn("Audio Context aguardando interação inicial.");
+    }
+  }
+
+  // Teclado do Estúdio
+  const seletorTimbre = document.getElementById('seletor-timbre');
+  const displayNota = document.getElementById('display-nota');
+  const teclas = document.querySelectorAll('#teclado-estudio .tecla');
+
+  teclas.forEach(tecla => {
+    function acionarTecla() {
+      const freq = parseFloat(tecla.getAttribute('data-nota'));
+      const nome = tecla.getAttribute('data-nome');
+      const timbre = seletorTimbre ? seletorTimbre.value : 'sine';
+      
+      tocarNota(freq, timbre, 0.9);
+      
+      if (displayNota) {
+        displayNota.innerHTML = `Nota Tocada: <strong>${nome} (${freq.toFixed(1)} Hz)</strong>`;
+      }
+
+      tecla.classList.add('ativa');
+      setTimeout(() => tecla.classList.remove('ativa'), 200);
+    }
+
+    tecla.addEventListener('mousedown', acionarTecla);
+    tecla.addEventListener('touchstart', (e) => { e.preventDefault(); acionarTecla(); });
+  });
+
+  // Mapeamento por Teclado Físico
+  const mapaTeclasComputador = {};
+  teclas.forEach(t => {
+    const key = t.getAttribute('data-key');
+    if (key) mapaTeclasComputador[key.toLowerCase()] = t;
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.repeat || e.target.tagName === 'INPUT') return;
+    const teclaEl = mapaTeclasComputador[e.key.toLowerCase()];
+    if (teclaEl) {
+      teclaEl.dispatchEvent(new Event('mousedown'));
+    }
+  });
+
+  // Botões de Som Sintetizado nos Cards
+  document.querySelectorAll('.btn-tocar-sintetizado').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const freq = parseFloat(btn.getAttribute('data-freq'));
+      const tipo = btn.getAttribute('data-tipo');
+      tocarNota(freq, tipo, 1.2, 0.6);
+    });
+  });
+
+  /* ==========================================================================
+     2. SOUNDBOARD E METRÔNOMO VISUOSSENSORIAL
+  ========================================================================== */
+  const pads = document.querySelectorAll('.pad-som');
+  pads.forEach(pad => {
+    pad.addEventListener('click', () => {
+      const tipo = pad.getAttribute('data-tipo-som');
+      pad.classList.add('hit');
+      setTimeout(() => pad.classList.remove('hit'), 150);
+
+      const ctx = obterAudioContext();
+      if (tipo === 'bumbo') tocarNota(60, 'sine', 0.3, 0.8);
+      else if (tipo === 'caixa') tocarNota(180, 'triangle', 0.2, 0.7);
+      else if (tipo === 'prato') tocarNota(800, 'square', 0.1, 0.3);
+      else if (tipo === 'palma') tocarNota(500, 'sawtooth', 0.15, 0.5);
+      else if (tipo === 'vinil') tocarNota(350, 'sine', 0.25, 0.6);
+      else if (tipo === 'triangulo') tocarNota(1200, 'sine', 0.5, 0.4);
+    });
+  });
+
+  // Metrônomo
+  let metronomoTimer = null;
+  const sliderBpm = document.getElementById('slider-bpm');
+  const valBpm = document.getElementById('val-bpm');
+  const pulsoVisual = document.getElementById('pulso-visual');
+  const btnIniciarMetr = document.getElementById('btn-iniciar-metronomo');
+  const btnPararMetr = document.getElementById('btn-parar-metronomo');
+
+  if (sliderBpm && valBpm) {
+    sliderBpm.addEventListener('input', () => {
+      valBpm.innerText = sliderBpm.value;
+      if (metronomoTimer) {
+        reiniciarMetronomo();
+      }
+    });
+  }
+
+  function tickMetronomo() {
+    tocarNota(880, 'sine', 0.08, 0.4);
+    if (pulsoVisual) {
+      pulsoVisual.classList.add('piscar');
+      setTimeout(() => pulsoVisual.classList.remove('piscar'), 100);
+    }
+  }
+
+  function iniciarMetronomo() {
+    if (metronomoTimer) clearInterval(metronomoTimer);
+    const bpm = parseInt(sliderBpm.value);
+    const intervalo = (60 / bpm) * 1000;
+    tickMetronomo();
+    metronomoTimer = setInterval(tickMetronomo, intervalo);
+  }
+
+  function reiniciarMetronomo() {
+    iniciarMetronomo();
+  }
+
+  if (btnIniciarMetr) btnIniciarMetr.addEventListener('click', iniciarMetronomo);
+  if (btnPararMetr) btnPararMetr.addEventListener('click', () => {
+    if (metronomoTimer) clearInterval(metronomoTimer);
+    metronomoTimer = null;
+  });
+
+  /* ==========================================================================
+     3. FILTROS DO CATÁLOGO DE INSTRUMENTOS
+  ========================================================================== */
+  const filtroCategoria = document.getElementById('filtro-categoria');
+  const filtroDificuldade = document.getElementById('filtro-dificuldade');
+  const inputBusca = document.getElementById('input-busca');
+  const cards = document.querySelectorAll('.card-instrumento');
+
+  function aplicarFiltros() {
+    const cat = filtroCategoria ? filtroCategoria.value : 'todos';
+    const dif = filtroDificuldade ? filtroDificuldade.value : 'todos';
+    const busca = inputBusca ? inputBusca.value.toLowerCase().trim() : '';
+
+    cards.forEach(card => {
+      const cardCat = card.getAttribute('data-categoria');
+      const cardDif = card.getAttribute('data-dificuldade');
+      const textoCard = card.innerText.toLowerCase();
+
+      const bateCategoria = (cat === 'todos' || cardCat === cat);
+      const bateDificuldade = (dif === 'todos' || cardDif === dif);
+      const bateBusca = (busca === '' || textoCard.includes(busca));
+
+      if (bateCategoria && bateDificuldade && bateBusca) {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  if (filtroCategoria) filtroCategoria.addEventListener('change', aplicarFiltros);
+  if (filtroDificuldade) filtroDificuldade.addEventListener('change', aplicarFiltros);
+  if (inputBusca) inputBusca.addEventListener('input', aplicarFiltros);
+
+  /* ==========================================================================
+     4. QUIZ RECOMENDADOR INTELIGENTE
+  ========================================================================== */
+  const btnCalcularQuiz = document.getElementById('btn-calcular-quiz');
+  const painelResultado = document.getElementById('painel-resultado-quiz');
+  const quizEmoji = document.getElementById('quiz-emoji');
+  const quizTitulo = document.getElementById('quiz-titulo-resultado');
+  const quizDesc = document.getElementById('quiz-desc-resultado');
+
+  if (btnCalcularQuiz) {
+    btnCalcularQuiz.addEventListener('click', () => {
+      const p1 = document.querySelector('input[name="p1"]:checked')?.value || 'violao';
+      
+      let instrumento = 'Violão';
+      let emoji = '🎸';
+      let descricao = 'Perfeito para cantar suas músicas favoritas e levar para encontros entre amigos!';
+
+      if (p1 === 'teclado') {
+        instrumento = 'Teclado / Piano';
+        emoji = '🎹';
+        descricao = 'Uma escolha incrível e confortável para exercitar a mente e harmonias suaves sem dores nas mãos.';
+      } else if (p1 === 'ukulele') {
+        instrumento = 'Ukulele';
+        emoji = '🪕';
+        descricao = 'Leve, prático e muito rápido de aprender. Em poucos dias você estará tocando suas primeiras faixas!';
+      } else if (p1 === 'bateria') {
+        instrumento = 'Bateria Eletrônica';
+        emoji = '🥁';
+        descricao = 'Ótimo para aliviar o estresse, desenvolver o ritmo corporal e praticar com fones de ouvido em qualquer horário!';
+      }
+
+      if (quizEmoji) quizEmoji.innerText = emoji;
+      if (quizTitulo) quizTitulo.innerHTML = `Seu instrumento ideal é o <strong>${instrumento}</strong>!`;
+      if (quizDesc) quizDesc.innerText = descricao;
+
+      if (painelResultado) {
+        painelResultado.style.display = 'block';
+        painelResultado.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  }
+
+  /* ==========================================================================
+     5. BARRA DE ACESSIBILIDADE E SINTETIZADOR DE VOZ
+  ========================================================================== */
+  let tamanhoFonte = 100;
+  const btnAumentar = document.getElementById('btn-fonte-aumentar');
+  const btnDiminuir = document.getElementById('btn-fonte-diminuir');
+  const wrapper = document.getElementById('app-wrapper');
+
+  if (btnAumentar && btnDiminuir && wrapper) {
+    btnAumentar.addEventListener('click', () => {
+      if (tamanhoFonte < 140) {
+        tamanhoFonte += 10;
+        wrapper.style.fontSize = `${tamanhoFonte}%`;
+      }
+    });
+
+    btnDiminuir.addEventListener('click', () => {
+      if (tamanhoFonte > 80) {
+        tamanhoFonte -= 10;
+        wrapper.style.fontSize = `${tamanhoFonte}%`;
+      }
+    });
+  }
+
+  // Leitor de Voz Nativo (Web Speech API)
+  const btnLeitorVoz = document.getElementById('btn-leitor-voz');
+  if (btnLeitorVoz && 'speechSynthesis' in window) {
+    btnLeitorVoz.addEventListener('click', () => {
+      window.speechSynthesis.cancel();
+      const textoParaLer = "Bem-vindo ao Clube da Música! Explore nosso catálogo de sons, toque piano virtual no estúdio e faça o quiz de recomendação musical.";
+      const utterance = new SpeechSynthesisUtterance(textoParaLer);
+      utterance.lang = 'pt-BR';
+      window.speechSynthesis.speak(utterance);
+    });
+  }
+
+  /* ==========================================================================
+     6. AMBIENTE 3D DINÂMICO (THREE.JS)
+  ========================================================================== */
   const canvas = document.getElementById('bg-canvas-3d');
   if (!canvas || typeof THREE === 'undefined') return;
 
@@ -347,7 +862,7 @@ window.addEventListener('DOMContentLoaded', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  // Luzes
+  // Iluminação
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
   scene.add(ambientLight);
 
@@ -359,12 +874,11 @@ window.addEventListener('DOMContentLoaded', () => {
   light2.position.set(-20, -20, -10);
   scene.add(light2);
 
-  // Geometrias dos Objetos 3D
+  // Objetos 3D
   const geometries = [
     new THREE.IcosahedronGeometry(1.2, 0),
     new THREE.TorusGeometry(1, 0.35, 16, 32),
     new THREE.OctahedronGeometry(1.2, 0),
-    new THREE.TetrahedronGeometry(1.3, 0),
     new THREE.TorusKnotGeometry(0.7, 0.2, 64, 8)
   ];
 
@@ -372,40 +886,63 @@ window.addEventListener('DOMContentLoaded', () => {
   const objectsData = [];
   const quantidade = window.innerWidth < 768 ? 20 : 45;
 
-  const cores = [0x3b82f6, 0x8b5cf6, 0xec4899, 0x06b6d4, 0x6366f1];
+  let paletaCores = [0x3b82f6, 0x8b5cf6, 0xec4899, 0x06b6d4, 0x6366f1];
 
-  for (let i = 0; i < quantidade; i++) {
-    const geom = geometries[Math.floor(Math.random() * geometries.length)];
-    const mat = new THREE.MeshPhongMaterial({
-      color: cores[Math.floor(Math.random() * cores.length)],
-      shininess: 90,
-      transparent: true,
-      opacity: 0.75
-    });
+  function criarObjetos3D() {
+    while(group.children.length > 0) { 
+      group.remove(group.children[0]); 
+    }
+    objectsData.length = 0;
 
-    const mesh = new THREE.Mesh(geom, mat);
-    mesh.position.x = (Math.random() - 0.5) * 60;
-    mesh.position.y = (Math.random() - 0.5) * 60;
-    mesh.position.z = (Math.random() - 0.5) * 40;
+    for (let i = 0; i < quantidade; i++) {
+      const geom = geometries[Math.floor(Math.random() * geometries.length)];
+      const mat = new THREE.MeshPhongMaterial({
+        color: paletaCores[Math.floor(Math.random() * paletaCores.length)],
+        shininess: 90,
+        transparent: true,
+        opacity: 0.75
+      });
 
-    const scale = Math.random() * 0.8 + 0.4;
-    mesh.scale.set(scale, scale, scale);
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.position.x = (Math.random() - 0.5) * 60;
+      mesh.position.y = (Math.random() - 0.5) * 60;
+      mesh.position.z = (Math.random() - 0.5) * 40;
 
-    group.add(mesh);
+      const scale = Math.random() * 0.8 + 0.4;
+      mesh.scale.set(scale, scale, scale);
 
-    objectsData.push({
-      mesh: mesh,
-      rotX: (Math.random() - 0.5) * 0.015,
-      rotY: (Math.random() - 0.5) * 0.015,
-      baseY: mesh.position.y,
-      speed: Math.random() * 0.015 + 0.005,
-      offset: Math.random() * Math.PI * 2
-    });
+      group.add(mesh);
+
+      objectsData.push({
+        mesh: mesh,
+        rotX: (Math.random() - 0.5) * 0.015,
+        rotY: (Math.random() - 0.5) * 0.015,
+        baseY: mesh.position.y,
+        speed: Math.random() * 0.015 + 0.005,
+        offset: Math.random() * Math.PI * 2
+      });
+    }
   }
 
+  criarObjetos3D();
   scene.add(group);
 
-  // Movimento com o ponteiro do mouse
+  // Troca de Temas 3D
+  document.querySelectorAll('.btn-tema-3d').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.btn-tema-3d').forEach(b => b.classList.remove('ativo'));
+      btn.classList.add('ativo');
+      const tema = btn.getAttribute('data-tema');
+
+      if (tema === 'cosmos') paletaCores = [0x3b82f6, 0x8b5cf6, 0xec4899];
+      else if (tema === 'neon') paletaCores = [0x00ffcc, 0xff007f, 0x9d00ff];
+      else if (tema === 'aurora') paletaCores = [0x10b981, 0x06b6d4, 0x3b82f6];
+
+      criarObjetos3D();
+    });
+  });
+
+  // Movimento com Mouse
   let mouseX = 0, mouseY = 0;
   document.addEventListener('mousemove', (e) => {
     mouseX = (e.clientX - window.innerWidth / 2) * 0.0006;
