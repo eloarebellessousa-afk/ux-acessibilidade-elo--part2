@@ -31,7 +31,7 @@
   <div id="simple-mode-banner" class="simple-banner" hidden>
     <div class="banner-content">
       <span>✨ <strong>Modo Simples Ativo:</strong> Interface limpa, foco ampliado e navegação direta.</span>
-      <button id="btn-disable-simple-mode" class="pill-btn outline small" type="button">Voltar ao Modo Completo</button>
+      <button id="btn-disable-simple-mode" class="pill-btn outline small">Voltar ao Modo Completo</button>
     </div>
   </div>
 
@@ -47,10 +47,10 @@
     </nav>
 
     <div class="nav-accessibility-quick">
-      <button id="btn-quick-simple-mode" class="pill-btn highlight" type="button" aria-pressed="false" aria-label="Alternar Modo Simples">
+      <button id="btn-quick-simple-mode" class="pill-btn highlight" aria-pressed="false" aria-label="Alternar Modo Simples">
         <span class="icon" aria-hidden="true">✨</span> <span class="label">Modo Simples</span>
       </button>
-      <button id="btn-quick-speech" class="icon-btn" type="button" title="Ouvir resumo da tela" aria-label="Ouvir resumo do conteúdo da tela">
+      <button id="btn-quick-speech" class="icon-btn" title="Ouvir resumo da tela" aria-label="Ouvir resumo do conteúdo da tela">
         🔊
       </button>
       <a href="#meu-jeito" class="pill-btn outline" aria-label="Acessar centro de acessibilidade Meu Jeito de Usar">
@@ -83,7 +83,7 @@
         </div>
 
         <div class="hero-interactive-stage">
-          <button class="stage-orb" id="hero-orb" type="button" aria-label="Toque no orbe para emitir um tom ressonante e pulsar o ambiente 3D">
+          <button class="stage-orb" id="hero-orb" aria-label="Toque no orbe para emitir um tom ressonante e pulsar o ambiente 3D">
             <span class="orb-core"></span>
             <span class="orb-pulse"></span>
             <span class="orb-label">Pulsar Som</span>
@@ -140,10 +140,10 @@
           <fieldset class="control-group">
             <legend><span class="icon" aria-hidden="true">👁️</span> Ajustes de Visão</legend>
             <div class="control-grid">
-              <button id="btn-font-increase" class="control-btn" type="button" aria-label="Aumentar tamanho do texto">Aumentar Fonte (+)</button>
-              <button id="btn-font-decrease" class="control-btn" type="button" aria-label="Diminuir tamanho do texto">Diminuir Fonte (-)</button>
-              <button id="btn-high-contrast" class="control-btn toggle-btn" type="button" aria-pressed="false">Alto Contraste</button>
-              <button id="btn-soft-contrast" class="control-btn toggle-btn" type="button" aria-pressed="false">Contraste Suave</button>
+              <button id="btn-font-increase" class="control-btn" aria-label="Aumentar tamanho do texto">Aumentar Fonte (+)</button>
+              <button id="btn-font-decrease" class="control-btn" aria-label="Diminuir tamanho do texto">Diminuir Fonte (-)</button>
+              <button id="btn-high-contrast" class="control-btn toggle-btn" aria-pressed="false">Alto Contraste</button>
+              <button id="btn-soft-contrast" class="control-btn toggle-btn" aria-pressed="false">Contraste Suave</button>
             </div>
           </fieldset>
 
@@ -155,7 +155,7 @@
                 <label for="master-volume">Volume Geral</label>
                 <input type="range" id="master-volume" min="0" max="1" step="0.05" value="0.8" aria-label="Ajustar Volume Geral">
               </div>
-              <button id="btn-toggle-speech" class="control-btn toggle-btn" type="button" aria-pressed="false">Sintetizador de Voz</button>
+              <button id="btn-toggle-speech" class="control-btn toggle-btn" aria-pressed="false">Sintetizador de Voz</button>
             </div>
           </fieldset>
 
@@ -163,9 +163,9 @@
           <fieldset class="control-group">
             <legend><span class="icon" aria-hidden="true">✋</span> Interação & Movimento</legend>
             <div class="control-grid">
-              <button id="btn-toggle-simple-mode" class="control-btn toggle-btn highlight" type="button" aria-pressed="false">Modo Simples</button>
-              <button id="btn-reduce-motion" class="control-btn toggle-btn" type="button" aria-pressed="false">Reduzir Animações</button>
-              <button id="btn-large-controls" class="control-btn toggle-btn" type="button" aria-pressed="false">Controles Maiores</button>
+              <button id="btn-toggle-simple-mode" class="control-btn toggle-btn highlight" aria-pressed="false">Modo Simples</button>
+              <button id="btn-reduce-motion" class="control-btn toggle-btn" aria-pressed="false">Reduzir Animações</button>
+              <button id="btn-large-controls" class="control-btn toggle-btn" aria-pressed="false">Controles Maiores</button>
             </div>
           </fieldset>
 
@@ -259,7 +259,7 @@
         </div>
         <div class="studio-global-controls">
           <div class="metronome-box">
-            <button id="btn-toggle-metronome" class="pill-btn outline" type="button" aria-pressed="false">⏱️ Metrônomo: <span id="metronome-status">Desligado</span></button>
+            <button id="btn-toggle-metronome" class="pill-btn outline" aria-pressed="false">⏱️ Metrônomo: <span id="metronome-status">Desligado</span></button>
             <label for="metronome-bpm" class="sr-only">Ajustar BPM do Metrônomo</label>
             <input type="range" id="metronome-bpm" min="40" max="200" value="120">
             <span id="bpm-display" aria-live="polite">120 BPM</span>
@@ -275,9 +275,9 @@
 
         <div class="studio-recorder-bar">
           <div class="recorder-controls">
-            <button id="btn-record" class="record-btn" type="button" aria-pressed="false"><span class="dot" aria-hidden="true"></span> Gravar Sequência</button>
-            <button id="btn-play-recording" class="pill-btn" type="button" disabled>▶️ Reproduzir Gravação</button>
-            <button id="btn-clear-recording" class="pill-btn outline" type="button" disabled>🗑 Limpar</button>
+            <button id="btn-record" class="record-btn" aria-pressed="false"><span class="dot" aria-hidden="true"></span> Gravar Sequência</button>
+            <button id="btn-play-recording" class="pill-btn" disabled>▶️ Reproduzir Gravação</button>
+            <button id="btn-clear-recording" class="pill-btn outline" disabled>🗑 Limpar</button>
           </div>
           <div class="recording-status" id="recording-status-text" aria-live="polite">Nenhuma gravação armazenada.</div>
         </div>
@@ -289,13 +289,13 @@
       <div class="section-header">
         <span class="section-kicker">🎹 Expressão Melódica</span>
         <h2 class="section-title">Teclado Sonora</h2>
-        <p class="section-sub">Utilize o mouse, toque na tela ou use o teclado do computador (teclas Z, X, C, V, B, N, M, K).</p>
+        <p class="section-sub">Utilize o mouse, toque na tela ou use o teclado do computador (teclas C a K).</p>
       </div>
 
       <div class="keyboard-modes-nav" role="tablist" aria-label="Modos do Teclado">
-        <button id="btn-keymode-free" class="mode-tab active" type="button" role="tab" aria-selected="true">Modo Livre</button>
-        <button id="btn-keymode-learn" class="mode-tab" type="button" role="tab" aria-selected="false">Modo Aprender</button>
-        <button id="btn-keymode-challenge" class="mode-tab" type="button" role="tab" aria-selected="false">Modo Desafio</button>
+        <button id="btn-keymode-free" class="mode-tab active" role="tab" aria-selected="true">Modo Livre</button>
+        <button id="btn-keymode-learn" class="mode-tab" role="tab" aria-selected="false">Modo Aprender</button>
+        <button id="btn-keymode-challenge" class="mode-tab" role="tab" aria-selected="false">Modo Desafio</button>
       </div>
 
       <div id="keyboard-guide-banner" class="keyboard-guide-banner" hidden aria-live="assertive">
@@ -318,36 +318,36 @@
       <div class="section-header">
         <span class="section-kicker">🥁 Base Rítmica</span>
         <h2 class="section-title">Estação de Percussão</h2>
-        <p class="section-sub">Pads responsivos. Experimente usar os atalhos A, S, D, F, G do teclado do computador.</p>
+        <p class="section-sub">Pads responsivos. Experimente usar os atalhos A, S, D, F, G do teclado.</p>
       </div>
 
       <div class="drum-actions-bar">
-        <button id="btn-play-demo-rhythm" class="pill-btn highlight" type="button">🥁 Ouvir Ritmo Demonstrativo</button>
-        <button id="btn-stop-demo-rhythm" class="pill-btn outline" type="button" hidden>⏹️ Parar Demonstração</button>
+        <button id="btn-play-demo-rhythm" class="pill-btn highlight">🥁 Ouvir Ritmo Demonstrativo</button>
+        <button id="btn-stop-demo-rhythm" class="pill-btn outline" hidden>⏹️ Parar Demonstração</button>
       </div>
 
       <div class="drum-pads-grid" id="drum-pads-grid">
-        <button class="drum-pad" type="button" data-sound="kick" data-key="A" aria-label="Bumbo (Kick), tecla A">
+        <button class="drum-pad" data-sound="kick" data-key="A" aria-label="Bumbo (Kick), tecla A">
           <span class="pad-key">A</span>
           <span class="pad-name">Bumbo</span>
           <span class="pad-sub">(Kick)</span>
         </button>
-        <button class="drum-pad" type="button" data-sound="snare" data-key="S" aria-label="Caixa (Snare), tecla S">
+        <button class="drum-pad" data-sound="snare" data-key="S" aria-label="Caixa (Snare), tecla S">
           <span class="pad-key">S</span>
           <span class="pad-name">Caixa</span>
           <span class="pad-sub">(Snare)</span>
         </button>
-        <button class="drum-pad" type="button" data-sound="hihat" data-key="D" aria-label="Chimbal (Hi-Hat), tecla D">
+        <button class="drum-pad" data-sound="hihat" data-key="D" aria-label="Chimbal (Hi-Hat), tecla D">
           <span class="pad-key">D</span>
           <span class="pad-name">Chimbal</span>
           <span class="pad-sub">(Hi-Hat)</span>
         </button>
-        <button class="drum-pad" type="button" data-sound="tom" data-key="F" aria-label="Tom-tom, tecla F">
+        <button class="drum-pad" data-sound="tom" data-key="F" aria-label="Tom-tom, tecla F">
           <span class="pad-key">F</span>
           <span class="pad-name">Toms</span>
           <span class="pad-sub">(Tom-tom)</span>
         </button>
-        <button class="drum-pad" type="button" data-sound="crash" data-key="G" aria-label="Prato de Ataque (Crash), tecla G">
+        <button class="drum-pad" data-sound="crash" data-key="G" aria-label="Prato de Ataque (Crash), tecla G">
           <span class="pad-key">G</span>
           <span class="pad-name">Prato</span>
           <span class="pad-sub">(Crash)</span>
@@ -367,10 +367,10 @@
         <div id="discovery-quiz-step" class="discovery-step">
           <h3>Qual ambiente sonoro atrai sua sensibilidade hoje?</h3>
           <div class="sound-mood-options">
-            <button class="mood-btn" type="button" data-mood="calm">🌙 Sons orgânicos, fluidos, tranquilos e suaves</button>
-            <button class="mood-btn" type="button" data-mood="energetic">⚡ Ritmos marcantes, pulsantes e vibrantes</button>
-            <button class="mood-btn" type="button" data-mood="creative">🎵 Harmonias ricas, estruturas dinâmicas e melódicas</button>
-            <button class="mood-btn" type="button" data-mood="curious">🎻 Timbres expressivos, clássicos e cheios de nuances</button>
+            <button class="mood-btn" data-mood="calm">🌙 Sons orgânicos, fluidos, tranquilos e suaves</button>
+            <button class="mood-btn" data-mood="energetic">⚡ Ritmos marcantes, pulsantes e vibrantes</button>
+            <button class="mood-btn" data-mood="creative">🎵 Harmonias ricas, estruturas dinâmicas e melódicas</button>
+            <button class="mood-btn" data-mood="curious">🎻 Timbres expressivos, clássicos e cheios de nuances</button>
           </div>
         </div>
 
@@ -384,7 +384,7 @@
             <div id="discovery-recommendations-list" class="recommendations-list"></div>
           </div>
 
-          <button id="btn-restart-discovery" class="pill-btn outline" type="button">Refazer Mapeamento</button>
+          <button id="btn-restart-discovery" class="pill-btn outline">Refazer Mapeamento</button>
         </div>
       </div>
     </section>
@@ -399,10 +399,10 @@
 
       <!-- Filtros Semânticos de Categoria -->
       <div class="catalog-filters" aria-label="Filtrar catálogo por família de instrumentos">
-        <button class="filter-btn active" type="button" data-filter="all" aria-pressed="true">Todos (4)</button>
-        <button class="filter-btn" type="button" data-filter="cordas" aria-pressed="false">🎸 Cordas</button>
-        <button class="filter-btn" type="button" data-filter="teclas" aria-pressed="false">🎹 Teclas</button>
-        <button class="filter-btn" type="button" data-filter="percussao" aria-pressed="false">🥁 Percussão</button>
+        <button class="filter-btn active" data-filter="all" aria-pressed="true">Todos (4)</button>
+        <button class="filter-btn" data-filter="cordas" aria-pressed="false">🎸 Cordas</button>
+        <button class="filter-btn" data-filter="teclas" aria-pressed="false">🎹 Teclas</button>
+        <button class="filter-btn" data-filter="percussao" aria-pressed="false">🥁 Percussão</button>
       </div>
 
       <div class="catalog-grid" id="catalog-grid">
@@ -443,7 +443,7 @@
           <h3 id="quiz-result-title">Sintonia Sonora Revelada</h3>
           <p id="quiz-result-text"></p>
           <div id="quiz-result-instrument-preview" class="quiz-instrument-result"></div>
-          <button id="btn-restart-quiz" class="pill-btn highlight" type="button">Refazer Quiz</button>
+          <button id="btn-restart-quiz" class="pill-btn highlight">Refazer Quiz</button>
         </div>
       </div>
     </section>
@@ -481,8 +481,8 @@
       <p id="tour-step-desc">Deseja realizar um percurso rápido para conhecer a plataforma e ajustar as opções de acessibilidade?</p>
       
       <div class="tour-modal-actions">
-        <button id="btn-start-tour" class="btn-primary" type="button">Iniciar Percurso Guiado</button>
-        <button id="btn-skip-tour" class="btn-secondary" type="button">Explorar Direto</button>
+        <button id="btn-start-tour" class="btn-primary">Iniciar Percurso Guiado</button>
+        <button id="btn-skip-tour" class="btn-secondary">Explorar Direto</button>
       </div>
     </div>
   </dialog>
