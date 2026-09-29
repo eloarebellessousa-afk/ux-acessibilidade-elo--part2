@@ -1,18 +1,22 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Estúdio Musical Interativo</title>
+  <title>Estúdio Musical Interativo & Acessível</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Three.js para o fundo 3D -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-  <!-- Canvas do Fundo 3D -->
+  <!-- Atalho para leitores de tela e navegação por teclado -->
+  <a href="#conteudo-principal" class="link-pular">Pular para o conteúdo principal</a>
+
+  <!-- Fundo 3D Interativo (Decorativo) -->
   <canvas id="bg-canvas-3d" aria-hidden="true"></canvas>
 
-  <!-- Luzes DMX Visual -->
+  <!-- Sistema de Iluminação Visual DMX -->
   <div class="painel-dmx" aria-hidden="true">
     <div class="luz-dmx"></div>
     <div class="luz-dmx"></div>
@@ -20,170 +24,409 @@
     <div class="luz-dmx"></div>
   </div>
 
-  <main class="container">
-    <header>
-      <!-- Painel de Acessibilidade -->
-      <div class="barra-acessibilidade" role="region" aria-label="Recursos de Acessibilidade">
-        <button id="btn-contraste" aria-label="Alternar Alto Contraste">👁️ Alto Contraste</button>
-        <button id="btn-ler-pagina" aria-label="Ouvir resumo da página">🔊 Ler Resumo</button>
+  <!-- Sistema de Toast / Notificações Acessíveis Global -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true" class="toast-container"></div>
+
+  <!-- Modal de Boas-Vindas / Primeiro Acesso -->
+  <div id="modal-boas-vindas" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-modal">
+    <div class="modal-card">
+      <h2 id="titulo-modal">👋 Bem-vindo ao Estúdio Musical Acessível!</h2>
+      <p>Este espaço foi projetado para permitir que todas as pessoas, especialmente idosos e pessoas com diferentes necessidades visuais, motoras ou auditivas, explorem e criem música com autonomia.</p>
+      <div class="modal-acoes">
+        <button id="btn-iniciar-experiencia" class="btn-destaque-grande">🚀 Começar Experiência</button>
+        <button id="btn-abrir-tutorial-inicial" class="btn-secundario">🧭 Me Guie (Tutorial)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal do Modo Experiência Guiada (Tutorial Step-by-Step) -->
+  <div id="modal-tutorial" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="tut-titulo" style="display: none;">
+    <div class="modal-card modal-tutorial-card">
+      <div class="tut-header">
+        <span id="tut-passo-num" class="badge-passo">Passo 1 de 6</span>
+        <button id="btn-fechar-tut" class="btn-fechar" aria-label="Fechar tutorial">&times;</button>
+      </div>
+      <h3 id="tut-titulo">Conheça o Painel de Acessibilidade</h3>
+      <p id="tut-descricao">Ajuste tamanhos de texto, contrastes e modos de visualização simplificados para navegar com total conforto.</p>
+      <div class="tut-acoes">
+        <button id="btn-tut-anterior" class="btn-secundario" disabled>Anterior</button>
+        <button id="btn-tut-executar" class="btn-destaque-pequeno">Ir para Área</button>
+        <button id="btn-tut-proximo" class="btn-principal">Próximo</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- HEADER & BARRA DE ACESSIBILIDADE PRINCIPAL -->
+    <header role="banner">
+      <div class="barra-acessibilidade" role="region" aria-label="Acessibilidade Principal">
+        <button id="btn-painel-acessibilidade" class="btn-acess-destaque" aria-expanded="false" aria-controls="painel-config-acessibilidade">
+          ♿ Painel de Acessibilidade
+        </button>
+        <button id="btn-modo-simples" class="btn-toggle-simples" aria-pressed="false">
+          👴 Modo Simples (Idosos)
+        </button>
+        <button id="btn-ler-resumo" class="btn-ler-tela" aria-label="Ler resumo da página via áudio">
+          🔊 Ler Resumo da Página
+        </button>
       </div>
 
-      <h1>🎶 Estúdio Musical Interativo</h1>
-      <p>Explora instrumentos, cria sons e testa os teus conhecimentos</p>
-      
-      <div class="controles-topo">
-        <div class="grupo-botoes">
-          <button id="btn-fonte-diminuir" aria-label="Diminuir tamanho do texto">A-</button>
-          <button id="btn-fonte-aumentar" aria-label="Aumentar tamanho do texto">A+</button>
+      <!-- PAINEL COMPLETO DE CONFIGURAÇÕES DE ACESSIBILIDADE (EXPANSÍVEL) -->
+      <section id="painel-config-acessibilidade" class="painel-acessibilidade-expandido" style="display: none;" aria-label="Configurações Detalhadas de Acessibilidade">
+        <div class="grid-acessibilidade">
+          <!-- Categoria Visão -->
+          <div class="card-acess-categoria">
+            <h3>👁️ Visão</h3>
+            <div class="controle-linha">
+              <span>Tamanho do Texto:</span>
+              <div class="grupo-botoes-p">
+                <button id="btn-fonte-dim" aria-label="Diminuir texto">A-</button>
+                <button id="btn-fonte-reset" aria-label="Restaurar tamanho de texto padrão">A</button>
+                <button id="btn-fonte-aum" aria-label="Aumentar texto">A+</button>
+              </div>
+            </div>
+            <div class="controle-linha">
+              <span>Modo de Contraste:</span>
+              <div class="grupo-botoes-p">
+                <button id="btn-contraste-alto">Alto Contraste</button>
+                <button id="btn-contraste-suave">Modo Suave</button>
+                <button id="btn-contraste-normal">Padrão</button>
+              </div>
+            </div>
+            <div class="controle-linha">
+              <label for="select-espacamento">Espaçamento de Texto:</label>
+              <select id="select-espacamento">
+                <option value="normal">Normal</option>
+                <option value="largo">Largo (+Linhas & Letras)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Categoria Áudio & Fala -->
+          <div class="card-acess-categoria">
+            <h3>🔊 Áudio & Fala</h3>
+            <div class="controle-linha">
+              <label for="vol-master-geral">Volume Geral:</label>
+              <input type="range" id="vol-master-geral" min="0" max="1" step="0.05" value="0.7">
+            </div>
+            <div class="controle-linha">
+              <label for="chk-feedback-sonoro">Feedback Sonoro nos Botões:</label>
+              <input type="checkbox" id="chk-feedback-sonoro" checked>
+            </div>
+            <button id="btn-parar-fala" class="btn-perigo-suave">⏹️ Parar Leitura de Voz</button>
+          </div>
+
+          <!-- Categoria Interação & Navegação -->
+          <div class="card-acess-categoria">
+            <h3>✋ Interação & Movimento</h3>
+            <div class="controle-linha">
+              <label for="chk-reduzir-movimento">Reduzir Animações / 3D:</label>
+              <input type="checkbox" id="chk-reduzir-movimento">
+            </div>
+            <div class="controle-linha">
+              <label for="select-tema-3d">Tema do Fundo 3D:</label>
+              <select id="select-tema-3d">
+                <option value="cosmos">Cosmos (Azul)</option>
+                <option value="neon">Neon Vibrante</option>
+                <option value="aurora">Aurora (Verde e Calmo)</option>
+              </select>
+            </div>
+            <button id="btn-restaurar-tudo" class="btn-restaurar">🔄 Restaurar Padrões do Site</button>
+          </div>
         </div>
-        <div class="grupo-temas">
-          <button class="btn-tema-3d ativo" data-tema="cosmos" aria-label="Tema Visual Cosmos">Cosmos</button>
-          <button class="btn-tema-3d" data-tema="neon" aria-label="Tema Visual Neon">Neon</button>
-          <button class="btn-tema-3d" data-tema="aurora" aria-label="Tema Visual Aurora">Aurora</button>
+      </section>
+
+      <!-- HERO SECTION -->
+      <div class="hero-header">
+        <h1>🎶 Estúdio Musical Interativo</h1>
+        <p class="subtitulo-hero">Uma experiência digital inclusiva, vibrante e acessível para todas as idades criarem, aprenderem e explorarem sons sem barreiras.</p>
+        
+        <div class="botoes-hero">
+          <a href="#secao-bateria" class="btn-hero-primario">🥁 Iniciar Bateria</a>
+          <a href="#secao-teclado" class="btn-hero-secundario">🎹 Tocar Teclado</a>
+          <button id="btn-iniciar-guiado" class="btn-hero-terciario">🧭 Iniciar Modo Guiado</button>
+        </div>
+      </div>
+
+      <!-- PAINEL DE JORNADA & CONQUISTAS DO USUÁRIO -->
+      <div class="painel-jornada-conquistas" role="region" aria-label="Sua Jornada e Conquistas">
+        <div class="jornada-progresso">
+          <span>Sua Jornada Musical:</span>
+          <div class="indicador-passos">
+            <span id="passo-1" class="passo-bolinha concluido" title="Entrou no site">● Início</span>
+            <span id="passo-2" class="passo-bolinha" title="Explorou a bateria ou teclado">○ Tocou</span>
+            <span id="passo-3" class="passo-bolinha" title="Usou metrônomo ou afinador">○ Praticou</span>
+            <span id="passo-4" class="passo-bolinha" title="Gravou uma música ou fez quiz">○ Concluiu</span>
+          </div>
+        </div>
+        <div class="conquistas-container">
+          <span class="titulo-conquistas">🏆 Conquistas Desbloqueadas:</span>
+          <div id="lista-badges" class="lista-badges">
+            <span id="badge-primeiro-som" class="badge-conquista bloqueada" title="Toque qualquer som para desbloquear">🎵 Primeiro Som</span>
+            <span id="badge-ritmo" class="badge-conquista bloqueada" title="Toque a bateria para desbloquear">🥁 Ritmista</span>
+            <span id="badge-maestro" class="badge-conquista bloqueada" title="Grave uma sequência para desbloquear">🎼 Maestro</span>
+            <span id="badge-explorador" class="badge-conquista bloqueada" title="Realize o Quiz musical">🎧 Explorador</span>
+          </div>
         </div>
       </div>
     </header>
 
-    <!-- Bateria Manual -->
-    <section class="secao-bateria" aria-label="Sessão Bateria Manual">
-      <h2>🥁 Bateria Manual</h2>
-      <div class="grid-pads">
-        <button class="pad-som" data-som="bumbo" aria-label="Som de Bumbo">Bumbo</button>
-        <button class="pad-som" data-som="caixa" aria-label="Som de Caixa">Caixa</button>
-        <button class="pad-som" data-som="prato" aria-label="Som de Prato">Prato</button>
-        <button class="pad-som" data-som="tom" aria-label="Som de Tom-Tom">Tom-Tom</button>
-        <button class="pad-som" data-som="palma" aria-label="Som de Palma">Palma</button>
-      </div>
-    </section>
+    <!-- CONTEÚDO PRINCIPAL DA PÁGINA -->
+    <main id="conteudo-principal" role="main">
 
-    <!-- Teclado Virtual -->
-    <section class="secao-teclado" aria-label="Sessão Teclado Interativo">
-      <h2>🎹 Teclado Interativo</h2>
-      <div class="controles-teclado">
-        <div class="grupo-input">
-          <label for="seletor-timbre">Timbre:</label>
-          <select id="seletor-timbre" aria-label="Selecionar timbre do som">
-            <option value="sine">Suave (Senoide)</option>
-            <option value="triangle">Encorpado (Triângulo)</option>
-            <option value="square">Retro (Quadrada)</option>
-            <option value="sawtooth">Brilhante (Dente de Serra)</option>
+      <!-- SEÇÃO DESCUBRA SEU SOM (NOVA SEÇÃO DE EXPERIÊNCIA RÁPIDA) -->
+      <section class="secao-descubra-som" aria-label="Descubra Seu Som">
+        <h2>✨ Descubra o Seu Som Ideal</h2>
+        <p>Escolha a sensação sonora que você deseja experimentar agora:</p>
+        <div class="grid-sensacoes">
+          <button class="btn-sensacao" data-estilo="calmo">🎵 Calmo & Relaxante</button>
+          <button class="btn-sensacao" data-estilo="ritmico">🥁 Rítmico & Vigoroso</button>
+          <button class="btn-sensacao" data-estilo="melodico">🎹 Melódico & Harmônico</button>
+          <button class="btn-sensacao" data-estilo="energetico">⚡ Energético & Festivo</button>
+        </div>
+        <div id="feedback-sensacao" class="card-resultado-sensacao" style="display: none;" aria-live="polite"></div>
+      </section>
+
+      <!-- SEÇÃO BATERIA MANUAL E MODOS DE PRÁTICA -->
+      <section id="secao-bateria" class="secao-bateria" aria-label="Bateria Interativa Manual">
+        <div class="cabecalho-secao">
+          <h2>🥁 Bateria Acessível</h2>
+          <div class="botoes-extra-secao">
+            <button id="btn-demo-ritmo" class="btn-acao-suave">▶️ Ritmo de Demonstração</button>
+            <button id="btn-pratica-bateria" class="btn-acao-suave">🎯 Modo Prática (Repita o Som)</button>
+          </div>
+        </div>
+        <p class="instrucao-secao">Clique nos botões abaixo ou use as teclas numéricas (1 a 5) do seu teclado.</p>
+
+        <div class="grid-pads">
+          <button class="pad-som" data-som="bumbo" aria-label="Tocar Bumbo (Atalho Tecla 1)">
+            <span class="pad-nome">Bumbo</span>
+            <span class="pad-tecla">Tecla 1</span>
+          </button>
+          <button class="pad-som" data-som="caixa" aria-label="Tocar Caixa (Atalho Tecla 2)">
+            <span class="pad-nome">Caixa</span>
+            <span class="pad-tecla">Tecla 2</span>
+          </button>
+          <button class="pad-som" data-som="prato" aria-label="Tocar Prato (Atalho Tecla 3)">
+            <span class="pad-nome">Prato</span>
+            <span class="pad-tecla">Tecla 3</span>
+          </button>
+          <button class="pad-som" data-som="tom" aria-label="Tocar Tom-Tom (Atalho Tecla 4)">
+            <span class="pad-nome">Tom-Tom</span>
+            <span class="pad-tecla">Tecla 4</span>
+          </button>
+          <button class="pad-som" data-som="palma" aria-label="Tocar Palma (Atalho Tecla 5)">
+            <span class="pad-nome">Palma</span>
+            <span class="pad-tecla">Tecla 5</span>
+          </button>
+        </div>
+        <div id="status-pratica-bateria" class="caixa-status-instrucao" aria-live="polite"></div>
+      </section>
+
+      <!-- SEÇÃO TECLADO MUSICAL INTERATIVO -->
+      <section id="secao-teclado" class="secao-teclado" aria-label="Teclado Musical Interativo">
+        <div class="cabecalho-secao">
+          <h2>🎹 Teclado Interativo</h2>
+          <button id="btn-modo-aula-teclado" class="btn-acao-suave">🎓 Modo Aula (Aprenda uma Sequência)</button>
+        </div>
+
+        <!-- Controles de Timbre e Volume -->
+        <div class="controles-teclado">
+          <div class="grupo-input">
+            <label for="seletor-timbre">Timbre:</label>
+            <select id="seletor-timbre" aria-label="Selecionar timbre do instrumento">
+              <option value="sine">Suave (Flauta/Senoide)</option>
+              <option value="triangle">Encorpado (Piano/Triângulo)</option>
+              <option value="square">Retro (8-bit/Quadrada)</option>
+              <option value="sawtooth">Brilhante (Metais/Dente de Serra)</option>
+            </select>
+          </div>
+          
+          <div class="grupo-input">
+            <label for="volume-estudio">Volume Teclado:</label>
+            <input type="range" id="volume-estudio" min="0" max="1" step="0.05" value="0.7" aria-label="Controle de volume do teclado">
+          </div>
+        </div>
+
+        <!-- Teclado Visual -->
+        <div class="teclado-container" role="region" aria-label="Teclas do Piano">
+          <button class="tecla" data-nota="261.63" data-nome="Dó (C4)" data-key="a" aria-label="Tecla Dó, atalho A">A<span>Dó</span></button>
+          <button class="tecla" data-nota="293.66" data-nome="Ré (D4)" data-key="s" aria-label="Tecla Ré, atalho S">S<span>Ré</span></button>
+          <button class="tecla" data-nota="329.63" data-nome="Mi (E4)" data-key="d" aria-label="Tecla Mi, atalho D">D<span>Mi</span></button>
+          <button class="tecla" data-nota="349.23" data-nome="Fá (F4)" data-key="f" aria-label="Tecla Fá, atalho F">F<span>Fá</span></button>
+          <button class="tecla" data-nota="392.00" data-nome="Sol (G4)" data-key="g" aria-label="Tecla Sol, atalho G">G<span>Sol</span></button>
+          <button class="tecla" data-nota="440.00" data-nome="Lá (A4)" data-key="h" aria-label="Tecla Lá, atalho H">H<span>Lá</span></button>
+          <button class="tecla" data-nota="493.88" data-nome="Si (B4)" data-key="j" aria-label="Tecla Si, atalho J">J<span>Si</span></button>
+          <button class="tecla" data-nota="523.25" data-nome="Dó Agudo (C5)" data-key="k" aria-label="Tecla Dó Agudo, atalho K">K<span>Dó</span></button>
+        </div>
+
+        <div id="display-nota" class="display-nota-info" aria-live="polite">Clique em uma tecla ou use as letras do seu teclado (A, S, D, F, G, H, J, K)</div>
+
+        <div id="status-modo-aula" class="caixa-status-instrucao" aria-live="polite"></div>
+
+        <!-- Central de Gravação de Áudio/Música -->
+        <div class="gravador-container">
+          <div class="status-gravacao-texto" id="texto-status-gravacao">Estado: Pronto para gravar</div>
+          <div class="botoes-gravador">
+            <button id="btn-record" aria-label="Iniciar ou parar gravação de áudio">🔴 Gravar</button>
+            <button id="btn-play-loop" disabled aria-label="Reproduzir música gravada">▶️ Reproduzir</button>
+            <button id="btn-limpar-gravacao" disabled aria-label="Limpar gravação atual">🗑️ Limpar</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEÇÃO FERRAMENTAS: METRÔNOMO E AFINADOR -->
+      <section id="secao-ferramentas" class="secao-ferramentas" aria-label="Ferramentas Musicais">
+        
+        <!-- Metrônomo Acessível -->
+        <div class="bloco-ferramenta">
+          <h3>⏱️ Metrônomo</h3>
+          <p class="desc-ferramenta">Acompanhe o tempo rítmico das suas músicas.</p>
+
+          <div class="bpm-display-container">
+            <button id="btn-bpm-menos" class="btn-mais-menos" aria-label="Diminuir velocidade BPM">-</button>
+            <div class="display-bpm-valor"><span id="val-bpm">120</span> <small>BPM</small></div>
+            <button id="btn-bpm-mais" class="btn-mais-menos" aria-label="Aumentar velocidade BPM">+</button>
+          </div>
+
+          <input type="range" id="slider-bpm" min="40" max="208" value="120" aria-label="Ajustar velocidade BPM">
+
+          <div class="presets-bpm">
+            <button class="btn-preset-bpm" data-bpm="60">Lento (60)</button>
+            <button class="btn-preset-bpm" data-bpm="120">Moderado (120)</button>
+            <button class="btn-preset-bpm" data-bpm="160">Rápido (160)</button>
+          </div>
+
+          <div class="botoes-inline">
+            <button id="btn-iniciar-metronomo" class="btn-principal">▶️ Iniciar</button>
+            <button id="btn-parar-metronomo" class="btn-secundario">⏹️ Parar</button>
+          </div>
+          <div id="pulso-visual" class="pulso-metronomo" aria-hidden="true"></div>
+        </div>
+
+        <!-- Afinador Visual & Falado -->
+        <div class="bloco-ferramenta">
+          <h3>🎯 Afinador de Referência</h3>
+          <p class="desc-ferramenta">Selecione uma nota abaixo para ouvir e calibrar o seu instrumento.</p>
+
+          <div class="grid-ref">
+            <button class="btn-nota-ref" data-freq="82.41" data-nome="Mi (E2)" data-pos="10">E2 (Mi)</button>
+            <button class="btn-nota-ref" data-freq="110.00" data-nome="Lá (A2)" data-pos="30">A2 (Lá)</button>
+            <button class="btn-nota-ref" data-freq="146.83" data-nome="Ré (D3)" data-pos="50">D3 (Ré)</button>
+            <button class="btn-nota-ref" data-freq="196.00" data-nome="Sol (G3)" data-pos="70">G3 (Sol)</button>
+            <button class="btn-nota-ref" data-freq="440.00" data-nome="Lá (A4)" data-pos="90">A4 (Lá)</button>
+          </div>
+
+          <div class="regua-afinador" aria-hidden="true">
+            <div id="ponteiro-afinador"></div>
+          </div>
+          <div id="status-afinador" class="status-afinador-texto" aria-live="polite">Selecione uma nota de referência acima</div>
+        </div>
+      </section>
+
+      <!-- CATÁLOGO AMPLIADO DE INSTRUMENTOS -->
+      <section id="secao-catalogo" class="secao-catalogo" aria-label="Catálogo Completo de Instrumentos">
+        <h2>🎸 Catálogo Musical Inclusivo</h2>
+        <p class="subtitulo-secao">Explore instrumentos de diferentes culturas e famílias sonoras.</p>
+
+        <div class="filtros-busca">
+          <input type="text" id="input-busca" placeholder="🔎 Digite para pesquisar instrumento..." aria-label="Pesquisar instrumento pelo nome">
+          <select id="filtro-categoria" aria-label="Filtrar por família de instrumento">
+            <option value="todos">Todas as Famílias</option>
+            <option value="cordas">Cordas</option>
+            <option value="teclas">Teclas</option>
+            <option value="percussao">Percussão</option>
+            <option value="sopros">Sopros</option>
           </select>
         </div>
+
+        <!-- Grid Dinâmico de Cards de Instrumentos -->
+        <div id="grid-cards-instrumentos" class="grid-cards">
+          <!-- Inserido dinamicamente via JS com dezenas de opções completas -->
+        </div>
+        <div id="estado-vazio-catalogo" class="estado-vazio" style="display: none;">
+          <p>🔍 Nenhum instrumento foi encontrado com esses filtros. Tente pesquisar outro termo.</p>
+        </div>
+      </section>
+
+      <!-- QUIZ COMPLETO DE RECOMENDAÇÃO -->
+      <section id="secao-quiz" class="secao-quiz" aria-label="Quiz Musical">
+        <h2>❓ Quiz: Qual Instrumento Combina com Você?</h2>
+        <p class="subtitulo-secao">Responda às perguntas simples para receber uma recomendação personalizada de aprendizado.</p>
+
+        <div id="quiz-form" class="container-quiz-perguntas">
+          
+          <div class="pergunta-card">
+            <p class="pergunta-titulo">1. O que você mais gosta de sentir ao ouvir música?</p>
+            <label><input type="radio" name="qp1" value="cordas" checked> Harmonia acolhedora para relaxar e cantar</label>
+            <label><input type="radio" name="qp1" value="teclas"> Melodias ricas e arranjos expressivos</label>
+            <label><input type="radio" name="qp1" value="percussao"> Ritmo marcante, energia e vontade de dançar</label>
+            <label><input type="radio" name="qp1" value="sopros"> Sons expressivos semelhantes à voz humana</label>
+          </div>
+
+          <div class="pergunta-card">
+            <p class="pergunta-titulo">2. Como é o seu espaço e rotina ideal de prática?</p>
+            <label><input type="radio" name="qp2" value="cordas" checked> Praticar no sofá, na varanda ou em viagens</label>
+            <label><input type="radio" name="qp2" value="teclas"> Um canto calmo com postura confortável</label>
+            <label><input type="radio" name="qp2" value="percussao"> Um ambiente para se movimentar e descarregar energia</label>
+            <label><input type="radio" name="qp2" value="sopros"> Práticas leves e focadas no controle do sopro/respiração</label>
+          </div>
+
+          <div class="pergunta-card">
+            <p class="pergunta-titulo">3. Como você prefere aprender um novo exercício?</p>
+            <label><input type="radio" name="qp3" value="cordas" checked> Ouvindo e repetindo os acordes no seu tempo</label>
+            <label><input type="radio" name="qp3" value="teclas"> Visualizando as notas organizadas passo a passo</label>
+            <label><input type="radio" name="qp3" value="percussao"> Acompanhando a palmas e a batida do tempo</label>
+            <label><input type="radio" name="qp3" value="sopros"> Treinando frases curtas e expressivas</label>
+          </div>
+
+          <button id="btn-calcular-quiz" class="btn-destaque-grande">📊 Ver Minha Recomendação</button>
+        </div>
+
+        <div id="painel-resultado-quiz" class="painel-resultado-quiz" style="display: none;" aria-live="polite">
+          <div id="quiz-emoji" class="quiz-emoji-destaque"></div>
+          <h3 id="quiz-titulo-resultado"></h3>
+          <p id="quiz-desc-resultado"></p>
+          <div id="barras-compatibilidade" class="barras-compatibilidade"></div>
+          <button id="btn-reiniciar-quiz" class="btn-secundario-pequeno">🔄 Refazer Quiz</button>
+        </div>
+      </section>
+
+      <!-- SEÇÃO DE ATALHOS DE TECLADO -->
+      <section id="secao-atalhos" class="secao-atalhos" aria-label="Atalhos do Teclado">
+        <h2>⌨️ Atalhos Rápidos de Teclado</h2>
+        <div class="grid-atalhos">
+          <div class="card-atalho"><kbd>A</kbd> até <kbd>K</kbd> <span>Teclas do Teclado Musical</span></div>
+          <div class="card-atalho"><kbd>1</kbd> até <kbd>5</kbd> <span>Sons de Bateria</span></div>
+          <div class="card-atalho"><kbd>M</kbd> <span>Iniciar/Parar Metrônomo</span></div>
+          <div class="card-atalho"><kbd>B</kbd> <span>Rolar até a Bateria</span></div>
+          <div class="card-atalho"><kbd>?</kbd> <span>Abrir / Fechar Painel de Acessibilidade</span></div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER E INFORMÁTICA SOCIAL -->
+    <footer role="contentinfo">
+      <div class="conteudo-footer">
+        <h3>🎶 Projeto de Acessibilidade & Inclusão Musical</h3>
+        <p>Desenvolvido para demonstrar que a tecnologia moderna, a interatividade 3D e o design elegante podem coexistir de forma harmoniosa com a acessibilidade plena para pessoas idosas e com necessidades diversas.</p>
         
-        <div class="grupo-input">
-          <label for="volume-estudio">Volume:</label>
-          <input type="range" id="volume-estudio" min="0" max="1" step="0.05" value="0.7" aria-label="Controle de volume master">
-        </div>
+        <nav aria-label="Navegação do Rodapé">
+          <ul class="links-footer">
+            <li><a href="#secao-bateria">Bateria</a></li>
+            <li><a href="#secao-teclado">Teclado</a></li>
+            <li><a href="#secao-ferramentas">Ferramentas</a></li>
+            <li><a href="#secao-catalogo">Catálogo</a></li>
+            <li><a href="#secao-quiz">Quiz</a></li>
+          </ul>
+        </nav>
+        <p class="copyright">© 2026 - Estúdio Musical Interativo. Todos os direitos reservados.</p>
       </div>
+    </footer>
 
-      <div class="teclado-container" role="region" aria-label="Teclado Musical">
-        <button class="tecla" data-nota="261.63" data-nome="Dó (C4)" data-key="a" aria-label="Tecla Dó">A<span>Dó</span></button>
-        <button class="tecla" data-nota="293.66" data-nome="Ré (D4)" data-key="s" aria-label="Tecla Ré">S<span>Ré</span></button>
-        <button class="tecla" data-nota="329.63" data-nome="Mi (E4)" data-key="d" aria-label="Tecla Mi">D<span>Mi</span></button>
-        <button class="tecla" data-nota="349.23" data-nome="Fá (F4)" data-key="f" aria-label="Tecla Fá">F<span>Fá</span></button>
-        <button class="tecla" data-nota="392.00" data-nome="Sol (G4)" data-key="g" aria-label="Tecla Sol">G<span>Sol</span></button>
-        <button class="tecla" data-nota="440.00" data-nome="Lá (A4)" data-key="h" aria-label="Tecla Lá">H<span>Lá</span></button>
-        <button class="tecla" data-nota="493.88" data-nome="Si (B4)" data-key="j" aria-label="Tecla Si">J<span>Si</span></button>
-        <button class="tecla" data-nota="523.25" data-nome="Dó (C5)" data-key="k" aria-label="Tecla Dó Agudo">K<span>Dó</span></button>
-      </div>
-      <div id="display-nota" aria-live="polite">Clica numa tecla ou usa o teclado do PC</div>
-
-      <div class="gravador-container">
-        <button id="btn-record" aria-label="Iniciar ou parar gravação de áudio">🔴 Gravar</button>
-        <button id="btn-play-loop" disabled aria-label="Reproduzir gravação">▶️ Reproduzir</button>
-      </div>
-    </section>
-
-    <!-- Ferramentas: Metrônomo e Afinador -->
-    <section class="secao-ferramentas" aria-label="Ferramentas Musicais">
-      <div class="bloco-ferramenta">
-        <h3>⏱️ Metrônomo</h3>
-        <div class="controles-inline">
-          <input type="range" id="slider-bpm" min="40" max="208" value="120" aria-label="Ajustar BPM do metrônomo">
-          <span id="val-bpm">120</span> BPM
-        </div>
-        <div class="botoes-inline">
-          <button id="btn-iniciar-metronomo" aria-label="Iniciar metrônomo">Iniciar</button>
-          <button id="btn-parar-metronomo" aria-label="Parar metrônomo">Parar</button>
-        </div>
-        <div id="pulso-visual" aria-hidden="true"></div>
-      </div>
-
-      <div class="bloco-ferramenta">
-        <h3>🎯 Afinador</h3>
-        <div class="grid-ref">
-          <button class="btn-nota-ref" data-freq="82.41" data-nome="E2" data-pos="10" aria-label="Nota Mi grave E2">E2</button>
-          <button class="btn-nota-ref" data-freq="110.00" data-nome="A2" data-pos="30" aria-label="Nota Lá A2">A2</button>
-          <button class="btn-nota-ref" data-freq="146.83" data-nome="D3" data-pos="50" aria-label="Nota Ré D3">D3</button>
-          <button class="btn-nota-ref" data-freq="196.00" data-nome="G3" data-pos="70" aria-label="Nota Sol G3">G3</button>
-          <button class="btn-nota-ref" data-freq="440.00" data-nome="A4" data-pos="90" aria-label="Nota Lá A4">A4</button>
-        </div>
-        <div class="regua-afinador" aria-hidden="true">
-          <div id="ponteiro-afinador"></div>
-        </div>
-        <div id="status-afinador" aria-live="polite">Seleciona um tom de referência</div>
-      </div>
-    </section>
-
-    <!-- Catálogo de Instrumentos -->
-    <section class="secao-catalogo" aria-label="Catálogo de Instrumentos">
-      <h2>🎸 Catálogo Musical</h2>
-      <div class="filtros-busca">
-        <input type="text" id="input-busca" placeholder="Pesquisar instrumento..." aria-label="Campo de pesquisa de instrumento">
-        <select id="filtro-categoria" aria-label="Filtrar por categoria de instrumento">
-          <option value="todos">Todas as Categoria</option>
-          <option value="cordas">Cordas</option>
-          <option value="teclas">Teclas</option>
-          <option value="percussao">Percussão</option>
-        </select>
-      </div>
-
-      <div class="grid-cards">
-        <div class="card-instrumento" data-categoria="cordas" data-nome="violão acustico">
-          <h3>Violão Acústico</h3>
-          <p>Instrumento de cordas com ressonância acústica natural.</p>
-          <button class="btn-tocar-demo" data-tipo="violao" aria-label="Ouvir demonstração de violão">Ouvir Arpejo</button>
-        </div>
-        <div class="card-instrumento" data-categoria="teclas" data-nome="piano teclado">
-          <h3>Teclado / Piano</h3>
-          <p>Versátil e essencial para harmonia e composição musical.</p>
-          <button class="btn-tocar-demo" data-tipo="teclado" aria-label="Ouvir demonstração de teclado">Ouvir Melodia</button>
-        </div>
-        <div class="card-instrumento" data-categoria="percussao" data-nome="bateria">
-          <h3>Bateria</h3>
-          <p>A base rítmica de qualquer banda ou produção.</p>
-          <button class="btn-tocar-demo" data-tipo="bateria" aria-label="Ouvir demonstração de bateria">Ouvir Beat</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Quiz -->
-    <section class="secao-quiz" aria-label="Quiz de Recomendação de Instrumento">
-      <h2>❓ Quiz: Instrumento Ideal</h2>
-      <div id="quiz-form">
-        <div class="pergunta">
-          <p>1. O que mais te atrai na música?</p>
-          <label><input type="radio" name="qp1" value="violao" checked> Harmonias suaves e cantar junto</label>
-          <label><input type="radio" name="qp1" value="teclado"> Melodias complexas e teoria</label>
-          <label><input type="radio" name="qp1" value="bateria"> Ritmo, energia e impacto</label>
-        </div>
-        <div class="pergunta">
-          <p>2. Como preferes praticar?</p>
-          <label><input type="radio" name="qp2" value="violao" checked> Em qualquer lugar com o instrumento nos braços</label>
-          <label><input type="radio" name="qp2" value="teclado"> Num espaço organizado com partitura</label>
-          <label><input type="radio" name="qp2" value="bateria"> Com baquetas descarregando energia</label>
-        </div>
-        <button id="btn-calcular-quiz" aria-label="Calcular resultado do quiz">Ver Resultado</button>
-      </div>
-
-      <div id="painel-resultado-quiz" style="display: none;" aria-live="polite">
-        <div id="quiz-emoji"></div>
-        <h3 id="quiz-titulo-resultado"></h3>
-        <p id="quiz-desc-resultado"></p>
-        <div id="barras-compatibilidade"></div>
-      </div>
-    </section>
-  </main>
+  </div>
 
   <script src="script.js"></script>
 </body>
