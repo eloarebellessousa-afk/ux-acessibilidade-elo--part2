@@ -3,18 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clube da Música • Plataforma Interativa & Estúdio Virtual Pro</title>
-<!-- Chamada correta para o arquivo CSS padronizado -->
+<title>Clube da Música • Plataforma Interativa Dark 3D</title>
 <link rel="stylesheet" href="style.css">
-<!-- Three.js CDN para o Fundo 3D Interativo -->
+<!-- Three.js para o Fundo 3D Interativo -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-<!-- Canvas do Fundo 3D -->
+<!-- Canvas do Fundo 3D Interativo que segue o mouse -->
 <canvas id="bg-canvas-3d"></canvas>
 
-<!-- Link de Acessibilidade de Teclado -->
+<!-- Link de Acessibilidade -->
 <a href="#conteudo-principal" class="link-atalho">Pular para o conteúdo principal</a>
 
 <!-- Gatilhos de Acessibilidade CSS -->
@@ -23,14 +22,13 @@
 
 <div class="pagina-wrapper" id="app-wrapper">
 
-<!-- Barra de Acessibilidade Superior Ampliada -->
+<!-- Barra Superior -->
 <nav class="barra-acessibilidade" aria-label="Acessibilidade e Ajustes">
   <div class="grupo-acessibilidade">
-    <button id="btn-fonte-aumentar" class="btn-acessibilidade" title="Aumentar fonte" aria-label="Aumentar fonte">A+</button>
-    <button id="btn-fonte-diminuir" class="btn-acessibilidade" title="Diminuir fonte" aria-label="Diminuir fonte">A-</button>
+    <button id="btn-fonte-aumentar" class="btn-acessibilidade" title="Aumentar fonte">A+</button>
+    <button id="btn-fonte-diminuir" class="btn-acessibilidade" title="Diminuir fonte">A-</button>
     <label for="chk-contraste" class="btn-acessibilidade" tabindex="0" role="button">👁️ Alto Contraste</label>
     <label for="chk-monocromatico" class="btn-acessibilidade" tabindex="0" role="button">🔳 Monocromático</label>
-    <button id="btn-leitor-voz" class="btn-acessibilidade" title="Ouvir Resumo da Página">🔊 Ler Página</button>
   </div>
   
   <div class="grupo-estilo-fundo">
@@ -41,22 +39,21 @@
   </div>
 </nav>
 
-<!-- Cabeçalho Principal -->
+<!-- Cabeçalho Principal Dark -->
 <header class="cabecalho">
   <div class="icone-animado" aria-hidden="true">🎼</div>
   <h1>Clube da Música</h1>
-  <p class="subtitulo">A experiência definitiva para aprender, simular ritmos, experimentar arranjos e descobrir sua vocação musical!</p>
+  <p class="subtitulo">A experiência imersiva definitiva em som, ritmos e simulação musical 3D!</p>
 
   <div class="banner-beneficios">
+    <span class="selo-beneficio">🌌 Fundo 3D Reativo</span>
     <span class="selo-beneficio">🧠 Estímulo Cognitivo</span>
-    <span class="selo-beneficio">🖐️ Coordenação Motora</span>
-    <span class="selo-beneficio">😊 Alívio do Estresse</span>
-    <span class="selo-beneficio">🎧 Som Sintetizado Hi-Fi</span>
-    <span class="selo-beneficio">⚡ Zero Delay de Áudio</span>
+    <span class="selo-beneficio">🎧 Som Hi-Fi Nativo</span>
+    <span class="selo-beneficio">📋 Quiz Avançado</span>
   </div>
 </header>
 
-<!-- NAVEGAÇÃO POR ABAS -->
+<!-- NAVEGAÇÃO DE ABAS -->
 <div class="sistema-abas">
   <input type="radio" name="abas" id="aba-catalogo" class="controle-oculto" checked>
   <input type="radio" name="abas" id="aba-estudio" class="controle-oculto">
@@ -64,18 +61,16 @@
   <input type="radio" name="abas" id="aba-afinador" class="controle-oculto">
   <input type="radio" name="abas" id="aba-quiz" class="controle-oculto">
 
-  <!-- Botões das Abas -->
   <nav class="menu-abas" aria-label="Navegação Principal">
     <label for="aba-catalogo" class="btn-aba" tabindex="0">🎸 Catálogo & Trechos</label>
     <label for="aba-estudio" class="btn-aba" tabindex="0">🎹 Estúdio & Piano Pro</label>
     <label for="aba-ritmo" class="btn-aba" tabindex="0">🥁 Ritmo & Soundboard</label>
     <label for="aba-afinador" class="btn-aba" tabindex="0">🎯 Laboratório de Afinação</label>
-    <label for="aba-quiz" class="btn-aba" tabindex="0">📋 Quiz Diagnóstico</label>
+    <label for="aba-quiz" class="btn-aba" tabindex="0">📋 Quiz Diagnóstico Pro</label>
   </nav>
 
-  <!-- ABA 1: CATÁLOGO DE INSTRUMENTOS -->
+  <!-- ABA 1: CATÁLOGO -->
   <section id="conteudo-principal" class="conteudo-aba secao-catalogo">
-    
     <div class="painel-filtros">
       <div class="filtro-grupo">
         <label for="filtro-categoria"><strong>Categoria:</strong></label>
@@ -89,12 +84,12 @@
       </div>
 
       <div class="filtro-grupo">
-        <label for="filtro-dificuldade"><strong>Nível de Entrada:</strong></label>
+        <label for="filtro-dificuldade"><strong>Nível:</strong></label>
         <select id="filtro-dificuldade" class="seletor-custom">
           <option value="todos">Todos os Níveis</option>
-          <option value="facil">Iniciante Amigável</option>
+          <option value="facil">Iniciante</option>
           <option value="medio">Intermediário</option>
-          <option value="avancado">Avançado / Técnico</option>
+          <option value="avancado">Avançado</option>
         </select>
       </div>
 
@@ -104,8 +99,6 @@
     </div>
 
     <div class="grade-instrumentos" id="grade-instrumentos">
-
-      <!-- CARD 1: VIOLÃO -->
       <article class="card-instrumento" data-categoria="cordas" data-dificuldade="facil">
         <div class="tag-nivel facil">Iniciante Amigável</div>
         <header class="card-cabecalho">
@@ -115,44 +108,16 @@
             <span class="categoria">Cordas • Harmônico</span>
           </div>
         </header>
-
         <div class="etiquetas-caracteristicas">
           <span class="etiqueta">Acompanhamento</span>
           <span class="etiqueta">Versátil</span>
         </div>
-
-        <div class="medidores">
-          <div class="medidor-item">
-            <span>Conforto Inicial:</span>
-            <div class="barras"><span style="width: 75%"></span></div>
-          </div>
-          <div class="medidor-item">
-            <span>Portabilidade:</span>
-            <div class="barras"><span style="width: 85%"></span></div>
-          </div>
-        </div>
-
-        <p class="descricao">A base para quem deseja cantar e acompanhar diversos gêneros como MPB, Pop, Sertanejo e Rock.</p>
-
+        <p class="descricao">Perfeito para criar bases, canções ao vivo e harmonias.</p>
         <section class="bloco-audio">
-          <div class="cabecalho-audio">
-            <span class="rotulo-audio">🎶 Trecho Arpejado em Violão:</span>
-          </div>
-          <button class="btn-tocar-demo" data-demo="violao">▶️ Ouvir Sequência de Acordes</button>
+          <button class="btn-tocar-demo" data-demo="violao">▶️ Ouvir Demonstração</button>
         </section>
-
-        <details class="sanfona-info">
-          <summary class="btn-detalhes">✨ Dicas de Estudo</summary>
-          <div class="conteudo-detalhes">
-            <div class="secao-info">
-              <h3>💡 Dica:</h3>
-              <p>Trabalhe primeiro a transição limpa entre os acordes básicos Dó (C), Sol (G) e Ré (D).</p>
-            </div>
-          </div>
-        </details>
       </article>
 
-      <!-- CARD 2: TECLADO PRO -->
       <article class="card-instrumento" data-categoria="teclas" data-dificuldade="facil">
         <div class="tag-nivel facil">Acesso Imediato</div>
         <header class="card-cabecalho">
@@ -162,138 +127,16 @@
             <span class="categoria">Teclas • Digital</span>
           </div>
         </header>
-
         <div class="etiquetas-caracteristicas">
           <span class="etiqueta">Lógica Clara</span>
           <span class="etiqueta">Polifônico</span>
         </div>
-
-        <div class="medidores">
-          <div class="medidor-item">
-            <span>Facilidade Teórica:</span>
-            <div class="barras"><span style="width: 95%"></span></div>
-          </div>
-          <div class="medidor-item">
-            <span>Variedade de Sons:</span>
-            <div class="barras"><span style="width: 100%"></span></div>
-          </div>
-        </div>
-
-        <p class="descricao">Facilita a visualização da teoria musical. Perfeito para melodias marcantes e harmonias ricas.</p>
-
+        <p class="descricao">Ideal para compreender a teoria musical com clareza visual.</p>
         <section class="bloco-audio">
-          <div class="cabecalho-audio">
-            <span class="rotulo-audio">🎶 Progressão Harmônica no Piano:</span>
-          </div>
-          <button class="btn-tocar-demo" data-demo="piano">▶️ Ouvir Melodia Suave em Piano</button>
+          <button class="btn-tocar-demo" data-demo="piano">▶️ Ouvir Demonstração</button>
         </section>
-
-        <details class="sanfona-info">
-          <summary class="btn-detalhes">✨ Dicas de Estudo</summary>
-          <div class="conteudo-detalhes">
-            <div class="secao-info">
-              <h3>💡 Dica:</h3>
-              <p>Experimente nosso Estúdio Pro na segunda aba para praticar com sintetizadores em tempo real.</p>
-            </div>
-          </div>
-        </details>
       </article>
 
-      <!-- CARD 3: VIOLINO -->
-      <article class="card-instrumento" data-categoria="cordas" data-dificuldade="avancado">
-        <div class="tag-nivel avancado">Expressão Profunda</div>
-        <header class="card-cabecalho">
-          <span class="emoji-instrumento" aria-hidden="true">🎻</span>
-          <div>
-            <h2>Violino Erudito</h2>
-            <span class="categoria">Cordas • Fricção</span>
-          </div>
-        </header>
-
-        <div class="etiquetas-caracteristicas">
-          <span class="etiqueta">Solo & Orquestra</span>
-          <span class="etiqueta">Timbre Aveludado</span>
-        </div>
-
-        <div class="medidores">
-          <div class="medidor-item">
-            <span>Treino do Ouvido:</span>
-            <div class="barras"><span style="width: 100%"></span></div>
-          </div>
-          <div class="medidor-item">
-            <span>Controle de Arco:</span>
-            <div class="barras"><span style="width: 90%"></span></div>
-          </div>
-        </div>
-
-        <p class="descricao">Instrumento lírico por excelência. Sem trastes fixos, desenvolve um ouvido musical apurado.</p>
-
-        <section class="bloco-audio">
-          <div class="cabecalho-audio">
-            <span class="rotulo-audio">🎶 Melodia de Violino em Legato:</span>
-          </div>
-          <button class="btn-tocar-demo" data-demo="violino">🎻 Ouvir Trecho Clássico Completo</button>
-        </section>
-
-        <details class="sanfona-info">
-          <summary class="btn-detalhes">✨ Dicas de Estudo</summary>
-          <div class="conteudo-detalhes">
-            <div class="secao-info">
-              <h3>💡 Dica de Afinação:</h3>
-              <p>Utilize nossa aba de afinação para treinar o reconhecimento de tons exatos.</p>
-            </div>
-          </div>
-        </details>
-      </article>
-
-      <!-- CARD 4: SAXOFONE -->
-      <article class="card-instrumento" data-categoria="sopro" data-dificuldade="medio">
-        <div class="tag-nivel medio">Linguagem Jazz / Pop</div>
-        <header class="card-cabecalho">
-          <span class="emoji-instrumento" aria-hidden="true">🎷</span>
-          <div>
-            <h2>Saxofone Alto</h2>
-            <span class="categoria">Sopro • Palheta Tripla</span>
-          </div>
-        </header>
-
-        <div class="etiquetas-caracteristicas">
-          <span class="etiqueta">Sonoridade Encorpada</span>
-          <span class="etiqueta">Expressivo</span>
-        </div>
-
-        <div class="medidores">
-          <div class="medidor-item">
-            <span>Controle de Sopro:</span>
-            <div class="barras"><span style="width: 85%"></span></div>
-          </div>
-          <div class="medidor-item">
-            <span>Presença de Palco:</span>
-            <div class="barras"><span style="width: 95%"></span></div>
-          </div>
-        </div>
-
-        <p class="descricao">Combina o poder de projeção dos metais com a agilidade dos instrumentos de madeira.</p>
-
-        <section class="bloco-audio">
-          <div class="cabecalho-audio">
-            <span class="rotulo-audio">🎶 Solinho de Jazz no Sax:</span>
-          </div>
-          <button class="btn-tocar-demo" data-demo="sax">🎷 Ouvir Improviso de Jazz</button>
-        </section>
-
-        <details class="sanfona-info">
-          <summary class="btn-detalhes">✨ Dicas de Estudo</summary>
-          <div class="conteudo-detalhes">
-            <div class="secao-info">
-              <h3>💡 Dica:</h3>
-              <p>Mantenha uma postura ereta e pratique notas longas para estabilizar a embocadura.</p>
-            </div>
-          </div>
-        </details>
-      </article>
-
-      <!-- CARD 5: BATERIA ELETRÔNICA -->
       <article class="card-instrumento" data-categoria="percussao" data-dificuldade="medio">
         <div class="tag-nivel medio">Motor Rítmico</div>
         <header class="card-cabecalho">
@@ -303,126 +146,42 @@
             <span class="categoria">Percussão • Modulada</span>
           </div>
         </header>
-
         <div class="etiquetas-caracteristicas">
-          <span class="etiqueta">Silenciosa</span>
+          <span class="etiqueta">Groove</span>
           <span class="etiqueta">Coordenação</span>
         </div>
-
-        <div class="medidores">
-          <div class="medidor-item">
-            <span>Independência Motora:</span>
-            <div class="barras"><span style="width: 95%"></span></div>
-          </div>
-          <div class="medidor-item">
-            <span>Prática Sem Barulho:</span>
-            <div class="barras"><span style="width: 100%"></span></div>
-          </div>
-        </div>
-
-        <p class="descricao">O coração da banda! A versão eletrônica permite praticar com fones em qualquer horário com resposta tátil real.</p>
-
+        <p class="descricao">A força do tempo e da métrica para todas as músicas.</p>
         <section class="bloco-audio">
-          <div class="cabecalho-audio">
-            <span class="rotulo-audio">🎶 Batida Rock/Groove Completa:</span>
-          </div>
-          <button class="btn-tocar-demo" data-demo="bateria">🥁 Ouvir Groove de Bateria Completo</button>
+          <button class="btn-tocar-demo" data-demo="bateria">▶️ Ouvir Demonstração</button>
         </section>
-
-        <details class="sanfona-info">
-          <summary class="btn-detalhes">✨ Dicas de Estudo</summary>
-          <div class="conteudo-detalhes">
-            <div class="secao-info">
-              <h3>💡 Dica:</h3>
-              <p>Treine o pulso constante mantendo a contagem em 4 tempos (1, 2, 3, 4).</p>
-            </div>
-          </div>
-        </details>
       </article>
-
-      <!-- CARD 6: UKULELE -->
-      <article class="card-instrumento" data-categoria="cordas" data-dificuldade="facil">
-        <div class="tag-nivel facil">Compacto & Divertido</div>
-        <header class="card-cabecalho">
-          <span class="emoji-instrumento" aria-hidden="true">🪕</span>
-          <div>
-            <h2>Ukulele Soprano</h2>
-            <span class="categoria">Cordas • Havaiano</span>
-          </div>
-        </header>
-
-        <div class="etiquetas-caracteristicas">
-          <span class="etiqueta">Fácil Aprendizado</span>
-          <span class="etiqueta">Aconchegante</span>
-        </div>
-
-        <div class="medidores">
-          <div class="medidor-item">
-            <span>Leveza nas Mãos:</span>
-            <div class="barras"><span style="width: 100%"></span></div>
-          </div>
-          <div class="medidor-item">
-            <span>Facilidade de Transporte:</span>
-            <div class="barras"><span style="width: 100%"></span></div>
-          </div>
-        </div>
-
-        <p class="descricao">Com apenas 4 cordas de nylon, é extremamente acolhedor para iniciantes de todas as idades.</p>
-
-        <section class="bloco-audio">
-          <div class="cabecalho-audio">
-            <span class="rotulo-audio">🎶 Ritmo de Ukulele:</span>
-          </div>
-          <button class="btn-tocar-demo" data-demo="ukulele">🪕 Ouvir Sequência Solar de Ukulele</button>
-        </section>
-
-        <details class="sanfona-info">
-          <summary class="btn-detalhes">✨ Dicas de Estudo</summary>
-          <div class="conteudo-detalhes">
-            <div class="secao-info">
-              <h3>💡 Dica:</h3>
-              <p>Mantenha o pulso solto ao rasquear para obter um som leve e uniforme.</p>
-            </div>
-          </div>
-        </details>
-      </article>
-
     </div>
   </section>
 
-  <!-- ABA 2: ESTÚDIO & PIANO VIRTUAL -->
+  <!-- ABA 2: ESTÚDIO -->
   <section class="conteudo-aba secao-estudio-aba">
     <div class="caixa-interativa">
-      <h2>🎹 Estúdio de Sintetizador & Piano Pro</h2>
-      <p>Sintetizador polifônico com envelopes ADSR limpos. Toque com o mouse ou use o <strong>teclado físico</strong>:</p>
+      <h2>🎹 Estúdio Synthesizer Dark Pro</h2>
+      <p>Toque com o mouse ou aperte as teclas do seu teclado físico (A, W, S, E, D, F, T, G, Y, H, U, J, K):</p>
 
       <div class="controles-estudio">
         <div class="grupo-estudio">
           <label for="seletor-timbre"><strong>Timbre:</strong></label>
           <select id="seletor-timbre" class="seletor-custom">
-            <option value="piano">🎹 Piano Suave</option>
-            <option value="synth">⚡ Sintetizador Warm</option>
-            <option value="orgao">🎺 Órgão Vintage</option>
+            <option value="piano">🎹 Piano Digital</option>
+            <option value="synth">⚡ Synth Neon</option>
+            <option value="orgao">🎺 Órgão Retro</option>
             <option value="cordas">🎻 Synth Strings</option>
           </select>
         </div>
 
         <div class="grupo-estudio">
-          <label for="seletor-oitava"><strong>Oitava:</strong></label>
-          <select id="seletor-oitava" class="seletor-custom">
-            <option value="0.5">Oitava Grave (-1)</option>
-            <option value="1" selected>Oitava Normal (0)</option>
-            <option value="2">Oitava Aguda (+1)</option>
-          </select>
-        </div>
-
-        <div class="grupo-estudio">
           <label for="volume-estudio"><strong>Volume Master:</strong></label>
-          <input type="range" id="volume-estudio" min="0" max="1" step="0.05" value="0.6">
+          <input type="range" id="volume-estudio" min="0" max="1" step="0.05" value="0.7">
         </div>
       </div>
 
-      <div class="teclado-visual" id="teclado-estudio" aria-label="Teclado musical interativo">
+      <div class="teclado-visual" id="teclado-estudio">
         <button class="tecla branca" data-nota="261.63" data-nome="DÓ" data-key="a"><span>DÓ<br><small>(A)</small></span></button>
         <button class="tecla preta" data-nota="277.18" data-nome="DÓ#" data-key="w"><span>W</span></button>
         <button class="tecla branca" data-nota="293.66" data-nome="RÉ" data-key="s"><span>RÉ<br><small>(S)</small></span></button>
@@ -439,25 +198,24 @@
       </div>
 
       <div class="display-nota" id="display-nota">
-        <span>Frequência Ativa: <strong>Nenhuma tecla tocada</strong></span>
+        <span>Nota Selecionada: <strong>Aguardando interação</strong></span>
       </div>
     </div>
   </section>
 
-  <!-- ABA 3: RITMO & SOUNDBOARD -->
+  <!-- ABA 3: SOUNDBOARD & RITMO -->
   <section class="conteudo-aba secao-ritmo-aba">
     <div class="caixa-interativa">
-      <h2>🥁 Laboratório de Ritmo & Soundboard HD</h2>
-      <p>Sons de percussão e metrônomo para praticar seu tempo musical:</p>
-
+      <h2>🥁 Laboratório de Ritmo & Soundboard</h2>
+      
       <div class="painel-metronomo">
         <div class="metronomo-visores">
           <div class="pulso-visual" id="pulso-visual"></div>
-          <div class="bpm-numero"><span id="val-bpm">110</span> <small>BPM</small></div>
+          <div class="bpm-numero"><span id="val-bpm">120</span> <small>BPM</small></div>
         </div>
 
         <div class="controles-metronomo">
-          <input type="range" id="slider-bpm" min="50" max="180" value="110" class="slider-largo">
+          <input type="range" id="slider-bpm" min="50" max="180" value="120" class="slider-largo">
           <div class="botoes-metronomo">
             <button id="btn-iniciar-metronomo" class="btn-acao">▶️ Iniciar Pulso</button>
             <button id="btn-parar-metronomo" class="btn-acao secundario">⏹️ Parar</button>
@@ -467,14 +225,14 @@
 
       <hr class="divisor">
 
-      <h3>🎛️ Soundboard de Percussão Reativa:</h3>
+      <h3>🎛️ Pads de Percussão Reativa:</h3>
       <div class="soundboard-grid">
-        <button class="pad-som" data-tipo-som="bumbo">🥁<br>Bumbo Profundo</button>
-        <button class="pad-som" data-tipo-som="caixa">💥<br>Caixa Seca</button>
-        <button class="pad-som" data-tipo-som="prato">🔔<br>Hi-Hat Fechado</button>
-        <button class="pad-som" data-tipo-som="prato-aberto">✨<br>Hi-Hat Aberto</button>
-        <button class="pad-som" data-tipo-som="palma">👏<br>Palmas de Estúdio</button>
-        <button class="pad-som" data-tipo-som="vinil">🪩<br>Scratch Dj</button>
+        <button class="pad-som" data-tipo-som="bumbo">🥁<br>Bumbo</button>
+        <button class="pad-som" data-tipo-som="caixa">💥<br>Caixa</button>
+        <button class="pad-som" data-tipo-som="prato">🔔<br>Hi-Hat</button>
+        <button class="pad-som" data-tipo-som="prato-aberto">✨<br>Prato Aberto</button>
+        <button class="pad-som" data-tipo-som="palma">👏<br>Palma</button>
+        <button class="pad-som" data-tipo-som="vinil">🪩<br>Scratch FX</button>
       </div>
     </div>
   </section>
@@ -482,9 +240,7 @@
   <!-- ABA 4: AFINAÇÃO -->
   <section class="conteudo-aba secao-afinador-aba">
     <div class="caixa-interativa">
-      <h2>🎯 Treinador Visual de Afinação</h2>
-      <p>Escute a nota de referência e observe o medidor de afinação ideal:</p>
-
+      <h2>🎯 Treinador Visual de Ouvido e Afinação</h2>
       <div class="painel-afinador">
         <div class="seletor-nota-afinador">
           <button class="btn-nota-ref" data-freq="261.63" data-nome="Dó (C4)">Dó (C4)</button>
@@ -499,90 +255,112 @@
         </div>
 
         <div class="status-afinador" id="status-afinador">
-          Selecione uma nota acima para emitir o tom e treinar o ouvido.
+          Clique em uma nota para gerar a freqüência e testar o timbre.
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ABA 5: QUIZ -->
+  <!-- ABA 5: QUIZ EXPANDIDO PRO -->
   <section class="conteudo-aba secao-quiz-aba">
     <div class="caixa-interativa">
-      <h2>📋 Quiz de Diagnóstico Musical</h2>
-      <p>Responda às questões para receber o diagnóstico do instrumento ideal:</p>
+      <h2>📋 Quiz Diagnóstico Musical Completo Pro</h2>
+      <p>Responda às 4 perguntas abaixo para calcular com precisão o seu perfil e o instrumento ideal:</p>
 
-      <div class="quiz-multi-etapas" id="quiz-form">
+      <form id="quiz-form" onsubmit="return false;">
         
         <fieldset class="quiz-pergunta">
-          <legend><strong>1. Qual a sensação que você busca ao tocar um instrumento?</strong></legend>
+          <legend><strong>1. Qual experiência sonora você deseja alcançar?</strong></legend>
           <div class="quiz-opcoes-grid">
             <label class="card-opcao-quiz">
               <input type="radio" name="p1" value="violao" checked>
-              <span>🗣️ Cantar junto e criar um clima aconchegante.</span>
+              <span>🗣️ Cantar acompanhado e criar momentos acolhedores.</span>
             </label>
             <label class="card-opcao-quiz">
               <input type="radio" name="p1" value="teclado">
-              <span>🎹 Relaxar criando harmonias suaves.</span>
+              <span>🎹 Criar arranjos e composições completas.</span>
             </label>
             <label class="card-opcao-quiz">
               <input type="radio" name="p1" value="bateria">
-              <span>⚡ Soltar a energia praticando ritmos vivos.</span>
-            </label>
-            <label class="card-opcao-quiz">
-              <input type="radio" name="p1" value="sax">
-              <span>🎷 Expressar emoções fortes com um som marcante.</span>
+              <span>⚡ Descarregar energia no ritmo e velocidade.</span>
             </label>
           </div>
         </fieldset>
 
         <fieldset class="quiz-pergunta">
-          <legend><strong>2. Qual o seu gênero musical favorito no dia a dia?</strong></legend>
+          <legend><strong>2. Qual o seu ambiente principal de prática?</strong></legend>
           <div class="quiz-opcoes-grid">
             <label class="card-opcao-quiz">
-              <input type="radio" name="p2" value="pop" checked>
-              <span>🎶 Pop, MPB, Sertanejo ou Folk.</span>
+              <input type="radio" name="p2" value="casa" checked>
+              <span>🏠 Quarto/Casa (precisa de fones de ouvido ou som ambiente suave).</span>
             </label>
             <label class="card-opcao-quiz">
-              <input type="radio" name="p2" value="classico">
-              <span>🎼 Música Clássica ou Instrumental.</span>
+              <input type="radio" name="p2" value="viagem">
+              <span>✈️ Em viagens, parques ou encontros ao ar livre.</span>
             </label>
             <label class="card-opcao-quiz">
-              <input type="radio" name="p2" value="rock">
-              <span>🎸 Rock, Heavy Metal ou Groove.</span>
-            </label>
-            <label class="card-opcao-quiz">
-              <input type="radio" name="p2" value="jazz">
-              <span>🎷 Jazz, Blues ou Bossa Nova.</span>
+              <input type="radio" name="p2" value="palco">
+              <span>🎙️ Estúdios e palcos de apresentação.</span>
             </label>
           </div>
         </fieldset>
 
-        <button id="btn-calcular-quiz" class="btn-acao primario-grande">✨ Gerar Meu Diagnóstico Musical Personalizado</button>
-
-        <div class="painel-resultado-quiz" id="painel-resultado-quiz" style="display: none;">
-          <div class="resultado-header">
-            <span class="emoji-resultado" id="quiz-emoji">🎸</span>
-            <div>
-              <h3 id="quiz-titulo-resultado">Sua Recomendação</h3>
-              <p id="quiz-desc-resultado">Analisando suas preferências...</p>
-            </div>
+        <fieldset class="quiz-pergunta">
+          <legend><strong>3. Quanto tempo pretende dedicar aos treinos por semana?</strong></legend>
+          <div class="quiz-opcoes-grid">
+            <label class="card-opcao-quiz">
+              <input type="radio" name="p3" value="pouco" checked>
+              <span>⏱️ 15 a 30 minutos por dia (ritmo leve).</span>
+            </label>
+            <label class="card-opcao-quiz">
+              <input type="radio" name="p3" value="medio">
+              <span>⏱️ 1 hora por dia (ritmo constante).</span>
+            </label>
+            <label class="card-opcao-quiz">
+              <input type="radio" name="p3" value="muito">
+              <span>⏱️ Mais de 2 horas diárias (foco profissional).</span>
+            </label>
           </div>
-          <div class="detalhes-resultado-analise" id="quiz-detalhes-analise"></div>
-        </div>
+        </fieldset>
 
+        <fieldset class="quiz-pergunta">
+          <legend><strong>4. Qual estilo visual e sonoro te atrai mais?</strong></legend>
+          <div class="quiz-opcoes-grid">
+            <label class="card-opcao-quiz">
+              <input type="radio" name="p4" value="classico" checked>
+              <span>🎻 Orgânico, clássico e acústico.</span>
+            </label>
+            <label class="card-opcao-quiz">
+              <input type="radio" name="p4" value="moderno">
+              <span>⚡ Digital, eletrônico e dinâmico.</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <button id="btn-calcular-quiz" type="button" class="btn-acao primario-grande">✨ Processar Diagnóstico Musical</button>
+
+      </form>
+
+      <div class="painel-resultado-quiz" id="painel-resultado-quiz" style="display: none;">
+        <div class="resultado-header">
+          <span class="emoji-resultado" id="quiz-emoji">🎸</span>
+          <div>
+            <h3 id="quiz-titulo-resultado">Seu Diagnóstico Ideal</h3>
+            <p id="quiz-desc-resultado">Avaliando perfil...</p>
+          </div>
+        </div>
+        <div class="detalhes-resultado-analise" id="quiz-detalhes-analise"></div>
       </div>
+
     </div>
   </section>
 
 </div>
 
 <footer class="rodape">
-  <p>🌟 <strong>Clube da Música</strong> • Arte, som de qualidade e inclusão digital para todos.</p>
+  <p>🌟 <strong>Clube da Música Dark Pro</strong> • Experiência 100% Interativa em HTML & CSS.</p>
 </footer>
 
-</div>
-
-<!-- Arquivo JS Externo para garantir a estabilidade do código -->
 <script src="script.js"></script>
 </body>
 </html>
