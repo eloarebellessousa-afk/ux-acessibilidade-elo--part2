@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ESTILOS BASE - TEMA ESCURO (DARK MODE NATIVO)
+   ESTILOS BASE - TEMA ESCURO (DARK MODE NATIVO & EFEITOS NEON)
    ========================================================================== */
 :root {
   --cor-fundo: #050811;
@@ -62,7 +62,7 @@ body {
 }
 .link-atalho:focus { top: 10px; }
 
-/* ACESSIBILIDADE */
+/* ACESSIBILIDADE VIA CHECKBOX */
 #chk-contraste:checked ~ .pagina-wrapper {
   --cor-card: #000000;
   --cor-texto: #ffff00;
@@ -92,10 +92,6 @@ body {
 .btn-acessibilidade:hover, .btn-tema-3d:hover {
   border-color: var(--cor-primaria); transform: translateY(-2px);
   background-color: var(--cor-primaria); color: #fff;
-}
-
-.btn-tema-3d.ativo {
-  background-color: var(--cor-primaria); color: #ffffff; border-color: var(--cor-primaria);
 }
 
 .cabecalho {
@@ -130,7 +126,7 @@ h1 { font-size: 2.6rem; color: #60a5fa; font-weight: 800; margin-bottom: 8px; }
   border: 1px solid var(--cor-borda);
 }
 
-/* NAVEGAÇÃO DE ABAS */
+/* NAVEGAÇÃO DE ABAS VIA CSS PURO */
 .sistema-abas { margin-bottom: 30px; }
 .menu-abas { display: flex; gap: 10px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap; }
 
@@ -201,9 +197,6 @@ h1 { font-size: 2.6rem; color: #60a5fa; font-weight: 800; margin-bottom: 8px; }
 .emoji-instrumento { font-size: 2.5rem; }
 .categoria { font-size: 0.85rem; color: var(--cor-texto-suave); font-weight: 700; }
 
-.etiquetas-caracteristicas { display: flex; gap: 6px; flex-wrap: wrap; }
-.etiqueta { background: #1e293b; color: #94a3b8; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
-
 .bloco-audio {
   background: var(--cor-destaque); padding: 12px; border-radius: 12px; border: 1px solid var(--cor-borda);
 }
@@ -226,7 +219,7 @@ h1 { font-size: 2.6rem; color: #60a5fa; font-weight: 800; margin-bottom: 8px; }
 .teclado-visual {
   display: flex; justify-content: center; height: 180px; position: relative; margin: 25px 0; user-select: none;
 }
-.tecla { border: 1px solid #000; border-radius: 0 0 8px 8px; cursor: pointer; position: relative; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; font-weight: 800; font-size: 0.8rem; }
+.tecla { border: 1px solid #000; border-radius: 0 0 8px 8px; cursor: pointer; position: relative; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; font-weight: 800; font-size: 0.8rem; transition: background 0.1s; }
 .tecla.branca { background: #e2e8f0; color: #0f172a; width: 55px; z-index: 1; }
 .tecla.preta { background: #090d16; color: #fff; width: 36px; height: 110px; margin: 0 -18px; z-index: 2; border-radius: 0 0 5px 5px; border: 1px solid var(--cor-borda); }
 .tecla.ativa { background: var(--cor-primaria) !important; color: #fff !important; transform: translateY(2px); }
@@ -237,11 +230,11 @@ h1 { font-size: 2.6rem; color: #60a5fa; font-weight: 800; margin-bottom: 8px; }
 .soundboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-top: 20px; }
 .pad-som { padding: 20px; border-radius: 14px; border: 1px solid var(--cor-borda); background: #1e293b; color: #fff; font-weight: 800; cursor: pointer; transition: var(--transicao); text-align: center; }
 .pad-som:hover { border-color: var(--cor-primaria); transform: scale(1.03); background: #334155; }
-.pad-som.hit { background: var(--cor-primaria); color: #fff; }
+.pad-som.hit { background: var(--cor-primaria); color: #fff; transform: scale(0.95); }
 
 .painel-metronomo { display: flex; align-items: center; justify-content: space-around; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
-.pulso-visual { width: 30px; height: 30px; border-radius: 50%; background: #334155; transition: background 0.1s; }
-.pulso-visual.piscar { background: #ef4444; transform: scale(1.2); }
+.pulso-visual { width: 30px; height: 30px; border-radius: 50%; background: #334155; transition: background 0.1s, transform 0.1s; }
+.pulso-visual.piscar { background: #ef4444; transform: scale(1.3); }
 
 .btn-acao { padding: 10px 20px; border-radius: 10px; border: none; background: var(--cor-primaria); color: #fff; font-weight: 800; cursor: pointer; }
 .btn-acao.secundario { background: #475569; }
@@ -253,10 +246,10 @@ h1 { font-size: 2.6rem; color: #60a5fa; font-weight: 800; margin-bottom: 8px; }
 .btn-nota-ref { padding: 10px 15px; border-radius: 8px; border: 1px solid var(--cor-primaria); background: #1e293b; color: #fff; font-weight: bold; cursor: pointer; }
 
 .display-afinador { width: 100%; max-width: 300px; height: 20px; background: #1e293b; margin: 20px auto; border-radius: 10px; position: relative; border: 1px solid var(--cor-borda); }
-.ponteiro-afinador { width: 6px; height: 30px; background: var(--cor-primaria); position: absolute; top: -5px; left: 10%; transition: left 0.3s; border-radius: 3px; }
+.ponteiro-afinador { width: 6px; height: 30px; background: var(--cor-primaria); position: absolute; top: -5px; left: 50%; transition: left 0.3s ease; border-radius: 3px; }
 .marca-centro { width: 4px; height: 24px; background: #22c55e; position: absolute; top: -2px; left: 50%; transform: translateX(-50%); }
 
-/* QUIZ DARK EXPANDIDO */
+/* QUIZ DARK */
 .quiz-pergunta { border: none; margin-bottom: 20px; }
 .quiz-opcoes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 10px; }
 .card-opcao-quiz { display: flex; align-items: center; gap: 10px; background: #1e293b; padding: 12px; border-radius: 10px; border: 1px solid var(--cor-borda); cursor: pointer; font-size: 0.9rem; font-weight: 600; }
