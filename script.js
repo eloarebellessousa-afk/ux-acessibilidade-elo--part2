@@ -1,10 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // ==========================================
-  // 1. ENGINE 3D & EFEITO DMX DE LUZES
+  // 1. ENGINE 3D - MULTI-TEMAS FUNCIONAIS
   // ==========================================
   let scene, camera, renderer, particles, particleMaterial;
   let mouseX = 0, mouseY = 0;
+  let velRotacaoX = 0.001, velRotacaoY = 0.0015;
+
+  // Definições dos temas 3D
+  const temas3D = {
+    cosmos: { cor: 0x3b82f6, tamanho: 3.2, velX: 0.001, velY: 0.0015 },
+    neon: { cor: 0xec4899, tamanho: 4.5, velX: 0.003, velY: 0.004 },
+    aurora: { cor: 0x22c55e, tamanho: 2.8, velX: 0.0005, velY: 0.002 }
+  };
 
   function init3D() {
     const canvas = document.getElementById('bg-canvas-3d');
@@ -18,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     const geometry = new THREE.BufferGeometry();
-    const count = 800;
+    const count = 900;
     const positions = new Float32Array(count * 3);
 
     for (let i = 0; i < count * 3; i++) {
@@ -26,7 +34,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    particleMaterial = new THREE.PointsMaterial({ size: 3.2, color: 0x3b82f6, transparent: true, opacity: 0.8 });
+    particleMaterial = new THREE.PointsMaterial({
+      size: temas3D.cosmos.tamanho,
+      color: temas3D.cosmos.cor,
+      transparent: true,
+      opacity: 0.85
+    });
+
     particles = new THREE.Points(geometry, particleMaterial);
     scene.add(particles);
 
@@ -41,8 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function animate() {
     requestAnimationFrame(animate);
     if (particles) {
-      particles.rotation.x += 0.001;
-      particles.rotation.y += 0.0015;
+      particles.rotation.x += velRotacaoX;
+      particles.rotation.y += velRotacaoY;
       camera.position.x += (mouseX - camera.position.x) * 0.05;
       camera.position.y += (-mouseY - camera.position.y) * 0.05;
       camera.lookAt(scene.position);
@@ -58,12 +72,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Alternador de Temas 3D Funcional
   document.querySelectorAll('.btn-tema-3d').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.btn-tema-3d').forEach(b => b.classList.remove('ativo'));
       btn.classList.add('ativo');
-      const corHex = parseInt(btn.dataset.cor, 16);
-      if (particleMaterial) particleMaterial.color.setHex(corHex);
+
+      const nomeTema = btn.dataset.tema;
+      const config = temas3D[nomeTema];
+
+      if (config && particleMaterial) {
+        particleMaterial.color.setHex(config.cor);
+        particleMaterial.size = config.tamanho;
+        velRotacaoX = config.velX;
+        velRotacaoY = config.velY;
+      }
     });
   });
 
@@ -75,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // 2. ENGINE DE ÁUDIO HD (WEB AUDIO API PRO)
+  // 2. SÍNTESE DE ÁUDIO (WEB AUDIO API)
   // ==========================================
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   let audioCtx = null;
@@ -86,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return audioCtx;
   }
 
-  // Emulação Karplus-Strong para som real de corda/violão
+  // Simulação física de violão
   function tocarCordaViolao(freq, duracao = 1.2) {
     const ctx = obterAudioContext();
     const bufferSize = Math.round(ctx.sampleRate / freq);
@@ -94,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const data = buffer.getChannelData(0);
 
     for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1; // Ruído inicial da palhetada
+      data[i] = Math.random() * 2 - 1;
     }
 
     const noiseSource = ctx.createBufferSource();
@@ -118,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dispararDMX();
   }
 
-  // Sintetizador polifônico com ADSR
+  // Teclado/Sintetizador
   function tocarSom(freq, duracao = 0.8, tipo = null) {
     const ctx = obterAudioContext();
     const osc = ctx.createOscillator();
@@ -130,11 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
     osc.type = tipoSelecionado;
     osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
-    // Envelope ADSR Limpo
     gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(volMaster, ctx.currentTime + 0.03); // Ataque
-    gain.gain.exponentialRampToValueAtTime(volMaster * 0.7, ctx.currentTime + 0.1); // Decaimento
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duracao); // Relaxamento
+    gain.gain.linearRampToValueAtTime(volMaster, ctx.currentTime + 0.03);
+    gain.gain.exponentialRampToValueAtTime(volMaster * 0.7, ctx.currentTime + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duracao);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
@@ -144,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dispararDMX();
   }
 
-  // Gerador de Bateria e Ritmos Reais
+  // Percussão/Bateria
   function tocarBateria(som) {
     const ctx = obterAudioContext();
     const now = ctx.currentTime;
@@ -190,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dispararDMX();
   }
 
-  // Demonstrador de Beats de Bateria Reais
+  // Execução de Beat
   function tocarBeatBateria() {
     const bpm = 110;
     const tempoNota = (60 / bpm) / 2;
@@ -201,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // GRAVADOR DE SEQUÊNCIA (LOOP STUDIO)
+  // Gravador de Sequências
   let gravando = false;
   let gravacao = [];
   let tempoInicio = 0;
@@ -218,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnRecord.classList.add('gravando');
       btnPlayLoop.disabled = true;
     } else {
-      btnRecord.textContent = '🔴 Gravar Loop';
+      btnRecord.textContent = '🔴 Gravar';
       btnRecord.classList.remove('gravando');
       btnPlayLoop.disabled = gravacao.length === 0;
     }
@@ -237,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Interação do Teclado Visual
+  // Teclado
   document.querySelectorAll('.tecla').forEach(tecla => {
     tecla.addEventListener('click', () => {
       const freq = parseFloat(tecla.dataset.nota);
@@ -263,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Demonstradores do Catálogo
+  // Catálogo
   document.querySelectorAll('.btn-tocar-demo').forEach(btn => {
     btn.addEventListener('click', () => {
       const tipo = btn.dataset.tipo;
@@ -319,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // 4. FILTRAGEM DE BUSCA & QUIZ PRO 360°
+  // 4. FILTRAGEM & QUIZ
   // ==========================================
   const filtroCat = document.getElementById('filtro-categoria');
   const inputBusca = document.getElementById('input-busca');
@@ -341,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
   filtroCat?.addEventListener('change', filtrarCards);
   inputBusca?.addEventListener('keyup', filtrarCards);
 
-  // Lógica Avançada de Pontuação do Quiz 360°
+  // Cálculo do Quiz
   document.getElementById('btn-calcular-quiz')?.addEventListener('click', () => {
     const respostas = ['qp1', 'qp2', 'qp3', 'qp4', 'qp5'];
     let pontos = { violao: 0, teclado: 0, bateria: 0 };
@@ -365,16 +387,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (vencedor === 'bateria') {
       document.getElementById('quiz-emoji').textContent = '🥁';
-      document.getElementById('quiz-titulo-resultado').textContent = 'Seu Match Ideal: Bateria Eletrônica Groovebox';
-      document.getElementById('quiz-desc-resultado').textContent = 'Sua energia rítmica e foco na pulsação tornam você um baterista nato.';
+      document.getElementById('quiz-titulo-resultado').textContent = 'Recomendação: Bateria';
+      document.getElementById('quiz-desc-resultado').textContent = 'Seu foco em ritmo e energia indica forte afinidade com a bateria.';
     } else if (vencedor === 'teclado') {
       document.getElementById('quiz-emoji').textContent = '🎹';
-      document.getElementById('quiz-titulo-resultado').textContent = 'Seu Match Ideal: Synthesizer PolyPro';
-      document.getElementById('quiz-desc-resultado').textContent = 'Seu perfil analítico e apreço por harmonias combinam com o teclado.';
+      document.getElementById('quiz-titulo-resultado').textContent = 'Recomendação: Teclado ou Piano';
+      document.getElementById('quiz-desc-resultado').textContent = 'Sua preferência por harmonia e teoria combina com instrumentos de teclas.';
     } else {
       document.getElementById('quiz-emoji').textContent = '🎸';
-      document.getElementById('quiz-titulo-resultado').textContent = 'Seu Match Ideal: Violão Acústico Pro';
-      document.getElementById('quiz-desc-resultado').textContent = 'Sua busca por versatilidade e sonoridade orgânica pede um violão.';
+      document.getElementById('quiz-titulo-resultado').textContent = 'Recomendação: Violão Acústico';
+      document.getElementById('quiz-desc-resultado').textContent = 'Sua busca por versatilidade e voz acompanhada sugere o violão.';
     }
 
     document.getElementById('barras-compatibilidade').innerHTML = `
@@ -393,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   });
 
-  // Acessibilidade Aumento/Diminuição de Fonte
+  // Ajustes de Fonte
   let tamanhoFonte = 100;
   document.getElementById('btn-fonte-aumentar')?.addEventListener('click', () => {
     if (tamanhoFonte < 130) { tamanhoFonte += 5; document.body.style.fontSize = tamanhoFonte + '%'; }
