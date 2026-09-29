@@ -13,6 +13,33 @@ body {
   overflow-x: hidden;
 }
 
+/* MODO ALTO CONTRASTE */
+body.alto-contraste {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+body.alto-contraste section,
+body.alto-contraste header,
+body.alto-contraste .bloco-ferramenta,
+body.alto-contraste .card-instrumento {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: none !important;
+}
+
+body.alto-contraste button {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+body.alto-contraste button:focus,
+body.alto-contraste button:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
 /* 1. EFEITOS DE FUNDO (Canvas 3D e DMX) */
 #bg-canvas-3d {
   position: fixed;
@@ -81,11 +108,20 @@ header p {
   font-size: 0.95rem;
 }
 
+/* PAINEL DE ACESSIBILIDADE E CONTROLES */
+.barra-acessibilidade {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
 .controles-topo {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 20px;
+  margin-top: 15px;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -113,7 +149,7 @@ h2 {
   gap: 8px;
 }
 
-/* 3. BOTOES GERAIS */
+/* 3. BOTÕES GERAIS E FOCO PARA ACESSIBILIDADE */
 button {
   background: #1e293b;
   color: #f8fafc;
@@ -125,9 +161,10 @@ button {
   transition: all 0.2s ease;
 }
 
-button:hover {
+button:hover, button:focus {
   background: #334155;
   border-color: #38bdf8;
+  outline: 2px solid #38bdf8;
 }
 
 button.ativo {
@@ -188,6 +225,10 @@ select, input[type="range"] {
   padding: 6px 12px;
   border-radius: 6px;
   outline: none;
+}
+
+select:focus, input[type="range"]:focus {
+  border-color: #38bdf8;
 }
 
 .teclado-container {
