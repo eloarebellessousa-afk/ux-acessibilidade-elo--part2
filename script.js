@@ -60,7 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
       camera.position.y += (-mouseY - camera.position.y) * 0.05;
       camera.lookAt(scene.position);
     }
-    renderer.render(scene, camera);
+    if (renderer && scene && camera) {
+      renderer.render(scene, camera);
+    }
   }
 
   window.addEventListener('resize', () => {
@@ -97,83 +99,148 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // 2. SÍNTESE & SAMPLES DE ÁUDIO REALISTA
+  // 2. SÍNTESE DE ÁUDIO (WEB AUDIO API)
   // ==========================================
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
   let audioCtx = null;
 
   function obterAudioContext() {
-    if (!audioCtx) audioCtx = new AudioContext();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (!audioCtx) {
+      audioCtx = new AudioCtxClass();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
     return audioCtx;
   }
 
-  // Links CDN de áudio de bateria real em HQ
-  const urlsBateria = {
-    bumbo: 'https://cdn.jsdelivr.net/gh/muralidesign/drum-samples@main/kick.wav',
-    caixa: 'https://cdn.jsdelivr.net/gh/muralidesign/drum-samples@main/snare.wav',
-    prato: 'https://cdn.jsdelivr.net/gh/muralidesign/drum-samples@main/hihat.wav',
-    tom: 'https://cdn.jsdelivr.net/gh/muralidesign/drum-samples@main/tom.wav',
-    palma: 'https://cdn.jsdelivr.net/gh/muralidesign/drum-samples@main/clap.wav'
-  };
-
-  const buffersBateria = {};
-
-  // Carrega os sons reais na memória
-  async function carregarSamplesBateria() {
-    const ctx = obterAudioContext();
-    for (const [key, url] of Object.entries(urlsBateria)) {
-      try {
-        const resp = await fetch(url);
-        const arrayBuffer = await resp.arrayBuffer();
-        buffersBateria[key] = await ctx.decodeAudioData(arrayBuffer);
-      } catch (e) {
-        console.warn(`Erro ao carregar sample de ${key}, usando síntese fallback.`, e);
-      }
+  function criarBufferRuido(ctx, duracao) {
+    const bufferSize = ctx.sampleRate * duracao;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
     }
+    return buffer;
   }
 
-  // Toca o som real da bateria (ou o sintetizado se estiver offline)
+  // BATERIA MANUAL MODELADA
   function tocarBateria(som) {
     const ctx = obterAudioContext();
-
-    if (buffersBateria[som]) {
-      const source = ctx.createBufferSource();
-      source.buffer = buffersBateria[som];
-      source.connect(ctx.destination);
-      source.start(0);
-      dispararDMX();
-      return;
-    }
-
-    // FALLBACK SINTETIZADO (Sintetizador de contingência)
     const now = ctx.currentTime;
+
     if (som === 'bumbo') {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.frequency.setValueAtTime(120, now);
-      osc.frequency.exponentialRampToValueAtTime(30, now + 0.1);
+
+      osc.frequency.setValueAtTime(130, now);
+      osc.frequency.exponentialRampToValueAtTime(32, now + 0.08);
+
       gain.gain.setValueAtTime(1.0, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
       osc.connect(gain);
       gain.connect(ctx.destination);
+
       osc.start(now);
       osc.stop(now + 0.3);
-    } else {
+
+    } else if (som === 'caixa') {
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(80, now + 0.07);
+      
+      oscGain.gain.setValueAtTime(0.7, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      
+      osc.connect(oscGain);
+      oscGain.connect(ctx.destination);
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = criarBufferRuido(ctx, 0.18);
+      
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(1000, now);
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.7, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+
+      osc.start(now);
+      noise.start(now);
+      osc.stop(now + 0.18);
+      noise.stop(now + 0.18);
+
+    } else if (som === 'prato') {
+      const noise = ctx.createBufferSource();
+      noise.buffer = criarBufferRuido(ctx, 0.2);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(6500, now);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.6, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      noise.start(now);
+      noise.stop(now + 0.1);
+
+    } else if (som === 'tom') {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.frequency.setValueAtTime(200, now);
-      gain.gain.setValueAtTime(0.5, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(120, now);
+      osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+
+      gain.gain.setValueAtTime(0.8, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
       osc.connect(gain);
       gain.connect(ctx.destination);
+
       osc.start(now);
-      osc.stop(now + 0.15);
+      osc.stop(now + 0.25);
+
+    } else if (som === 'palma') {
+      const tempos = [0, 0.01, 0.02];
+      tempos.forEach((delay) => {
+        const noise = ctx.createBufferSource();
+        noise.buffer = criarBufferRuido(ctx, 0.12);
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1000, now + delay);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.5, now + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.1);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+
+        noise.start(now + delay);
+        noise.stop(now + delay + 0.1);
+      });
     }
+
     dispararDMX();
   }
 
-  function tocarCordaViolao(freq, duracao = 1.5) {
+  function tocarCordaViolao(freq, duracao = 1.2) {
     const ctx = obterAudioContext();
     const now = ctx.currentTime;
     const bufferSize = Math.round(ctx.sampleRate / freq);
@@ -194,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
     filter.frequency.exponentialRampToValueAtTime(freq * 0.8, now + duracao);
 
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.7, now);
+    gain.gain.setValueAtTime(0.6, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + duracao);
 
     noiseSource.connect(filter);
@@ -283,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Teclado
+  // Eventos do Teclado
   document.querySelectorAll('.tecla').forEach(tecla => {
     tecla.addEventListener('click', () => {
       const freq = parseFloat(tecla.dataset.nota);
@@ -302,6 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn && !e.repeat) btn.click();
   });
 
+  // Eventos da Bateria
   document.querySelectorAll('.pad-som').forEach(pad => {
     pad.addEventListener('click', () => {
       pad.classList.add('hit');
@@ -310,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Demonstrações
+  // Demos
   document.querySelectorAll('.btn-tocar-demo').forEach(btn => {
     btn.addEventListener('click', () => {
       const tipo = btn.dataset.tipo;
@@ -365,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Filtros e Quiz
+  // Filtros
   const filtroCat = document.getElementById('filtro-categoria');
   const inputBusca = document.getElementById('input-busca');
 
@@ -386,8 +454,9 @@ document.addEventListener('DOMContentLoaded', () => {
   filtroCat?.addEventListener('change', filtrarCards);
   inputBusca?.addEventListener('keyup', filtrarCards);
 
+  // Quiz
   document.getElementById('btn-calcular-quiz')?.addEventListener('click', () => {
-    const respostas = ['qp1', 'qp2', 'qp3', 'qp4', 'qp5'];
+    const respostas = ['qp1', 'qp2'];
     let pontos = { violao: 0, teclado: 0, bateria: 0 };
 
     respostas.forEach(q => {
@@ -395,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (el) pontos[el.value]++;
     });
 
-    const total = 5;
+    const total = 2;
     const pctViolao = Math.round((pontos.violao / total) * 100);
     const pctTeclado = Math.round((pontos.teclado / total) * 100);
     const pctBateria = Math.round((pontos.bateria / total) * 100);
@@ -410,15 +479,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (vencedor === 'bateria') {
       document.getElementById('quiz-emoji').textContent = '🥁';
       document.getElementById('quiz-titulo-resultado').textContent = 'Recomendação: Bateria';
-      document.getElementById('quiz-desc-resultado').textContent = 'Seu foco em ritmo e energia indica forte afinidade com a bateria.';
+      document.getElementById('quiz-desc-resultado').textContent = 'O teu foco no ritmo indica forte afinidade com a bateria.';
     } else if (vencedor === 'teclado') {
       document.getElementById('quiz-emoji').textContent = '🎹';
       document.getElementById('quiz-titulo-resultado').textContent = 'Recomendação: Teclado ou Piano';
-      document.getElementById('quiz-desc-resultado').textContent = 'Sua preferência por harmonia e teoria combina com instrumentos de teclas.';
+      document.getElementById('quiz-desc-resultado').textContent = 'A tua preferência por harmonia combina com o teclado.';
     } else {
       document.getElementById('quiz-emoji').textContent = '🎸';
       document.getElementById('quiz-titulo-resultado').textContent = 'Recomendação: Violão Acústico';
-      document.getElementById('quiz-desc-resultado').textContent = 'Sua busca por versatilidade e voz acompanhada sugere o violão.';
+      document.getElementById('quiz-desc-resultado').textContent = 'A tua busca por praticidade sugere o violão.';
     }
 
     document.getElementById('barras-compatibilidade').innerHTML = `
@@ -437,7 +506,6 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   });
 
-  // Inicialização
+  // Inicializa o fundo 3D
   init3D();
-  carregarSamplesBateria();
 });
