@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let mouseX = 0, mouseY = 0;
   let velRotacaoX = 0.001, velRotacaoY = 0.0015;
 
-  // Definições dos temas 3D
   const temas3D = {
     cosmos: { cor: 0x3b82f6, tamanho: 3.2, velX: 0.001, velY: 0.0015 },
     neon: { cor: 0xec4899, tamanho: 4.5, velX: 0.003, velY: 0.004 },
@@ -72,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Alternador de Temas 3D Funcional
   document.querySelectorAll('.btn-tema-3d').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.btn-tema-3d').forEach(b => b.classList.remove('ativo'));
@@ -98,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // 2. SÍNTESE DE ÁUDIO (WEB AUDIO API)
+  // 2. SÍNTESE DE ÁUDIO REALISTA (WEB AUDIO)
   // ==========================================
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   let audioCtx = null;
@@ -109,9 +107,22 @@ document.addEventListener('DOMContentLoaded', () => {
     return audioCtx;
   }
 
-  // Simulação física de violão
-  function tocarCordaViolao(freq, duracao = 1.2) {
+  // Gerador de Ruído Branco (essencial para percussão realista)
+  function criarBufferRuido(ctx, duracao) {
+    const bufferSize = ctx.sampleRate * duracao;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    return buffer;
+  }
+
+  // Violão - Algoritmo Karplus-Strong melhorado
+  function tocarCordaViolao(freq, duracao = 1.5) {
     const ctx = obterAudioContext();
+    const now = ctx.currentTime;
+
     const bufferSize = Math.round(ctx.sampleRate / freq);
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -126,93 +137,175 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const filter = ctx.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.value = freq * 2;
+    filter.frequency.setValueAtTime(freq * 3, now);
+    filter.frequency.exponentialRampToValueAtTime(freq * 0.8, now + duracao);
 
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.8, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duracao);
+    gain.gain.setValueAtTime(0.7, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duracao);
 
     noiseSource.connect(filter);
     filter.connect(gain);
     gain.connect(ctx.destination);
 
-    noiseSource.start();
-    noiseSource.stop(ctx.currentTime + duracao);
+    noiseSource.start(now);
+    noiseSource.stop(now + duracao);
     dispararDMX();
   }
 
-  // Teclado/Sintetizador
+  // Teclado/Sintetizador com envolvente ADSR e oscilador duplo
   function tocarSom(freq, duracao = 0.8, tipo = null) {
     const ctx = obterAudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    const tipoSelecionado = tipo || document.getElementById('seletor-timbre')?.value || 'sine';
+    const now = ctx.currentTime;
     const volMaster = parseFloat(document.getElementById('volume-estudio')?.value || 0.7);
+    const tipoSelecionado = tipo || document.getElementById('seletor-timbre')?.value || 'sine';
 
-    osc.type = tipoSelecionado;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    // Oscilador Principal
+    const osc1 = ctx.createOscillator();
+    osc1.type = tipoSelecionado;
+    osc1.frequency.setValueAtTime(freq, now);
 
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(volMaster, ctx.currentTime + 0.03);
-    gain.gain.exponentialRampToValueAtTime(volMaster * 0.7, ctx.currentTime + 0.1);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duracao);
+    // Oscilador Secundário para corpo do som
+    const osc2 = ctx.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(freq * 1.002, now); // Ligeiramente desarmonizado para efeito natural
 
-    osc.connect(gain);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(volMaster, now + 0.02); // Ataque
+    gain.gain.exponentialRampToValueAtTime(volMaster * 0.5, now + 0.2); // Decay
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duracao); // Release
+
+    osc1.connect(gain);
+    osc2.connect(gain);
     gain.connect(ctx.destination);
 
-    osc.start();
-    osc.stop(ctx.currentTime + duracao);
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + duracao);
+    osc2.stop(now + duracao);
     dispararDMX();
   }
 
-  // Percussão/Bateria
+  // PERCUSSÃO REALISTA
   function tocarBateria(som) {
     const ctx = obterAudioContext();
     const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
 
     if (som === 'bumbo') {
-      osc.frequency.setValueAtTime(120, now);
-      osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.3);
-      gain.gain.setValueAtTime(1, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      // BUMBO: Golpe grave + ressonância de pele
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(35, now + 0.12);
+
+      gain.gain.setValueAtTime(1.0, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
       osc.connect(gain);
+      gain.connect(ctx.destination);
+
       osc.start(now);
-      osc.stop(now + 0.3);
+      osc.stop(now + 0.4);
+
     } else if (som === 'caixa') {
+      // CAIXA: Corpo de madeira + Ruído da esteira metálica
+      // 1. Tom da madeira
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(250, now);
-      gain.gain.setValueAtTime(0.8, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-      osc.connect(gain);
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
+      oscGain.gain.setValueAtTime(0.6, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+      osc.connect(oscGain);
+      oscGain.connect(ctx.destination);
+
+      // 2. Ruído da esteira
+      const noise = ctx.createBufferSource();
+      noise.buffer = criarBufferRuido(ctx, 0.2);
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(1000, now);
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.8, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+
       osc.start(now);
+      noise.start(now);
       osc.stop(now + 0.2);
+      noise.stop(now + 0.2);
+
     } else if (som === 'prato') {
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(800, now);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-      osc.connect(gain);
-      osc.start(now);
-      osc.stop(now + 0.1);
+      // PRATO (HI-HAT): Ruído metálico agudo e rápido
+      const noise = ctx.createBufferSource();
+      noise.buffer = criarBufferRuido(ctx, 0.3);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(7000, now);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.5, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      noise.start(now);
+      noise.stop(now + 0.12);
+
     } else if (som === 'tom') {
-      osc.frequency.setValueAtTime(90, now);
-      osc.frequency.exponentialRampToValueAtTime(30, now + 0.25);
+      // TOM-TOM: Ressonância acústica de tambor médio
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.frequency.setValueAtTime(120, now);
+      osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+
       gain.gain.setValueAtTime(0.9, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
       osc.connect(gain);
+      gain.connect(ctx.destination);
+
       osc.start(now);
-      osc.stop(now + 0.25);
-    } else {
-      tocarSom(450, 0.1, 'sine');
+      osc.stop(now + 0.35);
+
+    } else if (som === 'palma') {
+      // PALMA (CLAP): Múltiplas rajadas curtas de ruído
+      [0, 0.012, 0.024].forEach((delay) => {
+        const noise = ctx.createBufferSource();
+        noise.buffer = criarBufferRuido(ctx, 0.15);
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1200, now + delay);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.6, now + delay);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.12);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+
+        noise.start(now + delay);
+        noise.stop(now + delay + 0.12);
+      });
     }
-    gain.connect(ctx.destination);
+
     dispararDMX();
   }
 
-  // Execução de Beat
+  // Execução de Beat Automático
   function tocarBeatBateria() {
     const bpm = 110;
     const tempoNota = (60 / bpm) / 2;
@@ -223,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Gravador de Sequências
+  // Gravador
   let gravando = false;
   let gravacao = [];
   let tempoInicio = 0;
@@ -294,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
         arpejo.forEach((freq, i) => setTimeout(() => tocarCordaViolao(freq), i * 220));
       } else if (tipo === 'teclado') {
         const prog = [261.63, 329.63, 392.00, 493.88, 523.25];
-        prog.forEach((freq, i) => setTimeout(() => tocarSom(freq, 0.8, 'sawtooth'), i * 250));
+        prog.forEach((freq, i) => setTimeout(() => tocarSom(freq, 0.8, 'sine'), i * 250));
       } else {
         tocarBeatBateria();
       }
@@ -319,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pulso = document.getElementById('pulso-visual');
 
     timerMetronomo = setInterval(() => {
-      tocarSom(1000, 0.04, 'sine');
+      tocarBateria('prato');
       pulso.classList.add('piscar');
       setTimeout(() => pulso.classList.remove('piscar'), 100);
     }, ms);
