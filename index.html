@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clube da Música • Plataforma High-End 3D & Audio Synth</title>
+<title>Clube da Música • Plataforma Interativa</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -12,7 +12,7 @@
 <!-- Canvas do Fundo 3D Interativo -->
 <canvas id="bg-canvas-3d"></canvas>
 
-<!-- Barra de Luzes Reativa (Efeito DMX) -->
+<!-- Barra de Luzes Reativa -->
 <div class="painel-luzes-dmx">
   <div class="luz-dmx" id="luz-1"></div>
   <div class="luz-dmx" id="luz-2"></div>
@@ -37,24 +37,24 @@
   </div>
   
   <div class="grupo-estilo-fundo">
-    <span class="rotulo-mini">Ambiente 3D:</span>
-    <button class="btn-tema-3d ativo" data-cor="0x3b82f6">🌌 Cosmos</button>
-    <button class="btn-tema-3d" data-cor="0xec4899">⚡ Neon Pro</button>
-    <button class="btn-tema-3d" data-cor="0x22c55e">🟢 Cyber Aurora</button>
+    <span class="rotulo-mini">Fundo 3D:</span>
+    <button class="btn-tema-3d ativo" data-tema="cosmos">🌌 Cosmos</button>
+    <button class="btn-tema-3d" data-tema="neon">⚡ Neon</button>
+    <button class="btn-tema-3d" data-tema="aurora">🟢 Aurora</button>
   </div>
 </nav>
 
-<!-- Cabeçalho Principal Dark High-End -->
+<!-- Cabeçalho Principal -->
 <header class="cabecalho">
   <div class="icone-animado" aria-hidden="true">🎼</div>
-  <h1>Clube da Música Ultra Pro</h1>
-  <p class="subtitulo">A experiência definitiva em síntese de áudio nativa, emulação física de cordas e ritmos em tempo real.</p>
+  <h1>Clube da Música</h1>
+  <p class="subtitulo">Aprenda e experimente instrumentos musicais de forma interativa diretamente no seu navegador.</p>
 
   <div class="banner-beneficios">
-    <span class="selo-beneficio">🎸 Karplus-String Engine</span>
-    <span class="selo-beneficio">🥁 Sequenciador de Ritmos</span>
-    <span class="selo-beneficio">💡 Efeito DMX Reativo</span>
-    <span class="selo-beneficio">📋 Quiz Profiler Pro</span>
+    <span class="selo-beneficio">🎸 Sons Reais</span>
+    <span class="selo-beneficio">🥁 Ritmos Automáticos</span>
+    <span class="selo-beneficio">💡 Efeitos Visuais</span>
+    <span class="selo-beneficio">📋 Quiz de Diagnóstico</span>
   </div>
 </header>
 
@@ -67,11 +67,11 @@
   <input type="radio" name="abas" id="aba-quiz" class="controle-oculto">
 
   <nav class="menu-abas" aria-label="Navegação Principal">
-    <label for="aba-catalogo" class="btn-aba" tabindex="0">🎸 Catálogo & Beats</label>
-    <label for="aba-estudio" class="btn-aba" tabindex="0">🎹 Estúdio & Gravador</label>
-    <label for="aba-ritmo" class="btn-aba" tabindex="0">🥁 Ritmo & Groovebox</label>
-    <label for="aba-afinador" class="btn-aba" tabindex="0">🎯 Laboratório de Afinação</label>
-    <label for="aba-quiz" class="btn-aba" tabindex="0">📋 Quiz Profiler 360°</label>
+    <label for="aba-catalogo" class="btn-aba" tabindex="0">🎸 Catálogo & Demonstrações</label>
+    <label for="aba-estudio" class="btn-aba" tabindex="0">🎹 Teclado & Gravador</label>
+    <label for="aba-ritmo" class="btn-aba" tabindex="0">🥁 Ritmos & Metrônomo</label>
+    <label for="aba-afinador" class="btn-aba" tabindex="0">🎯 Afinador</label>
+    <label for="aba-quiz" class="btn-aba" tabindex="0">📋 Quiz Diagnóstico</label>
   </nav>
 
   <!-- ABA 1: CATÁLOGO -->
@@ -88,83 +88,83 @@
       </div>
 
       <div class="filtro-grupo busca-box">
-        <input type="text" id="input-busca" placeholder="🔍 Buscar por instrumento..." class="input-texto">
+        <input type="text" id="input-busca" placeholder="🔍 Buscar instrumento..." class="input-texto">
       </div>
     </div>
 
     <div class="grade-instrumentos" id="grade-instrumentos">
-      <article class="card-instrumento" data-categoria="cordas" data-nome="violão acústico emulação">
-        <div class="tag-nivel facil">Emulação Física</div>
+      <article class="card-instrumento" data-categoria="cordas" data-nome="violao acústico">
+        <div class="tag-nivel facil">Cordas</div>
         <header class="card-cabecalho">
           <span class="emoji-instrumento" aria-hidden="true">🎸</span>
           <div>
-            <h2>Violão Acústico Pro</h2>
-            <span class="categoria">Cordas • Dedilhado & Base</span>
+            <h2>Violão Acústico</h2>
+            <span class="categoria">Cordas • Dedilhado</span>
           </div>
         </header>
-        <p class="descricao">Acordes dedilhados sintetizados com algoritmo de ressonância física Karplus-Strong.</p>
+        <p class="descricao">Aprenda a tocar dedilhados e acompanhamentos com simulação de ressonância natural.</p>
         <section class="bloco-audio">
-          <button class="btn-tocar-demo" data-tipo="violao">▶️ Ouvir Dedilhado Real</button>
+          <button class="btn-tocar-demo" data-tipo="violao">▶️ Ouvir Dedilhado</button>
         </section>
       </article>
 
-      <article class="card-instrumento" data-categoria="teclas" data-nome="piano e synth pro">
-        <div class="tag-nivel facil">Arpejos HD</div>
+      <article class="card-instrumento" data-categoria="teclas" data-nome="piano e teclado">
+        <div class="tag-nivel facil">Teclas</div>
         <header class="card-cabecalho">
           <span class="emoji-instrumento" aria-hidden="true">🎹</span>
           <div>
-            <h2>Synthesizer PolyPro</h2>
-            <span class="categoria">Teclas • Polifônico</span>
+            <h2>Teclado e Piano</h2>
+            <span class="categoria">Teclas • Harmonia</span>
           </div>
         </header>
-        <p class="descricao">Progressão harmônica completa com envelopes ADSR para som limpo e cristalino.</p>
+        <p class="descricao">Progressões de acordes e melodia para entender harmonia e estrutura musical.</p>
         <section class="bloco-audio">
-          <button class="btn-tocar-demo" data-tipo="teclado">▶️ Ouvir Progressão Harmônica</button>
+          <button class="btn-tocar-demo" data-tipo="teclado">▶️ Ouvir Acordes</button>
         </section>
       </article>
 
-      <article class="card-instrumento" data-categoria="percussao" data-nome="bateria ritmo completo groove">
-        <div class="tag-nivel medio">Beat Completo</div>
+      <article class="card-instrumento" data-categoria="percussao" data-nome="bateria e ritmo">
+        <div class="tag-nivel medio">Percussão</div>
         <header class="card-cabecalho">
           <span class="emoji-instrumento" aria-hidden="true">🥁</span>
           <div>
-            <h2>Groovebox Percussiva</h2>
-            <span class="categoria">Percussão • Rhythm Beat</span>
+            <h2>Bateria Comercial</h2>
+            <span class="categoria">Percussão • Ritmo</span>
           </div>
         </header>
-        <p class="descricao">Ritmo real em execução sincronizada (Bumbo, Caixa, Hi-Hat e Tom).</p>
+        <p class="descricao">Acompanhamento rítmico com bumbo, caixa e pratos para marcar o tempo das músicas.</p>
         <section class="bloco-audio">
-          <button class="btn-tocar-demo" data-tipo="bateria">▶️ Ouvir Beat de Bateria</button>
+          <button class="btn-tocar-demo" data-tipo="bateria">▶️ Ouvir Ritmo de Bateria</button>
         </section>
       </article>
     </div>
   </section>
 
-  <!-- ABA 2: ESTÚDIO COM GRAVADOR -->
+  <!-- ABA 2: TECLADO E GRAVADOR -->
   <section class="conteudo-aba secao-estudio-aba">
     <div class="caixa-interativa">
-      <h2>🎹 Estúdio Synthesizer & Gravador de Loops</h2>
-      <p>Toque via teclado físico (A, W, S, E, D, F, T, G, Y, H, U, J, K) ou clique nas teclas:</p>
+      <h2>🎹 Teclado Interativo e Gravador</h2>
+      <p>Use o teclado do computador (A, W, S, E, D, F, T, G, Y, H, U, J, K) ou clique nas teclas abaixo:</p>
 
       <div class="controles-estudio">
         <div class="grupo-estudio">
-          <label for="seletor-timbre"><strong>Timbre:</strong></label>
+          <label for="seletor-timbre"><strong>Som do Instrumento:</strong></label>
           <select id="seletor-timbre" class="seletor-custom">
-            <option value="sine">🎹 Piano Suave (Sine)</option>
-            <option value="sawtooth">⚡ Synth Neon (Saw)</option>
-            <option value="square">🎺 Retro Lead (Square)</option>
-            <option value="triangle">🎻 Warm Strings (Triangle)</option>
+            <option value="sine">🎹 Piano Suave</option>
+            <option value="sawtooth">⚡ Synth Moderno</option>
+            <option value="square">🎺 Flauta Clássica</option>
+            <option value="triangle">🎻 Cordas</option>
           </select>
         </div>
 
         <div class="grupo-estudio">
-          <label for="volume-estudio"><strong>Volume Master:</strong></label>
+          <label for="volume-estudio"><strong>Volume:</strong></label>
           <input type="range" id="volume-estudio" min="0" max="1" step="0.05" value="0.7">
         </div>
 
         <div class="grupo-estudio painel-gravador">
-          <button id="btn-record" class="btn-acao rec">🔴 Gravar Loop</button>
-          <button id="btn-play-loop" class="btn-acao secundario" disabled>▶️ Tocar Loop</button>
+          <button id="btn-record" class="btn-acao rec">🔴 Gravar</button>
+          <button id="btn-play-loop" class="btn-acao secundario" disabled>▶️ Reproduzir</button>
         </div>
       </div>
 
@@ -185,15 +185,15 @@
       </div>
 
       <div class="display-nota" id="display-nota">
-        <span>Status do Teclado: <strong>Pronto para tocar</strong></span>
+        <span>Nota Selecionada: <strong>Aguardando clique...</strong></span>
       </div>
     </div>
   </section>
 
-  <!-- ABA 3: SOUNDBOARD & RITMO -->
+  <!-- ABA 3: RITMOS & METRÔNOMO -->
   <section class="conteudo-aba secao-ritmo-aba">
     <div class="caixa-interativa">
-      <h2>🥁 Groovebox & Metrônomo Reativo</h2>
+      <h2>🥁 Painel de Ritmos e Metrônomo</h2>
       
       <div class="painel-metronomo">
         <div class="metronomo-visores">
@@ -212,27 +212,27 @@
 
       <hr class="divisor">
 
-      <h3>🎛️ Soundboard de Bateria Pro:</h3>
+      <h3>🎛️ Bateria Manual:</h3>
       <div class="soundboard-grid">
-        <button class="pad-som" data-som="bumbo">🥁<br>Bumbo Deep</button>
-        <button class="pad-som" data-som="caixa">💥<br>Caixa Snare</button>
-        <button class="pad-som" data-som="prato">🔔<br>Hi-Hat Open</button>
-        <button class="pad-som" data-som="palma">👏<br>Clap Synth</button>
-        <button class="pad-som" data-som="tom">🥁<br>Low Tom</button>
+        <button class="pad-som" data-som="bumbo">🥁<br>Bumbo</button>
+        <button class="pad-som" data-som="caixa">💥<br>Caixa</button>
+        <button class="pad-som" data-som="prato">🔔<br>Prato</button>
+        <button class="pad-som" data-som="palma">👏<br>Palma</button>
+        <button class="pad-som" data-som="tom">🥁<br>Tom-Tom</button>
       </div>
     </div>
   </section>
 
-  <!-- ABA 4: AFINAÇÃO -->
+  <!-- ABA 4: AFINADOR -->
   <section class="conteudo-aba secao-afinador-aba">
     <div class="caixa-interativa">
-      <h2>🎯 Laboratório de Afinação e Ouvido Relativo</h2>
+      <h2>🎯 Guia de Afinação</h2>
       <div class="painel-afinador">
         <div class="seletor-nota-afinador">
           <button class="btn-nota-ref" data-freq="261.63" data-nome="Dó (C4)" data-pos="15">Dó (C4)</button>
           <button class="btn-nota-ref" data-freq="329.63" data-nome="Mi (E4)" data-pos="35">Mi (E4)</button>
           <button class="btn-nota-ref" data-freq="392.00" data-nome="Sol (G4)" data-pos="50">Sol (G4 - Centro)</button>
-          <button class="btn-nota-ref" data-freq="440.00" data-nome="Lá (A4 - 440Hz)" data-pos="65">Lá (A4)</button>
+          <button class="btn-nota-ref" data-freq="440.00" data-nome="Lá (A4)" data-pos="65">Lá (A4 - Padrão)</button>
           <button class="btn-nota-ref" data-freq="493.88" data-nome="Si (B4)" data-pos="85">Si (B4)</button>
         </div>
 
@@ -242,66 +242,66 @@
         </div>
 
         <div class="status-afinador" id="status-afinador">
-          Selecione uma frequência de referência para aferir o tom.
+          Clique em uma nota acima para emitir a frequência de referência.
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ABA 5: QUIZ EXPANDIDO 360 PRO -->
+  <!-- ABA 5: QUIZ DIAGNÓSTICO -->
   <section class="conteudo-aba secao-quiz-aba">
     <div class="caixa-interativa">
-      <h2>📋 Quiz Profiler Musical 360°</h2>
-      <p>Responda às 5 perguntas estratégicas para descobrir o seu instrumento ideal:</p>
+      <h2>📋 Quiz de Recomendação de Instrumento</h2>
+      <p>Responda às 5 perguntas abaixo para ver qual instrumento combina mais com você:</p>
 
       <form id="quiz-form" onsubmit="return false;" class="quiz-completo">
         
         <fieldset class="quiz-pergunta">
-          <legend><strong>1. Qual seu principal objetivo com a música?</strong></legend>
+          <legend><strong>1. Qual seu objetivo principal com a música?</strong></legend>
           <div class="quiz-opcoes-grid">
-            <label class="card-opcao-quiz"><input type="radio" name="qp1" value="violao" checked> <span>🗣️ Acompanhar minha voz e tocar em reuniões.</span></label>
-            <label class="card-opcao-quiz"><input type="radio" name="qp1" value="teclado"> <span>🎼 Criar arranjos e entender harmonia profunda.</span></label>
-            <label class="card-opcao-quiz"><input type="radio" name="qp1" value="bateria"> <span>⚡ Energia, descarregar o estresse e ditar o ritmo.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp1" value="violao" checked> <span>🗣️ Tocar músicas conhecidas e cantar junto.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp1" value="teclado"> <span>🎼 Entender notas, acordes e criar arranjos.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp1" value="bateria"> <span>⚡ Tocar com bastante ritmo e energia.</span></label>
           </div>
         </fieldset>
 
         <fieldset class="quiz-pergunta">
           <legend><strong>2. Quanto tempo você pretende praticar por dia?</strong></legend>
           <div class="quiz-opcoes-grid">
-            <label class="card-opcao-quiz"><input type="radio" name="qp2" value="violao" checked> <span>⏱️ 15 a 30 minutos (Treino rápido e prático).</span></label>
-            <label class="card-opcao-quiz"><input type="radio" name="qp2" value="teclado"> <span>⌛ 30 a 60 minutos (Prática focada no teclado).</span></label>
-            <label class="card-opcao-quiz"><input type="radio" name="qp2" value="bateria"> <span>🔥 Mais de 1 hora (Treino físico e rítmico pesado).</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp2" value="violao" checked> <span>⏱️ 15 a 30 minutos por dia.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp2" value="teclado"> <span>⌛ 30 a 60 minutos por dia.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp2" value="bateria"> <span>🔥 Mais de 1 hora por dia.</span></label>
           </div>
         </fieldset>
 
         <fieldset class="quiz-pergunta">
-          <legend><strong>3. Que tipo de sonoridade mais te arrepia?</strong></legend>
+          <legend><strong>3. Que tipo de som você prefere?</strong></legend>
           <div class="quiz-opcoes-grid">
-            <label class="card-opcao-quiz"><input type="radio" name="qp3" value="violao" checked> <span>🌾 Sons orgânicos, madeira, cordas e acústico.</span></label>
-            <label class="card-opcao-quiz"><input type="radio" name="qp3" value="teclado"> <span>🔮 Texturas eletrônicas, pianos e síntese modernista.</span></label>
-            <label class="card-opcao-quiz"><input type="radio" name="qp3" value="bateria"> <span>💥 Impacto grave, batidas marcantes e pulsação.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp3" value="violao" checked> <span>🌾 Som suave e acústico.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp3" value="teclado"> <span>🔮 Sons variados de piano e sintetizador.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp3" value="bateria"> <span>💥 Batidas marcantes e percussão.</span></label>
           </div>
         </fieldset>
 
         <fieldset class="quiz-pergunta">
-          <legend><strong>4. Qual seu ambiente preferido de estudo?</strong></legend>
+          <legend><strong>4. Onde você prefere praticar?</strong></legend>
           <div class="quiz-opcoes-grid">
-            <label class="card-opcao-quiz"><input type="radio" name="qp4" value="violao" checked> <span>🏕️ Qualquer lugar (Quero facilidade de transporte).</span></label>
-            <label class="card-opcao-quiz"><input type="radio" name="qp4" value="teclado"> <span>🏠 Meu quarto/estúdio de criação em casa.</span></label>
-            <label class="card-opcao-quiz"><input type="radio" name="qp4" value="bateria"> <span>🎧 Com fones de ouvido para não incomodar vizinhos.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp4" value="violao" checked> <span>🏕️ Em qualquer lugar (fácil de transportar).</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp4" value="teclado"> <span>🏠 No meu quarto ou mesa de estudo.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp4" value="bateria"> <span>🎧 Com fones de ouvido para treinar sem incomodar.</span></label>
           </div>
         </fieldset>
 
         <fieldset class="quiz-pergunta">
-          <legend><strong>5. Como você se considera em relação ao ritmo?</strong></legend>
+          <legend><strong>5. Como você se sente em relação ao ritmo?</strong></legend>
           <div class="quiz-opcoes-grid">
-            <label class="card-opcao-quiz"><input type="radio" name="qp5" value="violao" checked> <span>🎵 Acompanho o ritmo sem dificuldades.</span></label>
-            <label class="card-opcao-quiz"><input type="radio" name="qp5" value="teclado"> <span>🧠 Sou analítico e gosto de ver as notas no papel/tela.</span></label>
-            <label class="card-opcao-quiz"><input type="radio" name="qp5" value="bateria"> <span>🥁 Respiro ritmo, bato o pé o tempo todo nas músicas!</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp5" value="violao" checked> <span>🎵 Acompanho o ritmo naturalmente.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp5" value="teclado"> <span>🧠 Gosto de ver a representação das notas na minha frente.</span></label>
+            <label class="card-opcao-quiz"><input type="radio" name="qp5" value="bateria"> <span>🥁 Tenho muita facilidade para bater o pé no tempo certo.</span></label>
           </div>
         </fieldset>
 
-        <button type="button" id="btn-calcular-quiz" class="btn-acao primario-grande">✨ Processar Diagnóstico 360°</button>
+        <button type="button" id="btn-calcular-quiz" class="btn-acao primario-grande">✨ Ver Recomendação</button>
       </form>
 
       <div class="painel-resultado-quiz" id="painel-resultado-quiz" style="display: none;">
@@ -309,7 +309,7 @@
           <span class="emoji-resultado" id="quiz-emoji">🎸</span>
           <div>
             <h3 id="quiz-titulo-resultado">Seu Instrumento Ideal</h3>
-            <p id="quiz-desc-resultado">Analisando dados...</p>
+            <p id="quiz-desc-resultado">Analisando respostas...</p>
             <div class="barras-compatibilidade" id="barras-compatibilidade"></div>
           </div>
         </div>
@@ -320,7 +320,7 @@
 </div>
 
 <footer class="rodape">
-  <p>🌟 <strong>Clube da Música Dark Pro High-End</strong> • Engine Web Audio API & Synthesizer Pro.</p>
+  <p>🌟 <strong>Clube da Música</strong> • Plataforma Educacional de Música Interativa.</p>
 </footer>
 
 <script src="script.js"></script>
