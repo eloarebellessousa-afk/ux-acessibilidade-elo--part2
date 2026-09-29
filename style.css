@@ -3,35 +3,35 @@
    ========================================================================== */
 
 :root {
-  /* Paleta de Cores Premium */
+  /* Paleta Futurista e Acolhedora */
   --bg-dark: #090b10;
-  --bg-card: rgba(22, 27, 38, 0.7);
-  --bg-card-hover: rgba(33, 41, 57, 0.85);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-highlight: rgba(120, 119, 198, 0.4);
+  --bg-card: rgba(22, 27, 38, 0.75);
+  --bg-card-hover: rgba(33, 41, 57, 0.9);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-highlight: rgba(121, 82, 245, 0.5);
   
   --primary-accent: #7952f5;
   --primary-gradient: linear-gradient(135deg, #7952f5 0%, #4f46e5 100%);
   --secondary-accent: #00f2fe;
   --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
+  --text-muted: #a1a1aa;
   --text-bright: #ffffff;
   
   /* Acessibilidade & Foco */
   --focus-ring: 4px solid #00f2fe;
   --font-base-size: 16px;
   
-  /* Fontes */
+  /* Tipografia */
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-heading: 'Space Grotesk', system-ui, -apple-system, sans-serif;
   
-  /* Animações e Transições */
+  /* Transições Fluidas */
   --transition-fast: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* --------------------------------------------------------------------------
-   ESTILOS GLOBAIS E RESET
+   RESET & REGRAS GLOBAIS
    -------------------------------------------------------------------------- */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -55,7 +55,26 @@ body {
   position: relative;
 }
 
-/* Foco de Acessibilidade Visível e Forte */
+/* Skip Link */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  background: var(--secondary-accent);
+  color: #000;
+  padding: 0.75rem 1.5rem;
+  font-weight: 700;
+  border-radius: 8px;
+  z-index: 9999;
+  text-decoration: none;
+  transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Indicador de Foco Acessível Visível */
 :focus-visible {
   outline: var(--focus-ring) !important;
   outline-offset: 4px;
@@ -85,7 +104,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   BARRA SUPERIOR (TOP NAV)
+   BARRA DE NAVEGAÇÃO SUPERIOR
    -------------------------------------------------------------------------- */
 .top-nav {
   position: fixed;
@@ -97,7 +116,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 2rem;
-  background: rgba(9, 11, 16, 0.8);
+  background: rgba(9, 11, 16, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
   z-index: 1000;
@@ -116,6 +135,23 @@ body {
   color: var(--primary-accent);
 }
 
+.main-nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: color var(--transition-fast);
+}
+
+.nav-link:hover {
+  color: var(--text-bright);
+}
+
 .nav-accessibility-quick {
   display: flex;
   align-items: center;
@@ -123,7 +159,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   BOTÕES E COMPONENTES GENÉRICOS
+   BOTÕES E COMPONENTES DE DESIGN
    -------------------------------------------------------------------------- */
 .pill-btn {
   background: rgba(255, 255, 255, 0.05);
@@ -163,8 +199,8 @@ body {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-color);
   color: var(--text-main);
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -315,13 +351,12 @@ section {
   flex-wrap: wrap;
 }
 
-/* Palco Interativo do Hero */
+/* Stage Interativo */
 .hero-interactive-stage {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  position: relative;
 }
 
 .stage-orb {
@@ -378,7 +413,7 @@ section {
    -------------------------------------------------------------------------- */
 .stories-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
 }
 
@@ -401,7 +436,7 @@ section {
 }
 
 .story-card h3 {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   color: var(--text-bright);
   margin-bottom: 0.75rem;
 }
@@ -418,7 +453,6 @@ section {
   background: rgba(15, 20, 30, 0.6);
   border-radius: 24px;
   border: 1px solid var(--border-color);
-  margin-top: 2rem;
 }
 
 .hub-container {
@@ -432,7 +466,6 @@ section {
   border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-
 }
 
 .control-group legend {
@@ -474,11 +507,7 @@ section {
   border-color: var(--primary-accent);
 }
 
-.control-btn.highlight {
-  border-color: var(--secondary-accent);
-}
-
-.range-label {
+.range-wrapper {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -528,7 +557,6 @@ section {
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-
 }
 
 .preview-status {
@@ -539,7 +567,7 @@ section {
 }
 
 /* --------------------------------------------------------------------------
-   4. HUB MUSICAL POR EXPERIÊNCIAS (NAV MAP)
+   4. HUB MUSICAL POR EXPERIÊNCIAS
    -------------------------------------------------------------------------- */
 .hub-nav-grid {
   display: grid;
@@ -558,8 +586,6 @@ section {
   text-decoration: none;
   color: inherit;
   transition: all var(--transition-smooth);
-  position: relative;
-  overflow: hidden;
 }
 
 .experience-card:hover {
@@ -604,7 +630,7 @@ section {
 }
 
 /* --------------------------------------------------------------------------
-   5. SALA DE CRIAÇÃO (MEU ESTÚDIO)
+   5. MEU ESTÚDIO DIGITAL
    -------------------------------------------------------------------------- */
 .studio-section {
   background: rgba(12, 16, 25, 0.8);
@@ -681,7 +707,6 @@ section {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-
 }
 
 .record-btn .dot {
@@ -800,7 +825,7 @@ section {
 }
 
 /* --------------------------------------------------------------------------
-   7. BATERIA (PADS)
+   7. BATERIA & PADS
    -------------------------------------------------------------------------- */
 .drum-actions-bar {
   display: flex;
@@ -858,7 +883,7 @@ section {
 }
 
 /* --------------------------------------------------------------------------
-   8. DESCUBRA SEU SOM
+   8. PERFIL MUSICAL
    -------------------------------------------------------------------------- */
 .discovery-card-container {
   background: var(--bg-card);
@@ -1192,7 +1217,7 @@ section {
 }
 
 /* --------------------------------------------------------------------------
-   MODO SIMPLES & ACESSIBILIDADE SOBRESCRITAS
+   MODO SIMPLES & ACESSIBILIDADE
    -------------------------------------------------------------------------- */
 .simple-banner {
   background: var(--primary-accent);
@@ -1212,7 +1237,7 @@ section {
   margin: 0 auto;
 }
 
-/* Estado Quando Modo Simples Ativo */
+/* Modo Simples Reorganizado */
 body[data-simple-mode="true"] {
   --bg-dark: #000000;
   --bg-card: #111111;
@@ -1220,10 +1245,7 @@ body[data-simple-mode="true"] {
   --text-muted: #e5e7eb;
 }
 
-body[data-simple-mode="true"] #canvas-container {
-  display: none !important;
-}
-
+body[data-simple-mode="true"] #canvas-container,
 body[data-simple-mode="true"] .hero-interactive-stage,
 body[data-simple-mode="true"] .stories-grid,
 body[data-simple-mode="true"] .manifesto-section {
@@ -1234,7 +1256,7 @@ body[data-simple-mode="true"] section {
   padding: 3rem 1.5rem;
 }
 
-body[data-simple-mode="true"] .btn-primary,
+body[data-simple-mode="true"] button,
 body[data-simple-mode="true"] .pill-btn,
 body[data-simple-mode="true"] .control-btn {
   padding: 1.25rem 2rem !important;
@@ -1242,7 +1264,7 @@ body[data-simple-mode="true"] .control-btn {
   border: 2px solid #fff !important;
 }
 
-/* Alto Contraste */
+/* Alto Contraste Semântico */
 body[data-high-contrast="true"] {
   --bg-dark: #000000;
   --bg-card: #000000;
@@ -1253,7 +1275,8 @@ body[data-high-contrast="true"] {
   --primary-accent: #ffff00;
 }
 
-body[data-high-contrast="true"] button {
+body[data-high-contrast="true"] button,
+body[data-high-contrast="true"] a {
   border: 3px solid #fff !important;
   color: #fff !important;
   background: #000 !important;
@@ -1267,10 +1290,20 @@ body[data-soft-contrast="true"] {
   --primary-accent: #818cf8;
 }
 
+/* Controles Maiores */
+body[data-large-controls="true"] button,
+body[data-large-controls="true"] .pill-btn {
+  transform: scale(1.15);
+  margin: 0.25rem;
+}
+
 /* Redução de Movimento */
-body[data-motion-reduce="true"] * {
-  animation: none !important;
-  transition: none !important;
+body[data-motion-reduce="true"] *,
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /* FOOTER */
@@ -1282,7 +1315,7 @@ body[data-motion-reduce="true"] * {
   font-size: 0.9rem;
 }
 
-/* RESPONSIVIDADE MOBILE */
+/* RESPONSIVIDADE MOBILE & TABLET */
 @media (max-width: 900px) {
   .hero-container, .hub-container {
     grid-template-columns: 1fr;
@@ -1294,6 +1327,10 @@ body[data-motion-reduce="true"] * {
   
   .top-nav {
     padding: 0 1rem;
+  }
+  
+  .main-nav-links {
+    display: none;
   }
   
   .nav-accessibility-quick .label {
