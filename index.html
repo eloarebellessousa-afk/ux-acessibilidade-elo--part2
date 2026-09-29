@@ -27,7 +27,7 @@
   <!-- Região Acessível de Anúncios para Leitores de Tela -->
   <div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- Barra do Modo Simples Persistente (Aparece quando ativado) -->
+  <!-- Barra do Modo Simples Persistente -->
   <div id="simple-mode-banner" class="simple-banner" hidden>
     <div class="banner-content">
       <span>✨ <strong>Modo Simples Ativo:</strong> Interface limpa, foco ampliado e navegação direta.</span>
@@ -62,7 +62,7 @@
   <!-- Conteúdo Principal -->
   <main id="main-content">
 
-    <!-- 1. HERO SECTION (APRESENTAÇÃO IMERSIVA) -->
+    <!-- 1. HERO SECTION -->
     <section id="hero" class="hero-section" aria-label="Apresentação Inicial">
       <div class="hero-container">
         <div class="hero-text-block">
@@ -198,7 +198,7 @@
           <div class="exp-icon" aria-hidden="true">🎼</div>
           <div class="exp-info">
             <h3>CRIAR</h3>
-            <p>Combine instrumentos, grave melodias e analise frequências no Estúdio Digital.</p>
+            <p>Combine timbres, grave melodias e analise frequências no Estúdio Digital.</p>
           </div>
           <span class="exp-arrow" aria-hidden="true">→</span>
         </a>
@@ -234,7 +234,7 @@
           <div class="exp-icon" aria-hidden="true">🎸</div>
           <div class="exp-info">
             <h3>EXPLORAR</h3>
-            <p>Catálogo curado com 12 instrumentos, timbres demonstrativos e curiosidades.</p>
+            <p>Catálogo curado com os 4 instrumentos principais, demonstrações e curiosidades.</p>
           </div>
           <span class="exp-arrow" aria-hidden="true">→</span>
         </a>
@@ -243,7 +243,7 @@
           <div class="exp-icon" aria-hidden="true">🧠</div>
           <div class="exp-info">
             <h3>APRENDER</h3>
-            <p>Quiz interativo com 8 perguntas dinâmicas para testar afinidade sonora.</p>
+            <p>Quiz interativo com 8 perguntas dinâmicas para testar sua afinidade sonora.</p>
           </div>
           <span class="exp-arrow" aria-hidden="true">→</span>
         </a>
@@ -307,8 +307,8 @@
           <span class="current-note">Pressione uma tecla para emitir um som</span>
         </div>
 
-        <div class="piano-keys-wrapper" id="piano-keys-wrapper" role="region" aria-label="Teclas do Piano">
-          <!-- Teclas inseridas dinamicamente -->
+        <div class="piano-keys-wrapper" id="piano-keys-wrapper" role="region" aria-label="Teclas do Teclado">
+          <!-- Teclas inseridas dinamicamente via JS -->
         </div>
       </div>
     </section>
@@ -369,8 +369,8 @@
           <div class="sound-mood-options">
             <button class="mood-btn" data-mood="calm">🌙 Sons orgânicos, fluidos, tranquilos e suaves</button>
             <button class="mood-btn" data-mood="energetic">⚡ Ritmos marcantes, pulsantes e vibrantes</button>
-            <button class="mood-btn" data-mood="creative">🎵 Harmonies ricas, estruturas complexas e melódicas</button>
-            <button class="mood-btn" data-mood="curious">🎻 Timbres exóticos, instrumentos do mundo e texturas</button>
+            <button class="mood-btn" data-mood="creative">🎵 Harmonies ricas, estruturas dinâmicas e melódicas</button>
+            <button class="mood-btn" data-mood="curious">🎻 Timbres expressivos, clássicos e cheios de nuances</button>
           </div>
         </div>
 
@@ -389,7 +389,7 @@
       </div>
     </section>
 
-    <!-- 9. CATÁLOGO INTERATIVO CURADO (12 INSTRUMENTOS) -->
+    <!-- 9. CATÁLOGO INTERATIVO CURADO (4 INSTRUMENTOS) -->
     <section id="catalogo-secao" class="catalog-section" aria-label="Catálogo de Instrumentos">
       <div class="section-header">
         <span class="section-kicker">🎸 Acervo Sonoro</span>
@@ -397,19 +397,16 @@
         <p class="section-sub">Filtre por categorias, explore a história e escute demonstrações em áudio.</p>
       </div>
 
-      <!-- Filtros Semânticos de Categoria (Aria-Pressed) -->
+      <!-- Filtros Semânticos de Categoria -->
       <div class="catalog-filters" aria-label="Filtrar catálogo por família de instrumentos">
-        <button class="filter-btn active" data-filter="all" aria-pressed="true">Todos (12)</button>
-        <button class="filter-btn" data-filter="teclas" aria-pressed="false">🎹 Teclas</button>
+        <button class="filter-btn active" data-filter="all" aria-pressed="true">Todos (4)</button>
         <button class="filter-btn" data-filter="cordas" aria-pressed="false">🎸 Cordas</button>
+        <button class="filter-btn" data-filter="teclas" aria-pressed="false">🎹 Teclas</button>
         <button class="filter-btn" data-filter="percussao" aria-pressed="false">🥁 Percussão</button>
-        <button class="filter-btn" data-filter="sopros" aria-pressed="false">🎺 Sopros</button>
-        <button class="filter-btn" data-filter="eletronicos" aria-pressed="false">🎛️ Eletrônicos</button>
-        <button class="filter-btn" data-filter="mundo" aria-pressed="false">🌎 Do Mundo</button>
       </div>
 
       <div class="catalog-grid" id="catalog-grid">
-        <!-- Inserido dinamicamente via JS sem onclick inline -->
+        <!-- Inserido dinamicamente via JS -->
       </div>
     </section>
 
@@ -420,7 +417,7 @@
       </div>
     </dialog>
 
-    <!-- 10. QUIZ MUSICAL REAL DE APRENDIZADO (8 PERGUNTAS) -->
+    <!-- 10. QUIZ MUSICAL DE APRENDIZADO (8 PERGUNTAS) -->
     <section id="quiz-secao" class="quiz-section" aria-label="Quiz Musical">
       <div class="section-header">
         <span class="section-kicker">🧠 Desafio de Conhecimento</span>
@@ -479,9 +476,9 @@
   <!-- MODAL DO PERCURSO GUIADO (ONBOARDING) -->
   <dialog id="guided-tour-modal" class="tour-modal" aria-labelledby="tour-step-title">
     <div class="tour-modal-content">
-      <span class="tour-step-badge" id="tour-step-badge">Passo 1 de 5</span>
+      <span class="tour-step-badge" id="tour-step-badge">Boas-vindas</span>
       <h2 id="tour-step-title">Boas-vindas ao Sonora!</h2>
-      <p id="tour-step-desc">Deseja realizar um percurso rápido para ajustar as configurações de acessibilidade antes de começar?</p>
+      <p id="tour-step-desc">Deseja realizar um percurso rápido para conhecer a plataforma e ajustar as opções de acessibilidade?</p>
       
       <div class="tour-modal-actions">
         <button id="btn-start-tour" class="btn-primary">Iniciar Percurso Guiado</button>
