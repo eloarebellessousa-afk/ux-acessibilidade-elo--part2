@@ -10,10 +10,10 @@
 <body>
 
   <!-- Canvas do Fundo 3D -->
-  <canvas id="bg-canvas-3d"></canvas>
+  <canvas id="bg-canvas-3d" aria-hidden="true"></canvas>
 
   <!-- Luzes DMX Visual -->
-  <div class="painel-dmx">
+  <div class="painel-dmx" aria-hidden="true">
     <div class="luz-dmx"></div>
     <div class="luz-dmx"></div>
     <div class="luz-dmx"></div>
@@ -22,41 +22,47 @@
 
   <main class="container">
     <header>
+      <!-- Painel de Acessibilidade -->
+      <div class="barra-acessibilidade" role="region" aria-label="Recursos de Acessibilidade">
+        <button id="btn-contraste" aria-label="Alternar Alto Contraste">👁️ Alto Contraste</button>
+        <button id="btn-ler-pagina" aria-label="Ouvir resumo da página">🔊 Ler Resumo</button>
+      </div>
+
       <h1>🎶 Estúdio Musical Interativo</h1>
       <p>Explora instrumentos, cria sons e testa os teus conhecimentos</p>
       
       <div class="controles-topo">
         <div class="grupo-botoes">
-          <button id="btn-fonte-diminuir">A-</button>
-          <button id="btn-fonte-aumentar">A+</button>
+          <button id="btn-fonte-diminuir" aria-label="Diminuir tamanho do texto">A-</button>
+          <button id="btn-fonte-aumentar" aria-label="Aumentar tamanho do texto">A+</button>
         </div>
         <div class="grupo-temas">
-          <button class="btn-tema-3d ativo" data-tema="cosmos">Cosmos</button>
-          <button class="btn-tema-3d" data-tema="neon">Neon</button>
-          <button class="btn-tema-3d" data-tema="aurora">Aurora</button>
+          <button class="btn-tema-3d ativo" data-tema="cosmos" aria-label="Tema Visual Cosmos">Cosmos</button>
+          <button class="btn-tema-3d" data-tema="neon" aria-label="Tema Visual Neon">Neon</button>
+          <button class="btn-tema-3d" data-tema="aurora" aria-label="Tema Visual Aurora">Aurora</button>
         </div>
       </div>
     </header>
 
     <!-- Bateria Manual -->
-    <section class="secao-bateria">
+    <section class="secao-bateria" aria-label="Sessão Bateria Manual">
       <h2>🥁 Bateria Manual</h2>
       <div class="grid-pads">
-        <button class="pad-som" data-som="bumbo">Bumbo</button>
-        <button class="pad-som" data-som="caixa">Caixa</button>
-        <button class="pad-som" data-som="prato">Prato</button>
-        <button class="pad-som" data-som="tom">Tom-Tom</button>
-        <button class="pad-som" data-som="palma">Palma</button>
+        <button class="pad-som" data-som="bumbo" aria-label="Som de Bumbo">Bumbo</button>
+        <button class="pad-som" data-som="caixa" aria-label="Som de Caixa">Caixa</button>
+        <button class="pad-som" data-som="prato" aria-label="Som de Prato">Prato</button>
+        <button class="pad-som" data-som="tom" aria-label="Som de Tom-Tom">Tom-Tom</button>
+        <button class="pad-som" data-som="palma" aria-label="Som de Palma">Palma</button>
       </div>
     </section>
 
     <!-- Teclado Virtual -->
-    <section class="secao-teclado">
+    <section class="secao-teclado" aria-label="Sessão Teclado Interativo">
       <h2>🎹 Teclado Interativo</h2>
       <div class="controles-teclado">
         <div class="grupo-input">
           <label for="seletor-timbre">Timbre:</label>
-          <select id="seletor-timbre">
+          <select id="seletor-timbre" aria-label="Selecionar timbre do som">
             <option value="sine">Suave (Senoide)</option>
             <option value="triangle">Encorpado (Triângulo)</option>
             <option value="square">Retro (Quadrada)</option>
@@ -66,65 +72,65 @@
         
         <div class="grupo-input">
           <label for="volume-estudio">Volume:</label>
-          <input type="range" id="volume-estudio" min="0" max="1" step="0.05" value="0.7">
+          <input type="range" id="volume-estudio" min="0" max="1" step="0.05" value="0.7" aria-label="Controle de volume master">
         </div>
       </div>
 
-      <div class="teclado-container">
-        <button class="tecla" data-nota="261.63" data-nome="Dó (C4)" data-key="a">A<span>Dó</span></button>
-        <button class="tecla" data-nota="293.66" data-nome="Ré (D4)" data-key="s">S<span>Ré</span></button>
-        <button class="tecla" data-nota="329.63" data-nome="Mi (E4)" data-key="d">D<span>Mi</span></button>
-        <button class="tecla" data-nota="349.23" data-nome="Fá (F4)" data-key="f">F<span>Fá</span></button>
-        <button class="tecla" data-nota="392.00" data-nome="Sol (G4)" data-key="g">G<span>Sol</span></button>
-        <button class="tecla" data-nota="440.00" data-nome="Lá (A4)" data-key="h">H<span>Lá</span></button>
-        <button class="tecla" data-nota="493.88" data-nome="Si (B4)" data-key="j">J<span>Si</span></button>
-        <button class="tecla" data-nota="523.25" data-nome="Dó (C5)" data-key="k">K<span>Dó</span></button>
+      <div class="teclado-container" role="region" aria-label="Teclado Musical">
+        <button class="tecla" data-nota="261.63" data-nome="Dó (C4)" data-key="a" aria-label="Tecla Dó">A<span>Dó</span></button>
+        <button class="tecla" data-nota="293.66" data-nome="Ré (D4)" data-key="s" aria-label="Tecla Ré">S<span>Ré</span></button>
+        <button class="tecla" data-nota="329.63" data-nome="Mi (E4)" data-key="d" aria-label="Tecla Mi">D<span>Mi</span></button>
+        <button class="tecla" data-nota="349.23" data-nome="Fá (F4)" data-key="f" aria-label="Tecla Fá">F<span>Fá</span></button>
+        <button class="tecla" data-nota="392.00" data-nome="Sol (G4)" data-key="g" aria-label="Tecla Sol">G<span>Sol</span></button>
+        <button class="tecla" data-nota="440.00" data-nome="Lá (A4)" data-key="h" aria-label="Tecla Lá">H<span>Lá</span></button>
+        <button class="tecla" data-nota="493.88" data-nome="Si (B4)" data-key="j" aria-label="Tecla Si">J<span>Si</span></button>
+        <button class="tecla" data-nota="523.25" data-nome="Dó (C5)" data-key="k" aria-label="Tecla Dó Agudo">K<span>Dó</span></button>
       </div>
-      <div id="display-nota">Clica numa tecla ou usa o teclado do PC</div>
+      <div id="display-nota" aria-live="polite">Clica numa tecla ou usa o teclado do PC</div>
 
       <div class="gravador-container">
-        <button id="btn-record">🔴 Gravar</button>
-        <button id="btn-play-loop" disabled>▶️ Reproduzir</button>
+        <button id="btn-record" aria-label="Iniciar ou parar gravação de áudio">🔴 Gravar</button>
+        <button id="btn-play-loop" disabled aria-label="Reproduzir gravação">▶️ Reproduzir</button>
       </div>
     </section>
 
     <!-- Ferramentas: Metrônomo e Afinador -->
-    <section class="secao-ferramentas">
+    <section class="secao-ferramentas" aria-label="Ferramentas Musicais">
       <div class="bloco-ferramenta">
         <h3>⏱️ Metrônomo</h3>
         <div class="controles-inline">
-          <input type="range" id="slider-bpm" min="40" max="208" value="120">
+          <input type="range" id="slider-bpm" min="40" max="208" value="120" aria-label="Ajustar BPM do metrônomo">
           <span id="val-bpm">120</span> BPM
         </div>
         <div class="botoes-inline">
-          <button id="btn-iniciar-metronomo">Iniciar</button>
-          <button id="btn-parar-metronomo">Parar</button>
+          <button id="btn-iniciar-metronomo" aria-label="Iniciar metrônomo">Iniciar</button>
+          <button id="btn-parar-metronomo" aria-label="Parar metrônomo">Parar</button>
         </div>
-        <div id="pulso-visual"></div>
+        <div id="pulso-visual" aria-hidden="true"></div>
       </div>
 
       <div class="bloco-ferramenta">
         <h3>🎯 Afinador</h3>
         <div class="grid-ref">
-          <button class="btn-nota-ref" data-freq="82.41" data-nome="E2" data-pos="10">E2</button>
-          <button class="btn-nota-ref" data-freq="110.00" data-nome="A2" data-pos="30">A2</button>
-          <button class="btn-nota-ref" data-freq="146.83" data-nome="D3" data-pos="50">D3</button>
-          <button class="btn-nota-ref" data-freq="196.00" data-nome="G3" data-pos="70">G3</button>
-          <button class="btn-nota-ref" data-freq="440.00" data-nome="A4" data-pos="90">A4</button>
+          <button class="btn-nota-ref" data-freq="82.41" data-nome="E2" data-pos="10" aria-label="Nota Mi grave E2">E2</button>
+          <button class="btn-nota-ref" data-freq="110.00" data-nome="A2" data-pos="30" aria-label="Nota Lá A2">A2</button>
+          <button class="btn-nota-ref" data-freq="146.83" data-nome="D3" data-pos="50" aria-label="Nota Ré D3">D3</button>
+          <button class="btn-nota-ref" data-freq="196.00" data-nome="G3" data-pos="70" aria-label="Nota Sol G3">G3</button>
+          <button class="btn-nota-ref" data-freq="440.00" data-nome="A4" data-pos="90" aria-label="Nota Lá A4">A4</button>
         </div>
-        <div class="regua-afinador">
+        <div class="regua-afinador" aria-hidden="true">
           <div id="ponteiro-afinador"></div>
         </div>
-        <div id="status-afinador">Seleciona um tom de referência</div>
+        <div id="status-afinador" aria-live="polite">Seleciona um tom de referência</div>
       </div>
     </section>
 
     <!-- Catálogo de Instrumentos -->
-    <section class="secao-catalogo">
+    <section class="secao-catalogo" aria-label="Catálogo de Instrumentos">
       <h2>🎸 Catálogo Musical</h2>
       <div class="filtros-busca">
-        <input type="text" id="input-busca" placeholder="Pesquisar instrumento...">
-        <select id="filtro-categoria">
+        <input type="text" id="input-busca" placeholder="Pesquisar instrumento..." aria-label="Campo de pesquisa de instrumento">
+        <select id="filtro-categoria" aria-label="Filtrar por categoria de instrumento">
           <option value="todos">Todas as Categoria</option>
           <option value="cordas">Cordas</option>
           <option value="teclas">Teclas</option>
@@ -136,23 +142,23 @@
         <div class="card-instrumento" data-categoria="cordas" data-nome="violão acustico">
           <h3>Violão Acústico</h3>
           <p>Instrumento de cordas com ressonância acústica natural.</p>
-          <button class="btn-tocar-demo" data-tipo="violao">Ouvir Arpejo</button>
+          <button class="btn-tocar-demo" data-tipo="violao" aria-label="Ouvir demonstração de violão">Ouvir Arpejo</button>
         </div>
         <div class="card-instrumento" data-categoria="teclas" data-nome="piano teclado">
           <h3>Teclado / Piano</h3>
           <p>Versátil e essencial para harmonia e composição musical.</p>
-          <button class="btn-tocar-demo" data-tipo="teclado">Ouvir Melodia</button>
+          <button class="btn-tocar-demo" data-tipo="teclado" aria-label="Ouvir demonstração de teclado">Ouvir Melodia</button>
         </div>
         <div class="card-instrumento" data-categoria="percussao" data-nome="bateria">
           <h3>Bateria</h3>
           <p>A base rítmica de qualquer banda ou produção.</p>
-          <button class="btn-tocar-demo" data-tipo="bateria">Ouvir Beat</button>
+          <button class="btn-tocar-demo" data-tipo="bateria" aria-label="Ouvir demonstração de bateria">Ouvir Beat</button>
         </div>
       </div>
     </section>
 
     <!-- Quiz -->
-    <section class="secao-quiz">
+    <section class="secao-quiz" aria-label="Quiz de Recomendação de Instrumento">
       <h2>❓ Quiz: Instrumento Ideal</h2>
       <div id="quiz-form">
         <div class="pergunta">
@@ -167,10 +173,10 @@
           <label><input type="radio" name="qp2" value="teclado"> Num espaço organizado com partitura</label>
           <label><input type="radio" name="qp2" value="bateria"> Com baquetas descarregando energia</label>
         </div>
-        <button id="btn-calcular-quiz">Ver Resultado</button>
+        <button id="btn-calcular-quiz" aria-label="Calcular resultado do quiz">Ver Resultado</button>
       </div>
 
-      <div id="painel-resultado-quiz" style="display: none;">
+      <div id="painel-resultado-quiz" style="display: none;" aria-live="polite">
         <div id="quiz-emoji"></div>
         <h3 id="quiz-titulo-resultado"></h3>
         <p id="quiz-desc-resultado"></p>
