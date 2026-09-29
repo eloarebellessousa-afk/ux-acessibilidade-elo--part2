@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let mouseX = 0, mouseY = 0;
   let velRotacaoX = 0.001, velRotacaoY = 0.0015;
 
-  // Definições dos temas 3D
   const temas3D = {
     cosmos: { cor: 0x3b82f6, tamanho: 3.2, velX: 0.001, velY: 0.0015 },
     neon: { cor: 0xec4899, tamanho: 4.5, velX: 0.003, velY: 0.004 },
@@ -61,7 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
       camera.position.y += (-mouseY - camera.position.y) * 0.05;
       camera.lookAt(scene.position);
     }
-    renderer.render(scene, camera);
+    if (renderer && scene && camera) {
+      renderer.render(scene, camera);
+    }
   }
 
   window.addEventListener('resize', () => {
@@ -72,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Alternador de Temas 3D Funcional
+  // Troca de Temas
   document.querySelectorAll('.btn-tema-3d').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.btn-tema-3d').forEach(b => b.classList.remove('ativo'));
@@ -90,28 +91,144 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Ajuste de Fonte
+  let tamanhoFonteAtual = 100;
+  document.getElementById('btn-fonte-aumentar')?.addEventListener('click', () => {
+    if (tamanhoFonteAtual < 130) {
+      tamanhoFonteAtual += 5;
+      document.body.style.fontSize = `${tamanhoFonteAtual}%`;
+    }
+  });
+
+  document.getElementById('btn-fonte-diminuir')?.addEventListener('click', () => {
+    if (tamanhoFonteAtual > 85) {
+      tamanhoFonteAtual -= 5;
+      document.body.style.fontSize = `${tamanhoFonteAtual}%`;
+    }
+  });
+
   function dispararDMX() {
     const luzes = document.querySelectorAll('.luz-dmx');
+    if (luzes.length === 0) return;
     const idx = Math.floor(Math.random() * luzes.length);
     luzes[idx].classList.add('ativa');
     setTimeout(() => luzes[idx].classList.remove('ativa'), 120);
   }
 
   // ==========================================
-  // 2. SÍNTESE DE ÁUDIO (WEB AUDIO API)
+  // 2. SÍNTESE DE ÁUDIO
   // ==========================================
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
   let audioCtx = null;
 
   function obterAudioContext() {
-    if (!audioCtx) audioCtx = new AudioContext();
+    if (!audioCtx) audioCtx = new AudioCtxClass();
     if (audioCtx.state === 'suspended') audioCtx.resume();
     return audioCtx;
   }
 
-  // Simulação física de violão
+  function criarBufferRuido(ctx, duracao) {
+    const bufferSize = ctx.sampleRate * duracao;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    return buffer;
+  }
+
+  function tocarBateria(som) {
+    const ctx = obterAudioContext();
+    const now = ctx.currentTime;
+
+    if (som === 'bumbo') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.setValueAtTime(130, now);
+      osc.frequency.exponentialRampToValueAtTime(32, now + 0.08);
+      gain.gain.setValueAtTime(1.0, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else if (som === 'caixa') {
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(80, now + 0.07);
+      oscGain.gain.setValueAtTime(0.7, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      osc.connect(oscGain);
+      oscGain.connect(ctx.destination);
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = criarBufferRuido(ctx, 0.18);
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(1000, now);
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.7, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+
+      osc.start(now);
+      noise.start(now);
+      osc.stop(now + 0.18);
+      noise.stop(now + 0.18);
+    } else if (som === 'prato') {
+      const noise = ctx.createBufferSource();
+      noise.buffer = criarBufferRuido(ctx, 0.2);
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(6500, now);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.6, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      noise.start(now);
+      noise.stop(now + 0.1);
+    } else if (som === 'tom') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(120, now);
+      osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+      gain.gain.setValueAtTime(0.8, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } else if (som === 'palma') {
+      [0, 0.01, 0.02].forEach((delay) => {
+        const noise = ctx.createBufferSource();
+        noise.buffer = criarBufferRuido(ctx, 0.12);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1000, now + delay);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.5, now + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.1);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        noise.start(now + delay);
+        noise.stop(now + delay + 0.1);
+      });
+    }
+
+    dispararDMX();
+  }
+
   function tocarCordaViolao(freq, duracao = 1.2) {
     const ctx = obterAudioContext();
+    const now = ctx.currentTime;
     const bufferSize = Math.round(ctx.sampleRate / freq);
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -126,93 +243,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const filter = ctx.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.value = freq * 2;
+    filter.frequency.setValueAtTime(freq * 3, now);
+    filter.frequency.exponentialRampToValueAtTime(freq * 0.8, now + duracao);
 
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.8, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duracao);
+    gain.gain.setValueAtTime(0.6, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duracao);
 
     noiseSource.connect(filter);
     filter.connect(gain);
     gain.connect(ctx.destination);
 
-    noiseSource.start();
-    noiseSource.stop(ctx.currentTime + duracao);
+    noiseSource.start(now);
+    noiseSource.stop(now + duracao);
     dispararDMX();
   }
 
-  // Teclado/Sintetizador
   function tocarSom(freq, duracao = 0.8, tipo = null) {
     const ctx = obterAudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    const tipoSelecionado = tipo || document.getElementById('seletor-timbre')?.value || 'sine';
-    const volMaster = parseFloat(document.getElementById('volume-estudio')?.value || 0.7);
-
-    osc.type = tipoSelecionado;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(volMaster, ctx.currentTime + 0.03);
-    gain.gain.exponentialRampToValueAtTime(volMaster * 0.7, ctx.currentTime + 0.1);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duracao);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-    osc.stop(ctx.currentTime + duracao);
-    dispararDMX();
-  }
-
-  // Percussão/Bateria
-  function tocarBateria(som) {
-    const ctx = obterAudioContext();
     const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    const volMaster = parseFloat(document.getElementById('volume-estudio')?.value || 0.7);
+    const tipoSelecionado = tipo || document.getElementById('seletor-timbre')?.value || 'sine';
 
-    if (som === 'bumbo') {
-      osc.frequency.setValueAtTime(120, now);
-      osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.3);
-      gain.gain.setValueAtTime(1, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-      osc.connect(gain);
-      osc.start(now);
-      osc.stop(now + 0.3);
-    } else if (som === 'caixa') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(250, now);
-      gain.gain.setValueAtTime(0.8, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-      osc.connect(gain);
-      osc.start(now);
-      osc.stop(now + 0.2);
-    } else if (som === 'prato') {
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(800, now);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-      osc.connect(gain);
-      osc.start(now);
-      osc.stop(now + 0.1);
-    } else if (som === 'tom') {
-      osc.frequency.setValueAtTime(90, now);
-      osc.frequency.exponentialRampToValueAtTime(30, now + 0.25);
-      gain.gain.setValueAtTime(0.9, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-      osc.connect(gain);
-      osc.start(now);
-      osc.stop(now + 0.25);
-    } else {
-      tocarSom(450, 0.1, 'sine');
-    }
+    const osc1 = ctx.createOscillator();
+    osc1.type = tipoSelecionado;
+    osc1.frequency.setValueAtTime(freq, now);
+
+    const osc2 = ctx.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(freq * 1.002, now);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(volMaster, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(volMaster * 0.5, now + 0.2);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duracao);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
     gain.connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + duracao);
+    osc2.stop(now + duracao);
     dispararDMX();
   }
 
-  // Execução de Beat
   function tocarBeatBateria() {
     const bpm = 110;
     const tempoNota = (60 / bpm) / 2;
@@ -223,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Gravador de Sequências
+  // Gravador
   let gravando = false;
   let gravacao = [];
   let tempoInicio = 0;
@@ -268,7 +345,8 @@ document.addEventListener('DOMContentLoaded', () => {
       registrarNotaGravada(freq);
       tecla.classList.add('ativa');
       setTimeout(() => tecla.classList.remove('ativa'), 200);
-      document.getElementById('display-nota').innerHTML = `Nota: <strong>${nome} (${freq} Hz)</strong>`;
+      const display = document.getElementById('display-nota');
+      if (display) display.innerHTML = `Nota: <strong>${nome} (${freq} Hz)</strong>`;
     });
   });
 
@@ -277,6 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn && !e.repeat) btn.click();
   });
 
+  // Bateria
   document.querySelectorAll('.pad-som').forEach(pad => {
     pad.addEventListener('click', () => {
       pad.classList.add('hit');
@@ -285,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Catálogo
+  // Demos
   document.querySelectorAll('.btn-tocar-demo').forEach(btn => {
     btn.addEventListener('click', () => {
       const tipo = btn.dataset.tipo;
@@ -294,16 +373,14 @@ document.addEventListener('DOMContentLoaded', () => {
         arpejo.forEach((freq, i) => setTimeout(() => tocarCordaViolao(freq), i * 220));
       } else if (tipo === 'teclado') {
         const prog = [261.63, 329.63, 392.00, 493.88, 523.25];
-        prog.forEach((freq, i) => setTimeout(() => tocarSom(freq, 0.8, 'sawtooth'), i * 250));
+        prog.forEach((freq, i) => setTimeout(() => tocarSom(freq, 0.8, 'sine'), i * 250));
       } else {
         tocarBeatBateria();
       }
     });
   });
 
-  // ==========================================
-  // 3. METRÔNOMO & AFINADOR
-  // ==========================================
+  // Metrônomo
   let timerMetronomo = null;
   const sliderBpm = document.getElementById('slider-bpm');
   const valBpm = document.getElementById('val-bpm');
@@ -319,9 +396,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const pulso = document.getElementById('pulso-visual');
 
     timerMetronomo = setInterval(() => {
-      tocarSom(1000, 0.04, 'sine');
-      pulso.classList.add('piscar');
-      setTimeout(() => pulso.classList.remove('piscar'), 100);
+      tocarBateria('prato');
+      pulso?.classList.add('piscar');
+      setTimeout(() => pulso?.classList.remove('piscar'), 100);
     }, ms);
   });
 
@@ -335,14 +412,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const nome = btn.dataset.nome;
       const pos = btn.dataset.pos;
       tocarSom(freq, 1.2, 'sine');
-      document.getElementById('ponteiro-afinador').style.left = pos + '%';
-      document.getElementById('status-afinador').innerHTML = `Tom de Referência: <strong>${nome}</strong>`;
+      const ponteiro = document.getElementById('ponteiro-afinador');
+      const status = document.getElementById('status-afinador');
+      if (ponteiro) ponteiro.style.left = pos + '%';
+      if (status) status.innerHTML = `Tom de Referência: <strong>${nome}</strong>`;
     });
   });
 
-  // ==========================================
-  // 4. FILTRAGEM & QUIZ
-  // ==========================================
+  // Filtros
   const filtroCat = document.getElementById('filtro-categoria');
   const inputBusca = document.getElementById('input-busca');
 
@@ -363,9 +440,9 @@ document.addEventListener('DOMContentLoaded', () => {
   filtroCat?.addEventListener('change', filtrarCards);
   inputBusca?.addEventListener('keyup', filtrarCards);
 
-  // Cálculo do Quiz
+  // Quiz
   document.getElementById('btn-calcular-quiz')?.addEventListener('click', () => {
-    const respostas = ['qp1', 'qp2', 'qp3', 'qp4', 'qp5'];
+    const respostas = ['qp1', 'qp2'];
     let pontos = { violao: 0, teclado: 0, bateria: 0 };
 
     respostas.forEach(q => {
@@ -373,13 +450,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (el) pontos[el.value]++;
     });
 
-    const total = 5;
+    const total = 2;
     const pctViolao = Math.round((pontos.violao / total) * 100);
     const pctTeclado = Math.round((pontos.teclado / total) * 100);
     const pctBateria = Math.round((pontos.bateria / total) * 100);
 
     const res = document.getElementById('painel-resultado-quiz');
-    res.style.display = 'block';
+    if (res) res.style.display = 'block';
 
     let vencedor = 'violao';
     if (pontos.teclado > pontos.violao && pontos.teclado >= pontos.bateria) vencedor = 'teclado';
@@ -388,15 +465,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (vencedor === 'bateria') {
       document.getElementById('quiz-emoji').textContent = '🥁';
       document.getElementById('quiz-titulo-resultado').textContent = 'Recomendação: Bateria';
-      document.getElementById('quiz-desc-resultado').textContent = 'Seu foco em ritmo e energia indica forte afinidade com a bateria.';
+      document.getElementById('quiz-desc-resultado').textContent = 'O teu foco no ritmo indica forte afinidade com a bateria.';
     } else if (vencedor === 'teclado') {
       document.getElementById('quiz-emoji').textContent = '🎹';
       document.getElementById('quiz-titulo-resultado').textContent = 'Recomendação: Teclado ou Piano';
-      document.getElementById('quiz-desc-resultado').textContent = 'Sua preferência por harmonia e teoria combina com instrumentos de teclas.';
+      document.getElementById('quiz-desc-resultado').textContent = 'A tua preferência por harmonia combina com o teclado.';
     } else {
       document.getElementById('quiz-emoji').textContent = '🎸';
       document.getElementById('quiz-titulo-resultado').textContent = 'Recomendação: Violão Acústico';
-      document.getElementById('quiz-desc-resultado').textContent = 'Sua busca por versatilidade e voz acompanhada sugere o violão.';
+      document.getElementById('quiz-desc-resultado').textContent = 'A tua busca por praticidade sugere o violão.';
     }
 
     document.getElementById('barras-compatibilidade').innerHTML = `
@@ -413,15 +490,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="trilho-barra"><div class="preenchimento-barra" style="width: ${pctBateria}%;"></div></div>
       </div>
     `;
-  });
-
-  // Ajustes de Fonte
-  let tamanhoFonte = 100;
-  document.getElementById('btn-fonte-aumentar')?.addEventListener('click', () => {
-    if (tamanhoFonte < 130) { tamanhoFonte += 5; document.body.style.fontSize = tamanhoFonte + '%'; }
-  });
-  document.getElementById('btn-fonte-diminuir')?.addEventListener('click', () => {
-    if (tamanhoFonte > 85) { tamanhoFonte -= 5; document.body.style.fontSize = tamanhoFonte + '%'; }
   });
 
   init3D();
